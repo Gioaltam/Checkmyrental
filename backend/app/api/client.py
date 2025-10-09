@@ -107,29 +107,42 @@ def login_owner(request: OwnerLoginRequest, db: Session = Depends(get_db)):
 @router.get("/paid-owners")
 def get_paid_owners(db: Session = Depends(get_db)):
     """Get list of PAID owners only - for inspector GUI to know where to send reports"""
+    import json
+    from ..portal_models import PortalClient, ClientPortalToken
 
     paid_owners = []
 
-    # Get all paid clients from the database
-    clients = db.query(Client).filter(Client.is_paid == True).all()
+    # Get all paid portal clients from the database
+    portal_clients = db.query(PortalClient).filter(PortalClient.is_paid == True).all()
 
-    for client in clients:
-        # Get properties for this client
-        properties = db.query(Property).filter(Property.client_id == client.id).all()
+    for client in portal_clients:
+        # Parse properties data if available
         property_list = []
-        for prop in properties:
-            property_list.append({
-                "name": prop.label or prop.address,
-                "address": prop.address
-            })
+        if hasattr(client, 'properties_data') and client.properties_data:
+            try:
+                properties = json.loads(client.properties_data)
+                for prop in properties:
+                    property_list.append({
+                        "name": prop.get("name", ""),
+                        "address": prop.get("address", "")
+                    })
+            except:
+                property_list = []
+
+        # Get portal token for this client
+        portal_token = ""
+        token_obj = db.query(ClientPortalToken).filter(ClientPortalToken.client_id == client.id).first()
+        if token_obj:
+            portal_token = token_obj.portal_token
 
         owner_data = {
-            "owner_id": client.name or client.portal_token,  # Use name as owner_id
-            "name": client.contact_name or client.company_name or client.name,
-            "full_name": client.contact_name or client.company_name,
+            "owner_id": client.email,  # Use email as owner_id
+            "name": client.full_name or client.email,
+            "full_name": client.full_name or "",
             "email": client.email,
             "is_paid": True,  # Only paid owners are returned
-            "properties": property_list
+            "properties": property_list,
+            "portal_token": portal_token  # Include for dashboard navigation
         }
         paid_owners.append(owner_data)
 
@@ -238,97 +251,131 @@ def get_all_owners(db: Session = Depends(get_db)):
 @router.get("/dashboard")
 def get_portal_dashboard(portal_token: str, db: Session = Depends(get_db)):
     """Get dashboard data for a specific portal token (owner ID)"""
+    import sqlite3
+    from pathlib import Path
+    import json
+    from ..portal_models import ClientPortalToken, PortalClient
+
     print(f"Dashboard requested for token: {portal_token}")
-    
-    # Try to find a client with this owner ID (portal_token could be the owner name/ID)
-    # First try exact match on portal_token field
+
+    # First, try to find in the regular clients table
     client = db.query(Client).filter(Client.portal_token == portal_token).first()
-    
-    # If not found, try to match by name (for owner IDs)
-    if not client:
-        client = db.query(Client).filter(Client.name == portal_token).first()
-    
-    if not client:
-        # For now, return mock data for the demo token
-        if portal_token == "DEMO1234":
-            return {
-                "owner": "Juliana Shewmaker",
-                "properties": [
-                    {
-                        "address": "123 Demo Street, Miami, FL 33101",
-                        "type": "single",
-                        "label": "Demo Property",
-                        "lastInspection": "2024-01-15",
-                        "reportCount": 3,
-                        "reports": [
-                            {
-                                "date": "2024-01-15",
-                                "inspector": "John Smith",
-                                "status": "completed",
-                                "criticalIssues": 2,
-                                "importantIssues": 5,
-                                "id": "report1"
-                            },
-                            {
-                                "date": "2023-11-20",
-                                "inspector": "Mike Johnson",
-                                "status": "completed",
-                                "criticalIssues": 1,
-                                "importantIssues": 3,
-                                "id": "report2"
-                            },
-                            {
-                                "date": "2023-09-10",
-                                "inspector": "Sarah Williams",
-                                "status": "completed",
-                                "criticalIssues": 0,
-                                "importantIssues": 2,
-                                "id": "report3"
-                            }
-                        ]
-                    }
-                ]
-            }
-        else:
-            raise HTTPException(status_code=404, detail="Property not found")
-    
-    # Get all properties for this client
-    properties = db.query(Property).filter(Property.client_id == client.id).all()
-    
+    if client:
+        # Found in clients table, return their data
+        print(f"Found client in clients table: {client.name}")
+        return {
+            "owner": client.contact_name or client.company_name or client.name,
+            "full_name": client.contact_name or client.company_name,
+            "email": client.email,
+            "properties": []  # No properties yet for this client
+        }
+
+    # Find the portal client by token
+    token_obj = db.query(ClientPortalToken).filter(ClientPortalToken.portal_token == portal_token).first()
+    if not token_obj:
+        raise HTTPException(status_code=404, detail="Invalid portal token")
+
+    portal_client = db.query(PortalClient).filter(PortalClient.id == token_obj.client_id).first()
+    if not portal_client:
+        raise HTTPException(status_code=404, detail="Portal client not found")
+
+    # Query the workspace database for real reports
+    workspace_db_path = Path("../workspace/inspection_portal.db")
+    if not workspace_db_path.exists():
+        raise HTTPException(status_code=404, detail="Reports database not found")
+
+    conn = sqlite3.connect(str(workspace_db_path))
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Find the client by email in workspace database
+    print(f"Looking for workspace client with name={portal_client.email}")
+    cur.execute("SELECT id, name FROM clients WHERE name = ?", (portal_client.email,))
+    workspace_client = cur.fetchone()
+    print(f"Found workspace client: {workspace_client}")
+    if not workspace_client:
+        conn.close()
+        print("No workspace client found, returning empty properties")
+        return {
+            "owner": portal_client.full_name or portal_client.email,
+            "full_name": portal_client.full_name,
+            "email": portal_client.email,
+            "properties": []
+        }
+
+    workspace_client_id = workspace_client['id']
+
+    # Get all properties for this client from workspace database
+    cur.execute("""
+        SELECT id, address FROM properties
+        WHERE client_id = ?
+    """, (workspace_client_id,))
+    properties_rows = cur.fetchall()
+
     property_data = []
-    for prop in properties:
+    for prop_row in properties_rows:
+        prop_id = prop_row['id']
+        prop_address = prop_row['address']
+
         # Get all reports for this property
-        reports = db.query(Report).filter(
-            Report.property_id == prop.id
-        ).order_by(Report.inspection_date.desc()).all()
-        
+        cur.execute("""
+            SELECT id, web_dir, pdf_path, created_at
+            FROM reports
+            WHERE property_id = ?
+            ORDER BY created_at DESC
+        """, (prop_id,))
+        reports_rows = cur.fetchall()
+
         report_data = []
-        for report in reports:
+        for report_row in reports_rows:
+            report_id = report_row['id']
+            web_dir = report_row['web_dir']
+            pdf_path = report_row['pdf_path']
+            created_at = report_row['created_at']
+
+            # Try to load report.json for issue counts
+            critical_count = 0
+            important_count = 0
+            if web_dir:
+                try:
+                    report_json_path = Path("..") / web_dir / "report.json"
+                    if report_json_path.exists():
+                        with open(report_json_path, 'r', encoding='utf-8') as f:
+                            report_json = json.load(f)
+                            items = report_json.get("items", [])
+                            critical_count = sum(1 for i in items if i.get("severity") in ["critical", "major"])
+                            important_count = sum(1 for i in items if i.get("severity") in ["important", "minor"])
+                except Exception as e:
+                    print(f"Error loading report JSON: {e}")
+
             report_data.append({
-                "id": report.id,
-                "date": report.inspection_date.isoformat() if report.inspection_date else report.created_at.isoformat(),
-                "inspector": "Inspector",  # Could store this in report metadata
+                "id": report_id,
+                "date": created_at,
+                "inspector": "Inspection Agent",
                 "status": "completed",
-                "criticalIssues": report.critical_count or 0,
-                "importantIssues": report.important_count or 0,
-                "hasPdf": bool(report.pdf_standard_url or report.pdf_path),
-                "hasInteractiveView": bool(report.json_url or report.json_path)
+                "criticalIssues": critical_count,
+                "importantIssues": important_count,
+                "hasPdf": bool(pdf_path),
+                "hasInteractiveView": bool(web_dir)
             })
-        
-        last_inspection = reports[0] if reports else None
+
+        last_inspection = reports_rows[0]['created_at'] if reports_rows else None
         property_data.append({
-            "id": prop.id,
-            "address": prop.address,
-            "type": prop.property_type or "single",
-            "label": prop.label or prop.address,
-            "lastInspection": (last_inspection.inspection_date.isoformat() if last_inspection and last_inspection.inspection_date 
-                             else last_inspection.created_at.isoformat() if last_inspection else None),
-            "reportCount": len(reports),
+            "id": str(prop_id),
+            "address": prop_address,
+            "type": "single",
+            "label": prop_address,
+            "lastInspection": last_inspection,
+            "reportCount": len(reports_rows),
             "reports": report_data
         })
-    
+
+    conn.close()
+
     return {
-        "owner": client.contact_name or client.name or client.company_name or "Property Owner",
+        "owner": portal_client.full_name or portal_client.email,
+        "full_name": portal_client.full_name,
+        "email": portal_client.email,
         "properties": property_data
     }
 
@@ -520,6 +567,64 @@ def download_portal_report_pdf(
     else:
         raise HTTPException(status_code=404, detail="PDF not available")
 
+# ---------- Theme/Branding Endpoints ----------
+@router.get("/owners/{owner_id}/theme")
+def get_owner_theme(owner_id: str, db: Session = Depends(get_db)):
+    """Get theme configuration for an owner"""
+    # Try to find client by owner_id (name or portal_token)
+    client = db.query(Client).filter(
+        (Client.name == owner_id) | (Client.portal_token == owner_id)
+    ).first()
+
+    if not client:
+        raise HTTPException(status_code=404, detail="Owner not found")
+
+    # Return theme config or default
+    if client.theme_config:
+        return client.theme_config
+
+    # Return default theme structure
+    return {
+        "brandName": "CheckMyRental",
+        "brandSubtitle": "Owner Portal",
+        "colors": {
+            "primary": "#ef4444",
+            "primaryDark": "#dc2626",
+            "primaryLight": "#fee2e2",
+            "accent": "#3b82f6"
+        },
+        "features": {
+            "hvacMaintenance": True,
+            "photoAnalysis": True,
+            "reportFiltering": True,
+            "notifications": True
+        }
+    }
+
+@router.post("/owners/{owner_id}/theme")
+def update_owner_theme(
+    owner_id: str,
+    theme: dict,
+    db: Session = Depends(get_db)
+):
+    """Update theme configuration for an owner"""
+    # Find client
+    client = db.query(Client).filter(
+        (Client.name == owner_id) | (Client.portal_token == owner_id)
+    ).first()
+
+    if not client:
+        raise HTTPException(status_code=404, detail="Owner not found")
+
+    # Update theme config
+    client.theme_config = theme
+    db.commit()
+
+    return {
+        "message": "Theme updated successfully",
+        "theme": theme
+    }
+
 # ---------- Detailed interactive report payload ----------
 @router.get("/reports/{report_id}")
 def get_report_details(
@@ -572,3 +677,4 @@ def get_report_details(
             "property_type": prop.property_type,
         },
     }
+

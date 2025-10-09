@@ -1,8 +1,13 @@
 # Settings loader
 from __future__ import annotations
 import secrets
+import os
 from functools import lru_cache
 from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+
+# Load .env file explicitly to override environment variables
+load_dotenv("../.env", override=True)
 
 class Settings(BaseSettings):
     # Database (use SQLite for dev; swap to Postgres URL in prod)
@@ -28,7 +33,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     class Config:
-        env_file = ".env"
+        env_file = "../.env"  # Read from root .env file
         extra = "ignore"
 
 @lru_cache

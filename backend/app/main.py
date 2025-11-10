@@ -16,7 +16,23 @@ from .api.reports import router as reports_router
 from .api.simple_report import router as simple_report_router
 from .api.photos import router as photos_router
 from .api.photo_report import router as photo_report_router
+from .api.ai_services import router as ai_router
+from .api.pdf_serve import router as pdf_router
+from .api.activity import router as activity_router
+from .api.batch_photos import router as batch_photos_router
+from .api.seasonal_tasks import router as seasonal_tasks_router
 from .config import settings
+
+# Debug: Print actual database path being used
+print(f"=== DATABASE CONFIGURATION ===")
+print(f"DATABASE_URL from settings: {settings.DATABASE_URL}")
+print(f"Engine URL: {engine.url}")
+if str(engine.url).startswith('sqlite'):
+    db_path = str(engine.url).replace('sqlite:///', '')
+    abs_db_path = os.path.abspath(db_path)
+    print(f"Absolute database path: {abs_db_path}")
+    print(f"Database exists: {os.path.exists(abs_db_path)}")
+print(f"==============================")
 
 # Create tables on startup (SQLite/Postgres compatible)
 Base.metadata.create_all(bind=engine)
@@ -26,6 +42,7 @@ app = FastAPI(title="Inspection Portal API", version="0.1.0")
 # CORS configuration based on environment
 allowed_origins = ["*"] if settings.ENVIRONMENT == "development" else [
     "http://localhost:3000",
+    "http://localhost:4321",  # Astro landing page
     "http://localhost:8000",
     # Add your production domains here
 ]
@@ -65,6 +82,11 @@ app.include_router(reports_router, prefix="/api/reports", tags=["Reports"])
 app.include_router(simple_report_router, prefix="/api/simple", tags=["Simple Reports"])
 app.include_router(photos_router)  # Router has its own prefix and tags
 app.include_router(photo_report_router, prefix="/api/photo-report", tags=["Photo Reports"])
+app.include_router(ai_router, prefix="/api", tags=["AI Services"])
+app.include_router(pdf_router, prefix="/api/pdf", tags=["PDF Reports"])
+app.include_router(activity_router, prefix="/api/activity", tags=["Activity Feed"])
+app.include_router(batch_photos_router, prefix="/api/batch", tags=["Batch Photo Analysis"])
+app.include_router(seasonal_tasks_router, prefix="/api", tags=["Seasonal Tasks"])
 
 # Serve static frontend (landing + owner dashboard)
 static_dir = Path(__file__).parent.parent.parent / "static"
@@ -107,14 +129,15 @@ def get_all_owners():
         from sqlalchemy.orm import Session
         from .database import SessionLocal
         from .portal_models import PortalClient
-        
+        from .models import Client, Property
+
         db = SessionLocal()
         try:
-            # Get all clients from database
-            clients = db.query(PortalClient).all()
-            
             owners = []
-            for client in clients:
+
+            # First get PortalClients (legacy)
+            portal_clients = db.query(PortalClient).all()
+            for client in portal_clients:
                 # Parse properties if available
                 properties = []
                 if client.properties_data:
@@ -122,7 +145,7 @@ def get_all_owners():
                         properties = json.loads(client.properties_data)
                     except:
                         properties = []
-                
+
                 owner_data = {
                     "owner_id": f"client_{client.id}",
                     "name": client.full_name or client.email,
@@ -132,8 +155,29 @@ def get_all_owners():
                     "created_at": client.created_at.isoformat() if client.created_at else None
                 }
                 owners.append(owner_data)
-            
-            
+
+            # Now get regular Clients who have portal tokens
+            regular_clients = db.query(Client).filter(Client.portal_token.isnot(None)).all()
+            for client in regular_clients:
+                # Get properties for this client
+                props = db.query(Property).filter(Property.client_id == client.id).all()
+                properties = []
+                for prop in props:
+                    properties.append({
+                        "name": prop.label or prop.address,
+                        "address": prop.address
+                    })
+
+                owner_data = {
+                    "owner_id": client.portal_token,  # Use portal token as ID for regular clients
+                    "name": client.contact_name or client.name,
+                    "email": client.email,
+                    "is_paid": client.is_paid,
+                    "properties": properties,
+                    "created_at": client.created_at.isoformat() if client.created_at else None
+                }
+                owners.append(owner_data)
+
             return {"owners": owners}
         finally:
             db.close()

@@ -159,11 +159,15 @@ def get_reports(owner_id: str = Query(None, description="Owner ID to filter repo
 def save_report(report: ReportSaveRequest):
     """Save report data from run_report.py for dashboard display"""
     try:
-        # For now, store in the same SQLite database
-        db_path = Path("../workspace/inspection_portal.db")
+        # Use the main app.db database in the root directory
+        from pathlib import Path
+        import os
+        # Get the absolute path to the root app.db
+        current_file = Path(__file__).absolute()
+        root_dir = current_file.parent.parent.parent.parent  # Go up to inspection-agent root
+        db_path = root_dir / "app.db"
 
-        # Ensure directory exists
-        db_path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"Using database at: {db_path}")
 
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
@@ -179,14 +183,53 @@ def save_report(report: ReportSaveRequest):
             )
         """)
 
-        # Insert or get client for this owner_id
-        cur.execute("SELECT id FROM clients WHERE name = ?", (report.owner_id,))
-        row = cur.fetchone()
-        if row:
-            client_id = row['id']
+        # First check if this owner_id maps to a portal client
+        # owner_id might be "portal_2" format, extract the ID number
+        portal_client_id_from_owner = None
+        if report.owner_id and report.owner_id.startswith("portal_"):
+            try:
+                portal_client_id_from_owner = int(report.owner_id.replace("portal_", ""))
+            except:
+                pass
+
+        # Try to find the portal client by ID or name
+        if portal_client_id_from_owner:
+            cur.execute("""
+                SELECT id, full_name FROM portal_clients
+                WHERE id = ?
+            """, (portal_client_id_from_owner,))
         else:
-            cur.execute("INSERT INTO clients (name, email) VALUES (?, '')", (report.owner_id,))
-            client_id = cur.lastrowid
+            cur.execute("""
+                SELECT id, full_name FROM portal_clients
+                WHERE full_name = ?
+            """, (report.owner_id,))
+        portal_client = cur.fetchone()
+
+        if portal_client:
+            # Use the portal client's ID and name
+            portal_client_id = portal_client['id']
+            client_name = portal_client['full_name']
+
+            # Insert or get client for this portal client
+            # Use the portal client ID as the client ID to maintain consistency
+            cur.execute("SELECT id FROM clients WHERE id = ? OR name = ?", (portal_client_id, client_name))
+            row = cur.fetchone()
+            if row:
+                client_id = row['id']
+            else:
+                # Insert with specific ID matching portal client
+                cur.execute("INSERT OR IGNORE INTO clients (id, name, email) VALUES (?, ?, '')",
+                           (portal_client_id, client_name))
+                client_id = portal_client_id
+        else:
+            # Fallback to using owner_id as name
+            cur.execute("SELECT id FROM clients WHERE name = ?", (report.owner_id,))
+            row = cur.fetchone()
+            if row:
+                client_id = row['id']
+            else:
+                cur.execute("INSERT INTO clients (name, email) VALUES (?, '')", (report.owner_id,))
+                client_id = cur.lastrowid
 
         # Ensure properties table exists
         cur.execute("""
@@ -200,15 +243,19 @@ def save_report(report: ReportSaveRequest):
         """)
 
         # Insert or get property
+        # Note: properties table has VARCHAR id, not auto-increment
         cur.execute("SELECT id FROM properties WHERE client_id = ? AND address = ?",
-                   (client_id, report.property_address))
+                   (str(client_id), report.property_address))
         row = cur.fetchone()
         if row:
             property_id = row['id']
         else:
-            cur.execute("INSERT INTO properties (client_id, address) VALUES (?, ?)",
-                       (client_id, report.property_address))
-            property_id = cur.lastrowid
+            # Generate a unique ID for the property (VARCHAR)
+            import uuid
+            property_id = str(uuid.uuid4())[:8]  # Short UUID for property ID
+            cur.execute("INSERT INTO properties (id, client_id, address) VALUES (?, ?, ?)",
+                       (property_id, str(client_id), report.property_address))
+            # No lastrowid since we're providing the ID
 
         # Ensure reports table exists
         cur.execute("""
@@ -225,16 +272,22 @@ def save_report(report: ReportSaveRequest):
         # Check if report already exists
         cur.execute("SELECT id FROM reports WHERE id = ?", (report.report_id,))
         if not cur.fetchone():
-            # Insert new report
+            # Insert new report - use existing columns
+            # web_dir maps to json_path, and we already have pdf_path
+            from datetime import datetime
             cur.execute("""
-                INSERT INTO reports (id, property_id, web_dir, pdf_path)
-                VALUES (?, ?, ?, ?)
-            """, (report.report_id, property_id, report.web_dir, report.pdf_path))
+                INSERT INTO reports (id, property_id, address, inspection_date, json_path, pdf_path,
+                                   portal_client_id, property_name, critical_count, important_count, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (report.report_id, property_id, report.property_address,
+                  datetime.now(), report.web_dir, report.pdf_path,
+                  portal_client_id, report.property_address,
+                  report.critical_issues, report.important_issues, datetime.now()))
 
         conn.commit()
         conn.close()
 
-        print(f"✅ Report {report.report_id} saved for owner {report.owner_id}")
+        print(f"Report {report.report_id} saved for owner {report.owner_id}")
         return {"status": "success", "report_id": report.report_id}
 
     except Exception as e:

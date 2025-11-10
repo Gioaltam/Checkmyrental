@@ -1,0 +1,1241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    /* Modern professional colors - Blue palette */
+    --color-primary: 59 130 246;        /* Blue-500 - Professional blue */
+    --color-primary-hover: 37 99 235;   /* Blue-600 - Darker blue hover */
+    --color-accent: 59 130 246;         /* Blue-500 - Blue accent */
+    --color-success: 34 197 94;         /* Green-500 - Success states */
+    --color-warning: 251 146 60;        /* Orange-400 - Warning states */
+    --color-danger: 239 68 68;          /* Red-500 - Error states */
+
+    /* Neutral palette */
+    --color-neutral-50: 250 250 250;
+    --color-neutral-100: 245 245 245;
+    --color-neutral-200: 229 229 229;
+    --color-neutral-300: 212 212 212;
+    --color-neutral-400: 163 163 163;
+    --color-neutral-500: 115 115 115;
+    --color-neutral-600: 82 82 82;
+    --color-neutral-700: 64 64 64;
+    --color-neutral-800: 38 38 38;
+    --color-neutral-900: 23 23 23;
+    --color-neutral-950: 10 10 10;
+
+    /* Header styling variables - Dark mode */
+    --header-bg: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.98) 50%, rgba(17, 24, 39, 0.95) 100%);
+    --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+
+    /* Dashboard window frame - Dark mode */
+    --dashboard-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(59, 130, 246, 0.15), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+
+    /* QuickActions component - Dark mode */
+    --quick-actions-bg: linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(31, 41, 55, 0.98) 50%, rgba(17, 24, 39, 0.95) 100%);
+    --quick-actions-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: #0f172a;
+    color: rgb(250, 250, 250);
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Enhanced dark mode glass cards - Professional */
+  .glass-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .glass-card:hover {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Dark mode sidebar enhancements */
+  aside {
+    background: #1e293b !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Dark mode header enhancements */
+  header {
+    background: #1e293b !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Navigation button enhancements for dark mode */
+  nav button,
+  nav a {
+    transition: all 0.2s ease;
+  }
+
+  nav button:hover,
+  nav a:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Main content area */
+  main {
+    position: relative;
+  }
+
+  /* Do not globally change all images inside <main>. Keep layout safe but neutral. */
+  img { max-width: 100%; height: auto; }
+
+  /* If you need constrained images on content pages, wrap them with .prose-content */
+  .prose-content img {
+    display: block;
+    max-height: min(75vh, 720px);
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* Ensure Next.js <Image/> wrapper spans don't overflow */
+  span[style*="box-sizing:border-box;display:inline-block"] {
+    max-width: 100% !important;
+  }
+
+  /* Light mode */
+  .light-mode {
+    --color-neutral-50: 10 10 10;
+    --color-neutral-100: 23 23 23;
+    --color-neutral-200: 38 38 38;
+    --color-neutral-300: 64 64 64;
+    --color-neutral-400: 82 82 82;
+    --color-neutral-500: 115 115 115;
+    --color-neutral-600: 163 163 163;
+    --color-neutral-700: 212 212 212;
+    --color-neutral-800: 229 229 229;
+    --color-neutral-900: 245 245 245;
+    --color-neutral-950: 250 250 250;
+
+    /* Header styling variables - Light mode */
+    --header-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 50%, rgba(255, 255, 255, 0.95) 100%);
+    --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+    /* Dashboard window frame - Light mode */
+    --dashboard-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.2), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+
+    /* QuickActions component - Light mode */
+    --quick-actions-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.98) 50%, rgba(255, 255, 255, 0.95) 100%);
+    --quick-actions-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  .light-mode body {
+    background: linear-gradient(135deg, rgb(225, 235, 250) 0%, rgb(210, 225, 245) 50%, rgb(220, 230, 248) 100%) !important;
+    color: rgb(20, 25, 30) !important;
+  }
+
+  /* Light mode main container */
+  .light-mode > div {
+    background: transparent !important;
+  }
+
+  /* Force light blue background on main grid */
+  html.light-mode div.grid {
+    background: linear-gradient(135deg, rgb(225, 235, 250) 0%, rgb(210, 225, 245) 50%, rgb(220, 230, 248) 100%) !important;
+  }
+
+  /* Light mode glass cards - Sophisticated slate theme */
+  .light-mode .glass-card {
+    background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.85) 100%) !important;
+    border: 1px solid rgba(100, 120, 150, 0.2) !important;
+    box-shadow:
+      0 4px 12px rgba(100, 120, 150, 0.08),
+      0 2px 6px rgba(100, 120, 150, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(100, 120, 150, 0.08);
+  }
+
+  .light-mode .glass-card:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.9) 100%) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    box-shadow:
+      0 8px 20px rgba(59, 130, 246, 0.12),
+      0 4px 10px rgba(100, 120, 150, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -1px 0 rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+  }
+
+  /* Light mode sidebar - Sophisticated slate with soft glow */
+  html.light-mode aside,
+  html.light-mode body aside,
+  .light-mode aside,
+  body.light-mode aside {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%) !important;
+    border-right-color: rgba(100, 120, 150, 0.15) !important;
+    box-shadow:
+      2px 0 12px rgba(100, 120, 150, 0.06),
+      1px 0 0 rgba(226, 232, 240, 0.5) !important;
+  }
+
+  /* Light mode header - Clean slate glass effect */
+  html.light-mode header,
+  html.light-mode body header,
+  .light-mode header,
+  body.light-mode header {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+    border-bottom-color: rgba(100, 120, 150, 0.15) !important;
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow:
+      0 1px 0 rgba(226, 232, 240, 0.5),
+      0 2px 12px rgba(100, 120, 150, 0.06) !important;
+  }
+
+  /* Light mode text colors - cool dark slate tones */
+  .light-mode .text-white,
+  .light-mode h1,
+  .light-mode h2,
+  .light-mode h3,
+  .light-mode h4,
+  .light-mode h5,
+  .light-mode h6,
+  .light-mode .font-bold,
+  .light-mode .font-semibold,
+  .light-mode p,
+  .light-mode span,
+  .light-mode div,
+  .light-mode label,
+  .light-mode button {
+    color: rgb(25, 35, 45) !important;
+  }
+
+  .light-mode .text-white\/90 {
+    color: rgba(25, 35, 45, 0.9) !important;
+  }
+
+  .light-mode .text-white\/80 {
+    color: rgba(25, 35, 45, 0.8) !important;
+  }
+
+  .light-mode .text-white\/70 {
+    color: rgba(25, 35, 45, 0.75) !important;
+  }
+
+  .light-mode .text-white\/60 {
+    color: rgba(25, 35, 45, 0.65) !important;
+  }
+
+  .light-mode .text-white\/50 {
+    color: rgba(25, 35, 45, 0.5) !important;
+  }
+
+  .light-mode .text-white\/40 {
+    color: rgba(25, 35, 45, 0.45) !important;
+  }
+
+  .light-mode .text-white\/30 {
+    color: rgba(25, 35, 45, 0.35) !important;
+  }
+
+  /* Light mode logo - keep the red color visible */
+  .light-mode .text-\[rgb\(231\2c 76\2c 60\)\] {
+    color: rgb(192, 57, 43) !important; /* Slightly darker red for better contrast */
+  }
+
+  /* Light mode logo background box */
+  .light-mode .bg-\[rgba\(231\2c 76\2c 60\2c 0\.1\)\] {
+    background: rgba(231, 76, 60, 0.08) !important;
+  }
+
+  .light-mode .border-\[rgba\(231\2c 76\2c 60\2c 0\.2\)\] {
+    border-color: rgba(231, 76, 60, 0.25) !important;
+  }
+
+  /* Light mode active menu item */
+  .light-mode .bg-\[rgba\(231\2c 76\2c 60\2c 0\.2\)\] {
+    background: rgba(231, 76, 60, 0.15) !important;
+  }
+
+  .light-mode .border-\[rgba\(231\2c 76\2c 60\2c 0\.3\)\] {
+    border-color: rgba(231, 76, 60, 0.3) !important;
+  }
+
+  .light-mode .text-\[rgb\(231\2c 76\2c 60\)\] {
+    color: rgb(192, 57, 43) !important;
+  }
+
+  /* Light mode borders - cool slate tones */
+  .light-mode .border-white\/10 {
+    border-color: rgba(100, 120, 150, 0.15) !important;
+  }
+
+  /* Light mode backgrounds - cool slate overlays */
+  .light-mode .bg-black\/50,
+  .light-mode .bg-black\/80 {
+    background: rgba(247, 249, 251, 0.96) !important;
+  }
+
+  .light-mode .bg-\[rgb\(10\2c 10\2c 10\)\] {
+    background: linear-gradient(135deg, rgb(246, 248, 250) 0%, rgb(240, 243, 247) 100%) !important;
+  }
+
+  /* Light mode hover states - cool accent */
+  .light-mode .hover\:bg-white\/5:hover {
+    background: rgba(100, 120, 150, 0.08) !important;
+  }
+
+  /* Light mode particles - cool slate */
+  .light-mode .particle {
+    background: rgba(100, 120, 150, 0.2) !important;
+  }
+
+  /* Light mode ambient glow */
+  .light-mode .floating-particles > div {
+    opacity: 0.25;
+  }
+
+  /* Light mode scrollbar - cool slate tones */
+  .light-mode::-webkit-scrollbar-track {
+    background: rgba(100, 120, 150, 0.08);
+  }
+
+  .light-mode::-webkit-scrollbar-thumb {
+    background: rgba(80, 100, 130, 0.3);
+  }
+
+  .light-mode::-webkit-scrollbar-thumb:hover {
+    background: rgba(80, 100, 130, 0.5);
+  }
+
+  /* Light mode metric cards specific - cool slate gradient */
+  .light-mode .metric-card-wrapper .glass-card {
+    background: linear-gradient(135deg, rgb(251, 252, 254) 0%, rgb(248, 250, 252) 100%) !important;
+    box-shadow:
+      0 3px 12px rgba(60, 80, 110, 0.1),
+      0 1px 4px rgba(60, 80, 110, 0.06),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  }
+
+  .light-mode .metric-card-wrapper .glass-card:hover {
+    background: linear-gradient(135deg, rgb(254, 255, 255) 0%, rgb(250, 251, 254) 100%) !important;
+    box-shadow:
+      0 8px 20px rgba(60, 80, 110, 0.14),
+      0 4px 8px rgba(60, 80, 110, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+  }
+
+  /* Light mode - New component styles */
+
+  /* Command Palette - cool slate */
+  .light-mode .bg-\[rgb\(20\2c 20\2c 20\)\] {
+    background: linear-gradient(135deg, rgb(249, 250, 252) 0%, rgb(244, 246, 249) 100%) !important;
+    box-shadow: 0 12px 40px rgba(60, 80, 110, 0.15), 0 4px 12px rgba(60, 80, 110, 0.1);
+  }
+
+  .light-mode .bg-white\/10 {
+    background: rgba(100, 120, 150, 0.08) !important;
+  }
+
+  .light-mode .bg-white\/5 {
+    background: rgba(100, 120, 150, 0.05) !important;
+  }
+
+  .light-mode .hover\:bg-white\/10:hover {
+    background: rgba(100, 120, 150, 0.12) !important;
+  }
+
+  .light-mode .border-white\/20 {
+    border-color: rgba(100, 120, 150, 0.18) !important;
+  }
+
+  /* AI Chat Assistant - Blue */
+  .light-mode .from-purple-600 {
+    --tw-gradient-from: #9333ea !important;
+  }
+
+  .light-mode .to-blue-600 {
+    --tw-gradient-to: #2563eb !important;
+  }
+
+  .light-mode .shadow-purple-500\/20 {
+    box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.15), 0 10px 10px -5px rgba(147, 51, 234, 0.1) !important;
+  }
+
+  .light-mode .shadow-red-500\/20 {
+    box-shadow: 0 20px 25px -5px rgba(239, 68, 68, 0.15), 0 10px 10px -5px rgba(239, 68, 68, 0.1) !important;
+  }
+
+  /* Notification Center & Modals */
+  .light-mode .bg-black\/50,
+  .light-mode .bg-black\/70,
+  .light-mode .bg-black\/80,
+  .light-mode .bg-black\/90 {
+    background: rgba(0, 0, 0, 0.4) !important;
+  }
+
+  /* Card backgrounds for status colors in light mode */
+  .light-mode .bg-red-500\/10 {
+    background: rgba(239, 68, 68, 0.12) !important;
+  }
+
+  .light-mode .bg-red-500\/20 {
+    background: rgba(239, 68, 68, 0.18) !important;
+  }
+
+  .light-mode .border-red-500\/20 {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .light-mode .border-red-500\/30 {
+    border-color: rgba(239, 68, 68, 0.4) !important;
+  }
+
+  .light-mode .bg-yellow-500\/10 {
+    background: rgba(234, 179, 8, 0.12) !important;
+  }
+
+  .light-mode .bg-yellow-500\/20 {
+    background: rgba(234, 179, 8, 0.18) !important;
+  }
+
+  .light-mode .border-yellow-500\/20 {
+    border-color: rgba(234, 179, 8, 0.3) !important;
+  }
+
+  .light-mode .bg-blue-500\/10 {
+    background: rgba(59, 130, 246, 0.12) !important;
+  }
+
+  .light-mode .bg-blue-500\/20 {
+    background: rgba(59, 130, 246, 0.18) !important;
+  }
+
+  .light-mode .border-blue-500\/20 {
+    border-color: rgba(59, 130, 246, 0.3) !important;
+  }
+
+  .light-mode .bg-green-500\/10 {
+    background: rgba(34, 197, 94, 0.12) !important;
+  }
+
+  .light-mode .bg-green-500\/20 {
+    background: rgba(34, 197, 94, 0.18) !important;
+  }
+
+  .light-mode .border-green-500\/20 {
+    border-color: rgba(34, 197, 94, 0.3) !important;
+  }
+
+  .light-mode .bg-purple-500\/10 {
+    background: rgba(168, 85, 247, 0.12) !important;
+  }
+
+  .light-mode .bg-purple-500\/20 {
+    background: rgba(168, 85, 247, 0.18) !important;
+  }
+
+  .light-mode .border-purple-500\/20 {
+    border-color: rgba(168, 85, 247, 0.3) !important;
+  }
+
+  /* Text colors for icons and badges in light mode */
+  .light-mode .text-red-400 {
+    color: rgb(220, 38, 38) !important;
+  }
+
+  .light-mode .text-yellow-400 {
+    color: rgb(202, 138, 4) !important;
+  }
+
+  .light-mode .text-blue-400 {
+    color: rgb(37, 99, 235) !important;
+  }
+
+  .light-mode .text-green-400 {
+    color: rgb(22, 163, 74) !important;
+  }
+
+  .light-mode .text-purple-400 {
+    color: rgb(147, 51, 234) !important;
+  }
+
+  /* Placeholder text - cool slate gray */
+  .light-mode .placeholder-white\/40::placeholder {
+    color: rgba(70, 85, 100, 0.45) !important;
+  }
+
+  /* Mobile Navigation - cool slate */
+  .light-mode .safe-area-pb {
+    background: linear-gradient(180deg, rgb(247, 249, 251) 0%, rgb(244, 246, 249) 100%) !important;
+  }
+
+  /* Onboarding Tour - Blue/Purple */
+  .light-mode .from-purple-600.to-blue-600 {
+    background: linear-gradient(to right, #9333ea, #2563eb) !important;
+  }
+
+  /* Better contrast for light mode buttons and inputs */
+  .light-mode input,
+  .light-mode textarea,
+  .light-mode select {
+    color: rgb(25, 35, 45) !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    border-color: rgba(100, 120, 150, 0.2) !important;
+  }
+
+  .light-mode input:focus,
+  .light-mode textarea:focus,
+  .light-mode select:focus {
+    background: rgb(255, 255, 255) !important;
+    border-color: rgba(80, 100, 130, 0.4) !important;
+  }
+
+  .light-mode input::placeholder,
+  .light-mode textarea::placeholder {
+    color: rgba(70, 85, 100, 0.45) !important;
+  }
+
+  /* Focus states in light mode */
+  .light-mode .focus\:border-red-400:focus,
+  .light-mode .focus\:border-purple-500\/50:focus {
+    border-color: rgb(239, 68, 68) !important;
+  }
+
+  .light-mode .focus\:ring-red-400\/20:focus {
+    --tw-ring-color: rgba(239, 68, 68, 0.2) !important;
+  }
+
+  /* Hover states for colored backgrounds */
+  .light-mode .hover\:bg-red-500\/15:hover {
+    background: rgba(239, 68, 68, 0.18) !important;
+  }
+
+  .light-mode .hover\:bg-yellow-500\/15:hover {
+    background: rgba(234, 179, 8, 0.18) !important;
+  }
+
+  .light-mode .hover\:bg-blue-500\/15:hover {
+    background: rgba(59, 130, 246, 0.18) !important;
+  }
+
+  /* Backdrop blur modals in light mode */
+  .light-mode .backdrop-blur-sm,
+  .light-mode .backdrop-blur-xl {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+  }
+
+  /* Shadow improvements for light mode */
+  .light-mode .shadow-2xl {
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.15), 0 8px 16px -4px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .light-mode .shadow-lg {
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Additional shadow utilities for light mode */
+  .light-mode .shadow-md {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .light-mode .shadow-sm {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Improve divider visibility in light mode - cool slate tones */
+  .light-mode .divide-white\/5 > * + * {
+    border-color: rgba(100, 120, 150, 0.12) !important;
+  }
+
+  /* Additional text color overrides for light mode */
+  .light-mode .hover\:text-white:hover {
+    color: rgb(25, 35, 45) !important;
+  }
+
+  .light-mode .text-gray-200,
+  .light-mode .text-gray-300,
+  .light-mode .text-gray-400 {
+    color: rgb(50, 60, 75) !important;
+  }
+
+  /* Ensure colored text stays visible in light mode */
+  .light-mode .text-orange-400 {
+    color: rgb(194, 65, 12) !important;
+  }
+
+  .light-mode .text-emerald-400,
+  .light-mode .text-green-300 {
+    color: rgb(5, 150, 105) !important;
+  }
+
+  /* Navigation and menu text - cool dark slate tones */
+  .light-mode nav a,
+  .light-mode nav button {
+    color: rgba(25, 35, 45, 0.75) !important;
+  }
+
+  .light-mode nav a:hover,
+  .light-mode nav button:hover {
+    color: rgb(25, 35, 45) !important;
+  }
+
+  .light-mode nav a.active {
+    color: rgb(70, 100, 140) !important;
+  }
+
+  /* Ensure SVG icons inherit proper colors in light mode */
+  .light-mode svg {
+    color: inherit;
+  }
+
+  /* Black backgrounds should become white in light mode */
+  .light-mode .bg-black {
+    background: white !important;
+  }
+
+  .light-mode .bg-black\/60,
+  .light-mode .bg-black\/70 {
+    background: rgba(255, 255, 255, 0.95) !important;
+  }
+
+  /* Light mode active menu items - Enhanced with warm terracotta glow */
+  .light-mode .bg-\[rgba\(231\2c 76\2c 60\2c 0\.2\)\] {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(231, 76, 60, 0.14) 100%) !important;
+    border-color: rgba(231, 76, 60, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.08);
+  }
+
+  /* Enhanced sidebar logo area */
+  .light-mode .bg-\[rgba\(231\2c 76\2c 60\2c 0\.1\)\] {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.08) 0%, rgba(231, 76, 60, 0.12) 100%) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      0 2px 8px rgba(231, 76, 60, 0.06);
+  }
+
+  /* Navigation button styling enhancements */
+  .light-mode nav button {
+    transition: all 0.2s ease !important;
+  }
+
+  .light-mode nav button:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Refined border styling for sidebar sections */
+  .light-mode aside .border-b {
+    border-color: rgba(100, 120, 150, 0.12) !important;
+  }
+
+  /* Content area */
+  .light-mode main::before {
+    display: none;
+  }
+
+  /* Enhanced hover states for better interactivity */
+  .light-mode button:hover,
+  .light-mode a:hover {
+    transition: all 0.2s ease;
+  }
+
+  /* Better visual separation for nested cards */
+  .light-mode .glass-card .glass-card {
+    background: rgb(249, 250, 251) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Orange/streak colors in light mode */
+  .light-mode .bg-orange-500\/10 {
+    background: rgba(249, 115, 22, 0.12) !important;
+  }
+
+  .light-mode .border-orange-500\/20 {
+    border-color: rgba(249, 115, 22, 0.3) !important;
+  }
+
+  .light-mode .text-orange-400 {
+    color: rgb(234, 88, 12) !important;
+  }
+
+  /* Cyan colors for better visibility */
+  .light-mode .text-cyan-400 {
+    color: rgb(8, 145, 178) !important;
+  }
+
+  /* Emerald colors */
+  .light-mode .text-emerald-400 {
+    color: rgb(16, 185, 129) !important;
+  }
+
+  /* Better contrast for input fields */
+  .light-mode input,
+  .light-mode select,
+  .light-mode textarea {
+    background: white !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .light-mode input:focus,
+  .light-mode select:focus,
+  .light-mode textarea:focus {
+    border-color: rgb(231, 76, 60) !important;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1) !important;
+  }
+
+  /* Loading skeleton improvements for light mode */
+  .light-mode .animate-pulse > div {
+    background: rgba(0, 0, 0, 0.08) !important;
+  }
+
+  /* Seasonal Cards - Specific improvements for light mode */
+  .light-mode .text-orange-500 {
+    color: rgb(234, 88, 12) !important;
+  }
+
+  .light-mode .text-yellow-500 {
+    color: rgb(202, 138, 4) !important;
+  }
+
+  .light-mode .text-blue-300 {
+    color: rgb(37, 99, 235) !important;
+  }
+
+  /* Ensure gradients are visible in light mode */
+  .light-mode .from-red-500 {
+    --tw-gradient-from: rgb(239, 68, 68) !important;
+  }
+
+  .light-mode .to-red-600 {
+    --tw-gradient-to: rgb(220, 38, 38) !important;
+  }
+
+  .light-mode .from-orange-500 {
+    --tw-gradient-from: rgb(249, 115, 22) !important;
+  }
+
+  .light-mode .to-orange-600 {
+    --tw-gradient-to: rgb(234, 88, 12) !important;
+  }
+
+  .light-mode .from-yellow-500 {
+    --tw-gradient-from: rgb(234, 179, 8) !important;
+  }
+
+  .light-mode .to-yellow-600 {
+    --tw-gradient-to: rgb(202, 138, 4) !important;
+  }
+
+  .light-mode .from-green-500 {
+    --tw-gradient-from: rgb(34, 197, 94) !important;
+  }
+
+  .light-mode .to-green-600 {
+    --tw-gradient-to: rgb(22, 163, 74) !important;
+  }
+
+  .light-mode .from-blue-500 {
+    --tw-gradient-from: rgb(59, 130, 246) !important;
+  }
+
+  .light-mode .to-blue-600 {
+    --tw-gradient-to: rgb(37, 99, 235) !important;
+  }
+}
+
+@layer components {
+  /* Theme Toggle - Toggle Switch Design from Astro landing page */
+  .theme-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-toggle:hover {
+    transform: scale(1.05);
+  }
+
+  .toggle-track {
+    width: 80px;
+    height: 40px;
+    background: rgba(100, 116, 139, 0.2);
+    border: 2px solid rgba(100, 116, 139, 0.3);
+    border-radius: 40px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .light-mode .toggle-track {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(255, 107, 107, 0.15));
+    border-color: rgba(231, 76, 60, 0.3);
+    box-shadow: inset 0 2px 8px rgba(231, 76, 60, 0.1);
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #475569, #334155);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .light-mode .toggle-thumb {
+    left: 43px;
+    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .theme-icon {
+    font-size: 1rem;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  /* Focus styles - Blue accent for better accessibility */
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 2px solid rgb(59, 130, 246);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* (Optional) header/logo/button/card styles preserved from your file */
+  .header {
+    position: fixed; width: 100%; top: 0;
+    background: linear-gradient(135deg, rgba(10,10,20,0.95) 0%, rgba(20,20,35,0.9) 100%);
+    -webkit-backdrop-filter: saturate(200%) blur(30px);
+    backdrop-filter: saturate(200%) blur(30px);
+    z-index: 1000;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    transition: all .5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:
+      0 1px 1px rgba(0,0,0,.25),
+      0 2px 2px rgba(0,0,0,.22),
+      0 4px 4px rgba(0,0,0,.19),
+      0 8px 8px rgba(0,0,0,.16),
+      0 16px 16px rgba(0,0,0,.13),
+      0 32px 32px rgba(0,0,0,.1),
+      inset 0 1px 0 rgba(255,255,255,.08),
+      inset 0 -1px 0 rgba(0,0,0,.2);
+  }
+
+  /* Single, non-duplicated custom scrollbar - Blue accent */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+  ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 5px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.7); }
+}
+
+@layer utilities {
+  /* Screen reader only - visually hidden but accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .text-primary  { color: rgb(59, 130, 246); }
+  .bg-primary    { background-color: rgb(59, 130, 246); }
+  .border-primary{ border-color: rgb(59, 130, 246); }
+
+  /* Focus indicators for keyboard navigation */
+  .focus-visible\:ring-2:focus-visible {
+    outline: 2px solid rgb(239, 68, 68);
+    outline-offset: 2px;
+  }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid rgb(239, 68, 68);
+    outline-offset: 2px;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* Skip to content link */
+  .skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: rgb(239, 68, 68);
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 100;
+  }
+
+  .skip-to-content:focus {
+    top: 0;
+  }
+
+  /* Mobile touch optimization */
+  @media (max-width: 768px) {
+    /* Minimum touch target size of 44x44px (iOS guideline) */
+    button,
+    a,
+    input[type="checkbox"],
+    input[type="radio"],
+    select {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Increase spacing for easier touch */
+    .touch-spacing > * + * {
+      margin-top: 12px;
+    }
+  }
+
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Simplified animations */
+@keyframes float-particle {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.1;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 0.15;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Removed glow animation - too flashy */
+
+@keyframes draw-line {
+  from {
+    stroke-dasharray: 0 100;
+  }
+  to {
+    stroke-dasharray: 100 0;
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Removed glow-pulse animation - too flashy */
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.01) 0%,
+    rgba(255, 255, 255, 0.03) 50%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.light-mode .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.01) 0%,
+    rgba(0, 0, 0, 0.02) 50%,
+    rgba(0, 0, 0, 0.01) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.animate-draw-line {
+  animation: draw-line 2s ease-out forwards;
+}
+
+.animate-gradient {
+  animation: gradient-shift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Removed animate-glow class - too flashy */
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s ease-in-out infinite;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out forwards;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
+
+/* Interactive hover states */
+.hover-lift {
+  transition: all 0.2s ease;
+}
+
+.hover-lift:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Button ripple effect */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-ripple:active::after {
+  width: 300px;
+  height: 300px;
+}
+
+/* Tailwind animations for command palette and chat */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes paperSlide {
+  0% {
+    transform: translateY(-100%) rotateX(90deg);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) rotateX(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+/* Fade and slide animations */
+.animate-in {
+  animation-duration: 0.2s;
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.slide-in-from-top-4 {
+  animation-name: slideInFromTop;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* New animations for Executive Summary */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 2s ease-in-out infinite;
+}

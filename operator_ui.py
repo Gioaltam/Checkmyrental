@@ -67,9 +67,9 @@ APP_TITLE = "Inspector Portal"
 APP_VERSION = "v2.0 Professional"
 APP_TAGLINE = "Professional Property Inspection Reports"
 
-# CheckMyRental Brand Colors (Modern Dark Mode with 3D Effects)
-BRAND_PRIMARY = "#e74c3c"  # CheckMyRental Red
-BRAND_PRIMARY_HOVER = "#c0392b"  # Darker red for hover
+# CheckMyRental Brand Colors (Dashboard-Matched Glass-Morphism Theme)
+BRAND_PRIMARY = "#e74c3c"  # CheckMyRental Red (rgb(231, 76, 60))
+BRAND_PRIMARY_HOVER = "#c0392b"  # Darker red for hover (rgb(192, 57, 43))
 BRAND_PRIMARY_LIGHT = "#ff6b6b"  # Lighter red for gradients
 BRAND_SECONDARY = "#3b82f6"  # Accent Blue
 BRAND_SECONDARY_HOVER = "#2563eb"  # Darker blue for hover
@@ -79,21 +79,23 @@ BRAND_SUCCESS_LIGHT = "#34d399"  # Light green for gradients
 BRAND_ERROR = "#dc2626"  # Error Red
 BRAND_WARNING = "#ff9500"  # Warning Orange (vibrant, pure orange)
 
-# Modern ultra-dark theme with depth layers
-BRAND_BG = "#0a0e14"  # Ultra dark background
+# Modern glass-morphism theme with red-tinted borders (matches dashboard exactly)
+BRAND_BG = "#0f0f0f"  # Ultra dark background (rgb(15, 15, 15) - dashboard match)
 BRAND_BG_GRADIENT = "#0d1117"  # Gradient end
-BRAND_SURFACE = "#161b22"  # Card background
-BRAND_SURFACE_LIGHT = "#21262d"  # Elevated surface
-BRAND_SURFACE_HOVER = "#30363d"  # Hover state
-BRAND_SURFACE_ELEVATED = "#2d333b"  # More elevated surfaces
-BRAND_TEXT = "#f0f6fc"  # Bright white text
-BRAND_TEXT_SECONDARY = "#8b949e"  # Secondary text
+BRAND_SURFACE = "#1a1a1a"  # Glass card background (rgba(255, 255, 255, 0.05) simulation)
+BRAND_SURFACE_LIGHT = "#252525"  # Elevated surface
+BRAND_SURFACE_HOVER = "#303030"  # Hover state (rgba(255, 255, 255, 0.08) simulation)
+BRAND_SURFACE_ELEVATED = "#2a2a2a"  # More elevated surfaces
+BRAND_TEXT = "#fafafa"  # Bright white text (rgb(250, 250, 250) - dashboard match)
+BRAND_TEXT_SECONDARY = "#a0a0a0"  # Secondary text
 BRAND_TEXT_DIM = "#6e7681"  # Dimmed text
-BRAND_BORDER = "#30363d"  # Subtle border
-BRAND_BORDER_LIGHT = "#21262d"  # Even subtler border
+BRAND_BORDER = "#3d1f1c"  # Red-tinted border (simulates rgba(231, 76, 60, 0.15))
+BRAND_BORDER_LIGHT = "#2a1814"  # Even subtler red-tinted border
+BRAND_BORDER_HOVER = "#5e2d28"  # Red-tinted hover border (simulates rgba(231, 76, 60, 0.3))
 BRAND_SHADOW = "#000000"  # Shadow color
-BRAND_SHADOW_LIGHT = "#1a1a1a"  # Light shadow for transparency simulation
-BRAND_GLOW = "#ff9999"  # Red glow effect (light red instead of transparency)
+BRAND_SHADOW_LIGHT = "#0a0a0a"  # Light shadow for layering
+BRAND_GLOW = "#e74c3c"  # Red glow effect (matches primary)
+BRAND_GLASS_BG = "#0d0d0d"  # Glass card background with subtle opacity
 
 OUTPUT_DIR = Path("workspace/outputs")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -102,8 +104,8 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 SETTINGS_FILE = Path.home() / ".checkmyrental_inspector.json"
 
 # Parse lines like: [3/12] IMG_0042.jpg | elapsed 38s  ETA ~72s
-PROGRESS_RE = re.compile(r"\\[(\\d+)\\s*/\\s*(\\d+)\\]")
-START_RE = re.compile(r"Starting analysis of\\s+(\\d+)\\s+images\\b")
+PROGRESS_RE = re.compile(r"\[(\d+)\s*/\s*(\d+)\]")
+START_RE = re.compile(r"Starting analysis of\s+(\d+)\s+images\b")
 REPORT_ID_RE = re.compile(r"^REPORT_ID=(.+)$")
 OUTPUT_DIR_RE = re.compile(r"^OUTPUT_DIR=(.+)$")
 
@@ -116,7 +118,9 @@ def _int_env(name: str, default: int) -> int:
 
 JOB_CONCURRENCY = max(1, _int_env("JOB_CONCURRENCY", 1))
 ANALYSIS_CONCURRENCY = max(1, _int_env("ANALYSIS_CONCURRENCY", 3))
-PORTAL_EXTERNAL_BASE_URL = os.getenv("PORTAL_EXTERNAL_BASE_URL", "http://localhost:5000").strip().rstrip("/")
+# Portal API configuration - defaults to localhost:8000
+# FIXED: Hardcoded to port 8000 to ensure connection works
+PORTAL_EXTERNAL_BASE_URL = "http://localhost:8000"
 
 PLACEHOLDER_OWNER = "Select owner..."
 
@@ -166,26 +170,26 @@ def _resolve_run_report_cmd(zip_path: Path, client_name: str = "", property_addr
     """
     # Always use ZIP filename as property address (ignoring any passed parameter)
     property_address = zip_path.stem.replace('_', ' ')
-    
+
     # Build the command arguments
     args = ["--zip", str(zip_path), "--register"]  # Add --register for portal upload
-    
+
     # Use owner_name as client if provided, otherwise use inspector name
     effective_client = owner_name if owner_name else client_name
     if effective_client:
         args.extend(["--client", effective_client])
-    
+
     if property_address:
         args.extend(["--property", property_address])
-    
+
     # Add owner ID if provided
     if owner_id:
         args.extend(["--owner-id", owner_id])
-    
+
     # Add gallery if provided
     if gallery:
         args.extend(["--gallery", gallery])
-    
+
     # 1) Explicit override
     env_cmd = os.getenv("RUN_REPORT_CMD", "").strip()
     if env_cmd:
@@ -221,43 +225,43 @@ class App(BaseTk):  # type: ignore[misc]
     def __init__(self):
         super().__init__()
         self.title(f"{COMPANY_NAME} - {APP_TITLE} {APP_VERSION}")
-        
+
         # Configure default font for better clarity
         default_font = tkFont.nametofont("TkDefaultFont")
         default_font.configure(family="Segoe UI", size=10)
         self.option_add("*Font", default_font)
-        
+
         # Get screen dimensions to size window appropriately
         self.update_idletasks()
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
-        
+
         # Use 90% of screen height, 85% of width to maximize vertical space
         width = min(int(screen_width * 0.85), 1400)
         height = min(int(screen_height * 0.90), 950)  # Increased max height
-        
+
         # Ensure minimum size for usability
         width = max(width, 1000)
         height = max(height, 750)  # Increased minimum height
-        
+
         # Center window on screen with small top margin
         x = (screen_width // 2) - (width // 2)
         y = max(10, (screen_height // 2) - (height // 2) - 30)  # Small top margin
-        
+
         # Set geometry and minimum size
         self.geometry(f'{width}x{height}+{x}+{y}')
         self.minsize(1100, 650)  # Adjusted minimum size
-        
+
         # Allow window to be maximized
         self.state('normal')  # Start in normal state
-        
+
         # If window is still too small for screen, maximize it
         if height < 750 or screen_height < 900:
             self.after(100, lambda: self.state('zoomed'))  # Maximize on Windows
-        
+
         # Configure window background
         self.configure(bg=BRAND_BG)
-        
+
         # Setup custom styles
         self.setup_styles()
 
@@ -278,399 +282,492 @@ class App(BaseTk):  # type: ignore[misc]
         self.pending_owner_id: str = ""
         self.pending_owner_display: str = ""
         self.paused = False  # Track pause state for UI
+        self.log_visible = False  # Track log visibility state
 
         # UI
         self._build_ui()
+
+        # Setup keyboard shortcuts
+        self._setup_keyboard_shortcuts()
+
         self.after(120, self._pump_logs)  # log flusher
         self.after(250, self._poll_parallel_progress)  # progress aggregator
-        
+
         # Load and apply settings after UI is built
         self.load_and_apply_settings()
-        
+
         # Register cleanup on window close
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
         atexit.register(self.save_settings)
-    
+
     def setup_styles(self):
-        """Configure ttk styles for 3D dark mode appearance with shadows"""
+        """Configure ttk styles for modern glass-morphism appearance"""
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        
-        # Configure 3D button styles with shadows
+
+        # Enhanced button styles with better shadows and hover effects
         self.style.configure(
             'Primary.TButton',
             background=BRAND_PRIMARY,
             foreground='white',
-            borderwidth=2,
-            bordercolor=BRAND_PRIMARY_LIGHT,
-            darkcolor=BRAND_PRIMARY_HOVER,
-            lightcolor=BRAND_PRIMARY_LIGHT,
-            focuscolor='none',
+            borderwidth=0,
+            relief='flat',
             font=('Segoe UI', 11, 'bold'),
-            relief='raised',
-            padding=(12, 8)
+            padding=(16, 10)
         )
         self.style.map('Primary.TButton',
             background=[('active', BRAND_PRIMARY_HOVER), ('pressed', BRAND_PRIMARY_HOVER)],
-            relief=[('pressed', 'sunken'), ('active', 'raised')]
+            relief=[('pressed', 'flat')]
         )
-        
+
         self.style.configure(
             'Secondary.TButton',
             background=BRAND_SURFACE_ELEVATED,
             foreground=BRAND_TEXT,
-            borderwidth=2,
+            borderwidth=1,
             bordercolor=BRAND_BORDER,
-            darkcolor=BRAND_SURFACE,
-            lightcolor=BRAND_SURFACE_HOVER,
-            focuscolor='none',
+            relief='flat',
             font=('Segoe UI', 10, 'normal'),
-            relief='raised',
-            padding=(10, 6)
+            padding=(12, 8)
         )
         self.style.map('Secondary.TButton',
             background=[('active', BRAND_SURFACE_HOVER), ('pressed', BRAND_SURFACE)],
-            relief=[('pressed', 'sunken'), ('active', 'raised')]
+            bordercolor=[('active', BRAND_BORDER_HOVER), ('pressed', BRAND_BORDER)]
         )
-        
+
         self.style.configure(
             'Success.TButton',
             background=BRAND_SUCCESS,
             foreground='white',
-            borderwidth=2,
-            bordercolor=BRAND_SUCCESS_LIGHT,
-            darkcolor='#0d9668',
-            lightcolor=BRAND_SUCCESS_LIGHT,
-            focuscolor='none',
-            font=('Segoe UI', 12, 'bold'),
-            relief='raised',
-            padding=(14, 10)
+            borderwidth=0,
+            relief='flat',
+            font=('Segoe UI', 13, 'bold'),
+            padding=(20, 12)
         )
         self.style.map('Success.TButton',
             background=[('active', '#0d9668'), ('pressed', '#0a7e5c')],
-            relief=[('pressed', 'sunken'), ('active', 'raised')]
+            relief=[('pressed', 'flat')]
         )
-        
-        # Configure 3D frame styles with depth
+
+        # Enhanced tab styles
+        self.style.configure(
+            'Modern.TNotebook',
+            background=BRAND_SURFACE,
+            borderwidth=0,
+            tabmargins=[0, 0, 0, 0]
+        )
+
+        self.style.configure(
+            'Modern.TNotebook.Tab',
+            background=BRAND_SURFACE,
+            foreground=BRAND_TEXT_SECONDARY,
+            borderwidth=0,
+            padding=[20, 10],
+            font=('Segoe UI', 10, 'normal')
+        )
+
+        self.style.map('Modern.TNotebook.Tab',
+            background=[('selected', BRAND_SURFACE_HOVER), ('active', BRAND_SURFACE_LIGHT)],
+            foreground=[('selected', BRAND_PRIMARY_LIGHT), ('active', BRAND_TEXT)],
+            expand=[('selected', [1, 1, 1, 0])]
+        )
+
+        # Frame styles
         self.style.configure('Brand.TFrame', background=BRAND_BG)
-        self.style.configure('Elevated.TFrame', background=BRAND_SURFACE, relief='raised', borderwidth=2)
-        self.style.configure('Brand.TLabelframe', 
-                           background=BRAND_SURFACE,
-                           foreground=BRAND_TEXT,
-                           bordercolor=BRAND_BORDER,
-                           relief='raised',
-                           borderwidth=2)
-        self.style.configure('Brand.TLabelframe.Label', 
-                           background=BRAND_SURFACE,
-                           foreground=BRAND_PRIMARY_LIGHT,
-                           font=('Segoe UI', 11, 'bold'))
-        
-        # Configure label styles
-        self.style.configure('Brand.TLabel',
-                           background=BRAND_BG,
-                           foreground=BRAND_TEXT)
-        self.style.configure('Heading.TLabel',
-                           background=BRAND_BG,
-                           foreground=BRAND_TEXT,
-                           font=('Segoe UI', 12, 'bold'))
-        
-        # Configure enhanced progress bar with gradient effect
+        self.style.configure('Card.TFrame', background=BRAND_SURFACE, relief='flat', borderwidth=1)
+        self.style.configure('Elevated.TFrame', background=BRAND_SURFACE, relief='flat', borderwidth=1)
+
+        # Label styles
+        self.style.configure('Brand.TLabel', background=BRAND_BG, foreground=BRAND_TEXT)
+        self.style.configure('Card.TLabel', background=BRAND_SURFACE, foreground=BRAND_TEXT)
+        self.style.configure('Heading.TLabel', background=BRAND_BG, foreground=BRAND_TEXT, font=('Segoe UI', 12, 'bold'))
+
+        # Enhanced progress bar
         self.style.configure('Enhanced.Horizontal.TProgressbar',
                            background=BRAND_PRIMARY,
                            troughcolor=BRAND_SURFACE,
                            bordercolor=BRAND_BORDER,
                            lightcolor=BRAND_PRIMARY_LIGHT,
                            darkcolor=BRAND_PRIMARY_HOVER,
-                           borderwidth=2,
-                           relief='raised')
-        
-        # Jobs table (Treeview) — larger rows + padded headers
+                           borderwidth=1,
+                           relief='flat',
+                           thickness=8)
+
+        # Enhanced Treeview with alternating row colors
         self.style.configure(
             'Jobs.Treeview',
             background=BRAND_SURFACE,
             fieldbackground=BRAND_SURFACE,
             foreground=BRAND_TEXT,
             bordercolor=BRAND_BORDER,
-            rowheight=28,
+            rowheight=32,
+            relief='flat'
         )
-        self.style.map('Jobs.Treeview', background=[('selected', BRAND_SURFACE_HOVER)])
-        
+        self.style.map('Jobs.Treeview',
+            background=[('selected', BRAND_SURFACE_HOVER)],
+            foreground=[('selected', BRAND_TEXT)])
+
         self.style.configure(
             'Jobs.Treeview.Heading',
             background=BRAND_SURFACE_ELEVATED,
             foreground=BRAND_TEXT,
             bordercolor=BRAND_BORDER,
             font=('Segoe UI', 10, 'bold'),
-            padding=(8, 6),
+            padding=(10, 8),
+            relief='flat'
         )
+
+    # ----- NEW: Helper Methods for Modern UI -----
+
+    def _setup_keyboard_shortcuts(self):
+        """Setup keyboard shortcuts for common actions"""
+        # Ctrl+O: Add Files
+        self.bind('<Control-o>', lambda e: self.add_files())
+
+        # Ctrl+G: Generate Reports
+        self.bind('<Control-g>', lambda e: self.start())
+
+        # Ctrl+P: Toggle Pause
+        self.bind('<Control-p>', lambda e: self.toggle_pause() if self.pause_btn['state'] == 'normal' else None)
+
+        # Ctrl+L: Toggle Activity Log
+        self.bind('<Control-l>', lambda e: self._toggle_log_visibility())
+
+        # Ctrl+R: Refresh Owners
+        self.bind('<Control-r>', lambda e: self.refresh_owners())
+
+        # F5: Refresh Status
+        self.bind('<F5>', lambda e: self._check_all_status())
+
+        # Delete: Clear List (with confirmation)
+        self.bind('<Delete>', lambda e: self._confirm_clear_list())
+
+    def _confirm_clear_list(self):
+        """Confirm before clearing the job list"""
+        if self.zip_list:
+            if messagebox.askyesno("Clear List", "Clear all jobs from the list?"):
+                self.clear_list()
+
+    def _toggle_log_visibility(self):
+        """Toggle the activity log visibility"""
+        if self.log_visible:
+            # Hide log
+            self.log_card.pack_forget()
+            self.log_toggle_btn.config(text="▶ Activity Log")
+            self.log_visible = False
+        else:
+            # Show log
+            self.log_card.pack(fill="both", expand=True, pady=(0, 0))
+            self.log_toggle_btn.config(text="▼ Activity Log")
+            self.log_visible = True
+
+    def _create_status_pill(self, status: str) -> str:
+        """Create a styled status badge text"""
+        status_lower = status.lower()
+        if "done" in status_lower or "completed" in status_lower:
+            return f"✅ {status}"
+        elif "running" in status_lower or "processing" in status_lower:
+            return f"🔵 {status}"
+        elif "failed" in status_lower or "error" in status_lower:
+            return f"❌ {status}"
+        elif "waiting" in status_lower or "queued" in status_lower:
+            return f"🟡 {status}"
+        elif "canceled" in status_lower:
+            return f"⚫ {status}"
+        else:
+            return status
+
+    def _create_action_button(self, parent, text, icon, command, style='Secondary.TButton'):
+        """Create a consistent action button with icon"""
+        btn = ttk.Button(parent, text=f"{icon}  {text}", command=command, style=style)
+        return btn
+
+    def _update_window_title(self):
+        """Update window title with job count"""
+        job_count = len(self.zip_list)
+        if job_count > 0:
+            self.title(f"{COMPANY_NAME} - {APP_TITLE} ({job_count} jobs)")
+        else:
+            self.title(f"{COMPANY_NAME} - {APP_TITLE} {APP_VERSION}")
 
     # ----- UI construction -----
     def _build_ui(self):
-        # Create branded header
-        self._create_header()
-        
-        # Main container with reduced padding
-        main = ttk.Frame(self, style='Brand.TFrame')
-        main.pack(fill="both", expand=True, padx=2, pady=1)
+        """Build the modern UI with top app bar layout"""
 
-        # Left panel with 3D elevated card effect - increased width
-        left_shadow = tk.Frame(main, bg=BRAND_SHADOW, width=750)
-        left_shadow.pack(side="left", fill="both", expand=True, padx=(1, 2), pady=1)
-        left_shadow.pack_propagate(False)  # Maintain fixed width
-        
-        left_container = ttk.LabelFrame(left_shadow, text="🏠 INSPECTION CONTROL", padding=8, style='Brand.TLabelframe')
-        left_container.pack(fill="both", expand=True, padx=(0, 1), pady=(0, 1))
-        left = ttk.Frame(left_container, style='Brand.TFrame')
-        left.pack(fill="both", expand=True)
+        # ===== TOP APP BAR (60px height) =====
+        top_bar = tk.Frame(self, bg=BRAND_SURFACE, height=60)
+        top_bar.pack(fill="x", side="top")
+        top_bar.pack_propagate(False)
 
-        # Right panel with 3D elevated card effect - reduced size
-        right_shadow = tk.Frame(main, bg=BRAND_SHADOW, width=280)
-        right_shadow.pack(side="right", fill="y", padx=(0, 1), pady=1)
-        right_shadow.pack_propagate(False)  # Maintain fixed width
-        
-        right_container = ttk.LabelFrame(right_shadow, text="📋 ACTIVITY LOG", padding=6, style='Brand.TLabelframe')
-        right_container.pack(fill="both", expand=True, padx=(0, 1), pady=(0, 1))
-        right = ttk.Frame(right_container, style='Brand.TFrame')
-        right.pack(fill="both", expand=True)
+        # Add subtle bottom border
+        border = tk.Frame(top_bar, bg=BRAND_BORDER, height=1)
+        border.pack(side="bottom", fill="x")
 
-        # Modern button group with hover effects
-        btns = tk.Frame(left, bg=BRAND_SURFACE)
-        btns.pack(fill="x", pady=(0, 5))
-        
-        # Helper function to create 3D buttons with depth and animations
-        def create_3d_button(parent, text, command, primary=False, pack_side="left", padx=(0, 0)):
-            # Create button frame for shadow effect
-            btn_frame = tk.Frame(parent, bg=BRAND_SURFACE, bd=0)
-            btn_frame.pack(side=pack_side, padx=padx, pady=2)
-            
-            # Shadow layer
-            shadow = tk.Frame(btn_frame, bg=BRAND_SHADOW, height=42, width=120)
-            shadow.place(x=3, y=3)
-            
-            # Main button with gradient effect
-            bg = BRAND_PRIMARY if primary else BRAND_SURFACE_ELEVATED
-            hover = BRAND_PRIMARY_HOVER if primary else BRAND_SURFACE_HOVER
-            light = BRAND_PRIMARY_LIGHT if primary else BRAND_SURFACE_HOVER
-            fg = "white" if primary else BRAND_TEXT
-            
-            btn = tk.Button(btn_frame, text=text, command=command,
-                          bg=bg, fg=fg, font=('Segoe UI', 11, 'bold' if primary else 'normal'),
-                          bd=2, relief='raised', padx=20, pady=10,
-                          cursor="hand2", activebackground=hover,
-                          highlightbackground=light, highlightthickness=1)
-            
-            # Enhanced hover effects with animations
-            def on_enter(e):
-                btn.config(bg=hover, relief='ridge')
-                shadow.place(x=4, y=4)  # Move shadow for depth
-                if primary:
-                    btn_frame.config(bg=BRAND_GLOW)  # Add glow effect
-            
-            def on_leave(e):
-                btn.config(bg=bg, relief='raised')
-                shadow.place(x=3, y=3)  # Reset shadow
-                btn_frame.config(bg=BRAND_SURFACE)
-            
-            def on_press(e):
-                btn.config(relief='sunken')
-                shadow.place(x=1, y=1)  # Minimize shadow on press
-            
-            def on_release(e):
-                btn.config(relief='raised')
-                shadow.place(x=3, y=3)
-            
-            btn.bind("<Enter>", on_enter)
-            btn.bind("<Leave>", on_leave)
-            btn.bind("<ButtonPress-1>", on_press)
-            btn.bind("<ButtonRelease-1>", on_release)
-            btn.pack()
-            
-            return btn_frame
-        
-        create_3d_button(btns, "📁  Add Files", self.add_files, primary=True)
-        create_3d_button(btns, "🗑️  Clear", self.clear_list, padx=(12, 0))
-        create_3d_button(btns, "📂  Reports", self.open_output, padx=(12, 0))
+        # Top bar content container
+        top_content = tk.Frame(top_bar, bg=BRAND_SURFACE)
+        top_content.pack(fill="both", expand=True, padx=20, pady=10)
 
-        # Enhanced run button with glow effect
-        run_frame = ttk.Frame(left, style='Brand.TFrame')
-        run_frame.pack(fill="x", pady=(5, 0))
-        
-        # Create glowing success button with light green shadow
-        run_shadow = tk.Frame(run_frame, bg="#1a3d2e", height=50, width=200)
-        run_shadow.place(x=3, y=3)
-        
-        ttk.Button(run_frame, text="✨ GENERATE REPORTS", command=self.start, style='Success.TButton').pack(side="left")
-        
-        # Add pause/resume button
-        self.pause_btn = ttk.Button(run_frame, text="⏸️ PAUSE", command=self.toggle_pause, style='Secondary.TButton')
-        self.pause_btn.pack(side="left", padx=(10, 0))
-        self.pause_btn.config(state="disabled")  # Disabled until jobs start
-        
-        self.speed_label = tk.Label(run_frame, text=f"⚡ Fast Processing ({JOB_CONCURRENCY}×{ANALYSIS_CONCURRENCY})", 
-                             font=('Segoe UI', 10, 'italic'), fg=BRAND_SUCCESS_LIGHT, bg=BRAND_BG)
-        self.speed_label.pack(side="left", padx=(12, 0))
+        # Left: Brand Logo + Title
+        left_section = tk.Frame(top_content, bg=BRAND_SURFACE)
+        left_section.pack(side="left")
 
-        # Property details with elevated 3D card
-        details_shadow = tk.Frame(left, bg=BRAND_SHADOW)
-        details_shadow.pack(fill="x", pady=(5, 2))
-        
-        client_frame = ttk.LabelFrame(details_shadow, text="🔍 INSPECTION DETAILS", padding=15, style='Brand.TLabelframe')
-        client_frame.pack(fill="x", padx=(0, 3), pady=(0, 3))
-        
-        # Owner/Customer selection
-        ttk.Label(client_frame, text="Select Owner Portal:", font=('Segoe UI', 13, 'bold'), style='Brand.TLabel').pack(anchor="w", pady=(0, 4))
-        
-        owner_selection_frame = ttk.Frame(client_frame, style='Brand.TFrame')
-        owner_selection_frame.pack(fill="x", pady=(5, 8))
-        
+        # Brand logo (smaller for top bar)
+        logo_label = tk.Label(left_section, text="✓",
+                             font=('Segoe UI', 18, 'bold'),
+                             fg=BRAND_PRIMARY, bg=BRAND_SURFACE)
+        logo_label.pack(side="left", padx=(0, 8))
+
+        brand_label = tk.Label(left_section, text="CheckMyRental Operator",
+                              font=('Segoe UI', 13, 'bold'),
+                              fg=BRAND_TEXT, bg=BRAND_SURFACE)
+        brand_label.pack(side="left")
+
+        # Center: Status Indicators (using place for true centering)
+        # Status indicators container
+        self.status_indicators = tk.Frame(top_content, bg=BRAND_SURFACE)
+        self.status_indicators.place(relx=0.5, rely=0.5, anchor="center")
+
+        # Portal status
+        self.portal_status = tk.Label(self.status_indicators, text="⚪ Portal",
+                                     bg=BRAND_SURFACE, fg=BRAND_TEXT_DIM,
+                                     font=('Segoe UI', 10), cursor="question_arrow")
+        self.portal_status.pack(side="left", padx=12)
+        self.portal_status.bind("<Enter>", lambda e: self._show_status_tooltip(e, "portal"))
+        self.portal_status.bind("<Leave>", lambda e: self._hide_status_tooltip())
+
+        # run_report status
+        self.runreport_status = tk.Label(self.status_indicators, text="⚪ run_report",
+                                        bg=BRAND_SURFACE, fg=BRAND_TEXT_DIM,
+                                        font=('Segoe UI', 10), cursor="question_arrow")
+        self.runreport_status.pack(side="left", padx=12)
+        self.runreport_status.bind("<Enter>", lambda e: self._show_status_tooltip(e, "runreport"))
+        self.runreport_status.bind("<Leave>", lambda e: self._hide_status_tooltip())
+
+        # API key status
+        self.apikey_status = tk.Label(self.status_indicators, text="⚪ API Key",
+                                     bg=BRAND_SURFACE, fg=BRAND_TEXT_DIM,
+                                     font=('Segoe UI', 10), cursor="question_arrow")
+        self.apikey_status.pack(side="left", padx=12)
+        self.apikey_status.bind("<Enter>", lambda e: self._show_status_tooltip(e, "apikey"))
+        self.apikey_status.bind("<Leave>", lambda e: self._hide_status_tooltip())
+
+        # Right section removed - no portal button in top bar
+
+        # ===== MAIN CONTENT AREA =====
+        content_area = tk.Frame(self, bg=BRAND_BG)
+        content_area.pack(fill="both", expand=True, padx=0, pady=0)
+
+        # ===== CONTROLS SECTION =====
+        controls_wrapper = tk.Frame(content_area, bg=BRAND_BG)
+        controls_wrapper.pack(fill="x", padx=20, pady=(20, 10))
+
+        # Controls card
+        controls_card = tk.Frame(controls_wrapper, bg=BRAND_BORDER, bd=1, relief='flat')
+        controls_card.pack(fill="x")
+
+        controls_inner = tk.Frame(controls_card, bg=BRAND_SURFACE, pady=15, padx=20)
+        controls_inner.pack(fill="x", padx=1, pady=1)
+
+        # Row 1: Quick Actions
+        actions_row = tk.Frame(controls_inner, bg=BRAND_SURFACE)
+        actions_row.pack(fill="x", pady=(0, 12))
+
+        # Left buttons
+        left_btns = tk.Frame(actions_row, bg=BRAND_SURFACE)
+        left_btns.pack(side="left")
+
+        self._create_action_button(left_btns, "Add Files", "📁", self.add_files, 'Secondary.TButton').pack(side="left", padx=(0, 8))
+        self._create_action_button(left_btns, "Clear", "🗑️", self.clear_list, 'Secondary.TButton').pack(side="left", padx=(0, 8))
+        self._create_action_button(left_btns, "Open Reports", "📂", self.open_output, 'Secondary.TButton').pack(side="left")
+
+        # Right buttons (larger)
+        right_btns = tk.Frame(actions_row, bg=BRAND_SURFACE)
+        right_btns.pack(side="right")
+
+        self.pause_btn = ttk.Button(right_btns, text="⏸️  PAUSE", command=self.toggle_pause, style='Secondary.TButton')
+        self.pause_btn.pack(side="right", padx=(10, 0))
+        self.pause_btn.config(state="disabled")
+
+        ttk.Button(right_btns, text="⚡ GENERATE REPORTS", command=self.start, style='Success.TButton').pack(side="right")
+
+        # Row 2: Tabbed interface for Inspection Details and Advanced Settings
+        notebook = ttk.Notebook(controls_inner, style='Modern.TNotebook')
+        notebook.pack(fill="x", pady=(0, 0))
+
+        # Tab 1: Inspection Details
+        details_tab = tk.Frame(notebook, bg=BRAND_SURFACE)
+        notebook.add(details_tab, text="Inspection Details")
+
+        details_content = tk.Frame(details_tab, bg=BRAND_SURFACE, pady=10, padx=15)
+        details_content.pack(fill="x")
+
+        # Owner selection row
+        owner_row = tk.Frame(details_content, bg=BRAND_SURFACE)
+        owner_row.pack(fill="x", pady=(5, 10))
+
+        owner_label_frame = tk.Frame(owner_row, bg=BRAND_SURFACE)
+        owner_label_frame.pack(side="left", padx=(0, 10))
+
+        ttk.Label(owner_label_frame, text="Owner Portal:", font=('Segoe UI', 10, 'bold'),
+                 background=BRAND_SURFACE, foreground=BRAND_TEXT).pack(side="left")
+
+        # Add help icon with tooltip
+        owner_help = tk.Label(owner_label_frame, text=" ❓", bg=BRAND_SURFACE,
+                             fg=BRAND_TEXT_DIM, font=('Segoe UI', 9), cursor="question_arrow")
+        owner_help.pack(side="left")
+        owner_help.bind("<Enter>", lambda e: self._show_field_tooltip(e,
+            "Owner Portal\n\n"
+            "• Select the property owner's paid account\n"
+            "• Reports will be uploaded to their dashboard\n"
+            "• Only paid customers appear in this list\n"
+            "• Click 🔄 to refresh the list\n"
+            "• Click 📊 Dashboard to view their portal"))
+        owner_help.bind("<Leave>", lambda e: self._hide_status_tooltip())
+
         self.owner_var = tk.StringVar()
-        self.owner_combo = ttk.Combobox(owner_selection_frame, textvariable=self.owner_var, width=35, 
-                                       font=('Segoe UI', 12), state='readonly', values=(PLACEHOLDER_OWNER,))
+        self.owner_combo = ttk.Combobox(owner_row, textvariable=self.owner_var, width=35,
+                                       font=('Segoe UI', 10), state='readonly', values=(PLACEHOLDER_OWNER,))
         self.owner_combo.pack(side="left", fill="x", expand=True)
         self.owner_combo.current(0)
         self.owner_combo.bind('<<ComboboxSelected>>', self._on_owner_selected)
-        
-        # Refresh button to fetch owners with CheckMyRental styling
-        self.refresh_btn = ttk.Button(owner_selection_frame, text="🔄", width=3,
+
+        self.refresh_btn = ttk.Button(owner_row, text="🔄", width=3,
                                      command=self.refresh_owners, style='Secondary.TButton')
         self.refresh_btn.pack(side="left", padx=(5, 0))
-        
-        # Owner ID is now automatically set from the paid owners dropdown
-        # No manual entry needed - routing is automatic for paid customers
-        self.owner_id_var = tk.StringVar()  # Still needed internally for routing
 
-        # Show helpful info about automatic routing
-        auto_route_label = ttk.Label(client_frame, text="✅ Dashboard routing is automatic for paid customers",
-                                    font=('Segoe UI', 11, 'italic'), foreground=BRAND_SUCCESS_LIGHT,
-                                    style='Brand.TLabel')
-        auto_route_label.pack(anchor="w", pady=(10, 4))
-        
-        # Property address info (automatically extracted from filename)
-        ttk.Label(client_frame, text="Property Address: Automatically extracted from ZIP filename", 
-                 font=('Segoe UI', 11, 'italic'), foreground=BRAND_TEXT_SECONDARY,
-                 style='Brand.TLabel').pack(anchor="w", pady=(5, 12))
-        
-        # Client name for records (inspector/employee name)
-        ttk.Label(client_frame, text="Inspector Name (optional):", font=('Segoe UI', 13, 'bold'), style='Brand.TLabel').pack(anchor="w", pady=(5, 4))
+        self.dashboard_btn = ttk.Button(owner_row, text="📊 Dashboard", width=12,
+                                       command=self.open_owner_dashboard, style='Accent.TButton')
+        self.dashboard_btn.pack(side="left", padx=(5, 0))
+
+        self.owner_id_var = tk.StringVar()
+
+        # Inspector name row
+        inspector_row = tk.Frame(details_content, bg=BRAND_SURFACE)
+        inspector_row.pack(fill="x", pady=(0, 5))
+
+        inspector_label_frame = tk.Frame(inspector_row, bg=BRAND_SURFACE)
+        inspector_label_frame.pack(side="left", padx=(0, 10))
+
+        ttk.Label(inspector_label_frame, text="Inspector Name (optional):", font=('Segoe UI', 10, 'bold'),
+                 background=BRAND_SURFACE, foreground=BRAND_TEXT).pack(side="left")
+
+        # Add help icon with tooltip
+        inspector_help = tk.Label(inspector_label_frame, text=" ❓", bg=BRAND_SURFACE,
+                                 fg=BRAND_TEXT_DIM, font=('Segoe UI', 9), cursor="question_arrow")
+        inspector_help.pack(side="left")
+        inspector_help.bind("<Enter>", lambda e: self._show_field_tooltip(e,
+            "Inspector Name (Optional)\n\n"
+            "• Your name or initials\n"
+            "• Added to generated reports\n"
+            "• Helps track who performed the inspection\n"
+            "• Leave blank if not needed"))
+        inspector_help.bind("<Leave>", lambda e: self._hide_status_tooltip())
+
         self.client_name_var = tk.StringVar()
-        self.client_name_entry = ttk.Entry(client_frame, textvariable=self.client_name_var, width=40, font=('Segoe UI', 12))
-        self.client_name_entry.pack(fill="x", pady=(4, 0))
-        
-        # Advanced settings (concurrency controls)
-        advanced_frame = ttk.LabelFrame(client_frame, text="⚙️ Advanced Settings (Optional)", style='Brand.TLabelframe')
-        advanced_frame.pack(fill="x", pady=(5, 0))
-        
-        # Job concurrency spinner
-        job_frame = ttk.Frame(advanced_frame, style='Brand.TFrame')
-        job_frame.pack(fill="x", pady=(3, 3))
-        
-        ttk.Label(job_frame, text="Parallel Jobs:", font=('Segoe UI', 9), style='Brand.TLabel').pack(side="left")
-        self.job_concurrency_var = tk.IntVar(value=JOB_CONCURRENCY)
-        self.job_concurrency_spin = ttk.Spinbox(job_frame, from_=1, to=10, textvariable=self.job_concurrency_var, 
-                                               width=5, font=('Segoe UI', 9), command=self.update_concurrency)
-        self.job_concurrency_spin.pack(side="left", padx=(5, 10))
-        
-        # Analysis concurrency spinner
-        ttk.Label(job_frame, text="Images per Job:", font=('Segoe UI', 9), style='Brand.TLabel').pack(side="left")
-        self.analysis_concurrency_var = tk.IntVar(value=ANALYSIS_CONCURRENCY)
-        self.analysis_concurrency_spin = ttk.Spinbox(job_frame, from_=1, to=10, textvariable=self.analysis_concurrency_var,
-                                                    width=5, font=('Segoe UI', 9), command=self.update_concurrency)
-        self.analysis_concurrency_spin.pack(side="left", padx=(5, 0))
-        
-        # Auto-fetch owners on startup and then every 30 seconds
-        self.after(500, self.refresh_owners)
-        self.after(30000, self._auto_refresh_owners)  # Start auto-refresh timer
-        
-        # Portal button with improved styling matching landing page
-        portal_frame = ttk.Frame(left, style='Brand.TFrame')
-        portal_frame.pack(fill="x", pady=(5, 4))
-        
-        # Create custom portal button with better lighting effect
-        portal_btn_frame = tk.Frame(portal_frame, bg=BRAND_BG, bd=0)
-        portal_btn_frame.pack(side="left")
-        
-        # Shadow layer for depth
-        portal_shadow = tk.Frame(portal_btn_frame, bg=BRAND_SHADOW, height=44, width=180)
-        portal_shadow.place(x=2, y=2)
-        
-        # Main portal button with gradient-like effect
-        portal_btn = tk.Button(portal_btn_frame, text="🌐  Owner Portal", 
-                             command=self.view_portal,
-                             bg=BRAND_PRIMARY, fg="white", 
-                             font=('Segoe UI', 11, 'bold'),
-                             bd=1, relief='raised', padx=22, pady=10,
-                             cursor="hand2", activebackground=BRAND_PRIMARY_HOVER,
-                             highlightbackground=BRAND_PRIMARY_LIGHT, highlightthickness=1)
-        
-        # Improved hover effects without bouncing light
-        def on_enter_portal(e):
-            portal_btn.config(bg=BRAND_PRIMARY_HOVER, relief='ridge')
-            portal_shadow.place(x=3, y=3)
-            portal_btn_frame.config(bg=BRAND_GLOW)  # Use predefined glow color
-        
-        def on_leave_portal(e):
-            portal_btn.config(bg=BRAND_PRIMARY, relief='raised')
-            portal_shadow.place(x=2, y=2)
-            portal_btn_frame.config(bg=BRAND_BG)
-        
-        def on_press_portal(e):
-            portal_btn.config(relief='sunken')
-            portal_shadow.place(x=1, y=1)
-        
-        def on_release_portal(e):
-            portal_btn.config(relief='raised')
-            portal_shadow.place(x=2, y=2)
-        
-        portal_btn.bind("<Enter>", on_enter_portal)
-        portal_btn.bind("<Leave>", on_leave_portal)
-        portal_btn.bind("<ButtonPress-1>", on_press_portal)
-        portal_btn.bind("<ButtonRelease-1>", on_release_portal)
-        portal_btn.pack()
-        
-        portal_label = tk.Label(portal_frame, text="Access CheckMyRental Dashboard", 
-                              font=('Segoe UI', 10), fg=BRAND_PRIMARY_LIGHT, bg=BRAND_BG)
-        portal_label.pack(side="left", padx=(12, 0))
+        self.client_name_entry = ttk.Entry(inspector_row, textvariable=self.client_name_var,
+                                          width=40, font=('Segoe UI', 10))
+        self.client_name_entry.pack(side="left", fill="x", expand=True)
 
-        # Jobs table with 3D inset effect
-        list_label = ttk.Label(left, text="📸 Inspection Jobs:", style='Heading.TLabel')
-        list_label.pack(anchor="w", pady=(3, 1))
-        
-        # Create treeview frame with inset shadow effect
-        tree_frame = tk.Frame(left, bg=BRAND_SURFACE, relief='sunken', bd=3)
-        tree_frame.pack(fill="both", expand=True, pady=(2, 0))
-        
-        # Create scrollbars
+        # Tab 2: Advanced Settings
+        advanced_tab = tk.Frame(notebook, bg=BRAND_SURFACE)
+        notebook.add(advanced_tab, text="Advanced Settings")
+
+        advanced_content = tk.Frame(advanced_tab, bg=BRAND_SURFACE, pady=10, padx=15)
+        advanced_content.pack(fill="x")
+
+        # Concurrency controls
+        concurrency_row = tk.Frame(advanced_content, bg=BRAND_SURFACE)
+        concurrency_row.pack(fill="x", pady=5)
+
+        # Parallel jobs
+        ttk.Label(concurrency_row, text="Parallel Jobs:", font=('Segoe UI', 10),
+                 background=BRAND_SURFACE, foreground=BRAND_TEXT).pack(side="left", padx=(0, 5))
+
+        self.job_concurrency_var = tk.IntVar(value=JOB_CONCURRENCY)
+        self.job_concurrency_spin = ttk.Spinbox(concurrency_row, from_=1, to=10,
+                                               textvariable=self.job_concurrency_var,
+                                               width=8, font=('Segoe UI', 10),
+                                               command=self.update_concurrency)
+        self.job_concurrency_spin.pack(side="left", padx=(0, 20))
+
+        # Images per job
+        ttk.Label(concurrency_row, text="Images per Job:", font=('Segoe UI', 10),
+                 background=BRAND_SURFACE, foreground=BRAND_TEXT).pack(side="left", padx=(0, 5))
+
+        self.analysis_concurrency_var = tk.IntVar(value=ANALYSIS_CONCURRENCY)
+        self.analysis_concurrency_spin = ttk.Spinbox(concurrency_row, from_=1, to=10,
+                                                    textvariable=self.analysis_concurrency_var,
+                                                    width=8, font=('Segoe UI', 10),
+                                                    command=self.update_concurrency)
+        self.analysis_concurrency_spin.pack(side="left")
+
+        self.speed_label = tk.Label(concurrency_row,
+                                   text=f"⚡ Fast Processing ({JOB_CONCURRENCY}×{ANALYSIS_CONCURRENCY})",
+                                   font=('Segoe UI', 9, 'italic'),
+                                   fg=BRAND_SUCCESS_LIGHT, bg=BRAND_SURFACE)
+        self.speed_label.pack(side="left", padx=(20, 0))
+
+        # ===== JOBS TABLE (EXPANDED - 60% of vertical space) =====
+        table_wrapper = tk.Frame(content_area, bg=BRAND_BG)
+        table_wrapper.pack(fill="both", expand=True, padx=20, pady=(0, 10))
+
+        # Jobs card
+        jobs_card = tk.Frame(table_wrapper, bg=BRAND_BORDER, bd=1, relief='flat')
+        jobs_card.pack(fill="both", expand=True)
+
+        jobs_inner = tk.Frame(jobs_card, bg=BRAND_SURFACE, pady=12, padx=15)
+        jobs_inner.pack(fill="both", expand=True, padx=1, pady=1)
+
+        # Table header
+        header_frame = tk.Frame(jobs_inner, bg=BRAND_SURFACE)
+        header_frame.pack(fill="x", pady=(0, 10))
+
+        jobs_title = tk.Label(header_frame, text="📸 Inspection Jobs",
+                             font=('Segoe UI', 12, 'bold'),
+                             fg=BRAND_TEXT, bg=BRAND_SURFACE)
+        jobs_title.pack(side="left")
+
+        # Job count label
+        self.job_count_label = tk.Label(header_frame, text="0 jobs",
+                                       font=('Segoe UI', 9),
+                                       fg=BRAND_TEXT_SECONDARY, bg=BRAND_SURFACE)
+        self.job_count_label.pack(side="left", padx=(10, 0))
+
+        # Treeview frame
+        tree_frame = tk.Frame(jobs_inner, bg=BRAND_SURFACE, relief='flat', bd=0)
+        tree_frame.pack(fill="both", expand=True)
+
+        # Scrollbars
         tree_scroll_y = ttk.Scrollbar(tree_frame, orient="vertical")
-        tree_scroll_y.pack(side="right", fill="y", padx=(0, 2), pady=2)
-        
+        tree_scroll_y.pack(side="right", fill="y", padx=(0, 1), pady=1)
+
         tree_scroll_x = ttk.Scrollbar(tree_frame, orient="horizontal")
-        tree_scroll_x.pack(side="bottom", fill="x", padx=2, pady=(0, 2))
-        
-        # Create the treeview table
+        tree_scroll_x.pack(side="bottom", fill="x", padx=1, pady=(0, 1))
+
+        # Treeview
         self.jobs = ttk.Treeview(
             tree_frame,
             columns=("property", "owner", "gallery", "progress", "status", "actions"),
             show="tree headings",
-            height=10,
+            height=12,
             yscrollcommand=tree_scroll_y.set,
             xscrollcommand=tree_scroll_x.set,
-            style='Jobs.Treeview',   # NEW
+            style='Jobs.Treeview',
         )
-        
-        # Configure scrollbars
+
         tree_scroll_y.config(command=self.jobs.yview)
         tree_scroll_x.config(command=self.jobs.xview)
-        
-        # Headings
+
+        # Column headings
         self.jobs.heading("#0", text="File", anchor="w")
         self.jobs.heading("property", text="Property", anchor="w")
         self.jobs.heading("owner", text="Owner", anchor="w")
         self.jobs.heading("gallery", text="Gallery", anchor="w")
         self.jobs.heading("progress", text="Progress", anchor="center")
         self.jobs.heading("status", text="Status", anchor="center")
-        self.jobs.heading("actions", text="Actions", anchor="center")
-        
-        # Friendlier default column sizes
+        self.jobs.heading("actions", text="⚡ Actions (Click)", anchor="center")
+
+        # Column widths
         self.jobs.column("#0",       width=360, minwidth=280, stretch=True,  anchor="w")
         self.jobs.column("property", width=320, minwidth=260, stretch=True,  anchor="w")
         self.jobs.column("owner",    width=180, minwidth=130, stretch=False, anchor="w")
@@ -678,131 +775,121 @@ class App(BaseTk):  # type: ignore[misc]
         self.jobs.column("progress", width=110, minwidth= 90, stretch=False, anchor="center")
         self.jobs.column("status",   width=110, minwidth= 90, stretch=False, anchor="center")
         self.jobs.column("actions",  width=130, minwidth=110, stretch=False, anchor="center")
-        
-        # Auto-size on resize and show tooltips for truncated text
+
+        # Styling tags for alternating rows
+        self.jobs.tag_configure("queued", background="#1f1f1f", foreground=BRAND_TEXT_SECONDARY)
+        self.jobs.tag_configure("processing", background="#252525", foreground=BRAND_TEXT)
+        self.jobs.tag_configure("completed", background=BRAND_SURFACE_HOVER, foreground=BRAND_SUCCESS_LIGHT)
+        self.jobs.tag_configure("failed", background=BRAND_SURFACE_HOVER, foreground=BRAND_ERROR)
+
+        self.jobs.pack(fill="both", expand=True, padx=1, pady=1)
+
+        # Bind events
         self.jobs.bind("<Configure>", self._on_jobs_configure)
         self.jobs.bind("<Motion>", self._maybe_show_jobs_tooltip)
         self.jobs.bind("<Leave>", lambda e: self._hide_jobs_tooltip())
-        
-        # (Optional) Double-click header to autosize
-        for cname in ("#0", "property"):
-            self.jobs.heading(cname, command=lambda c=cname: self._autosize_job_columns())
-        
-        # Style the treeview
-        self.jobs.tag_configure("queued", background=BRAND_SURFACE_LIGHT, foreground=BRAND_TEXT_SECONDARY)
-        self.jobs.tag_configure("processing", background=BRAND_SURFACE_HOVER, foreground=BRAND_TEXT)
-        self.jobs.tag_configure("completed", background=BRAND_SUCCESS, foreground="white")
-        self.jobs.tag_configure("failed", background=BRAND_ERROR, foreground="white")
-        
-        self.jobs.pack(fill="both", expand=True, padx=2, pady=2)
-        
-        # Bind click handler for actions column
         self.jobs.bind("<ButtonRelease-1>", self._on_job_click)
 
+        # Drag and drop support
         if DND_AVAILABLE:
-            # Only register DND when the extension is present
             try:
                 self.jobs.drop_target_register(DND_FILES)  # type: ignore[arg-type]
                 self.jobs.dnd_bind("<<Drop>>", self._on_drop)
             except Exception:
-                # If anything goes wrong, silently disable DND
                 pass
-        else:
-            # Provide a gentle hint that DND is disabled
-            hint = tk.Label(left, text="Drag & drop disabled — install 'tkinterdnd2' to enable.", 
-                          fg=BRAND_WARNING, bg=BRAND_BG)
-            hint.pack(anchor="w", pady=(6, 0))
 
-        # Right: log
-        log_label = ttk.Label(right, text="Activity Log (double-click URLs to open)", style='Brand.TLabel')
-        log_label.pack(anchor="w")
+        # ===== ACTIVITY LOG (COLLAPSIBLE - starts collapsed) =====
+        log_wrapper = tk.Frame(content_area, bg=BRAND_BG)
+        log_wrapper.pack(fill="x", padx=20, pady=(0, 10))
 
-        # 3D inset log area with texture
-        log_outer = tk.Frame(right, bg=BRAND_SURFACE, relief='sunken', bd=3)
-        log_outer.pack(fill="both", expand=True, pady=(4, 0))
-        
-        log_frame = tk.Frame(log_outer, bg=BRAND_BORDER)
-        log_frame.pack(fill="both", expand=True, padx=2, pady=2)
-        
-        self.log = tk.Text(log_frame, state="disabled", wrap="word", height=6,
+        # Collapsible header
+        log_header = tk.Frame(log_wrapper, bg=BRAND_SURFACE, cursor="hand2")
+        log_header.pack(fill="x")
+
+        # Add border
+        tk.Frame(log_header, bg=BRAND_BORDER, height=1).pack(fill="x", side="top")
+
+        log_header_content = tk.Frame(log_header, bg=BRAND_SURFACE, pady=8, padx=15)
+        log_header_content.pack(fill="x")
+
+        self.log_toggle_btn = tk.Label(log_header_content, text="▶ Activity Log",
+                                      font=('Segoe UI', 11, 'bold'),
+                                      fg=BRAND_TEXT, bg=BRAND_SURFACE,
+                                      cursor="hand2")
+        self.log_toggle_btn.pack(side="left")
+        self.log_toggle_btn.bind("<Button-1>", lambda e: self._toggle_log_visibility())
+        log_header_content.bind("<Button-1>", lambda e: self._toggle_log_visibility())
+
+        hint_label = tk.Label(log_header_content, text="(Ctrl+L to toggle)",
+                            font=('Segoe UI', 9, 'italic'),
+                            fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE)
+        hint_label.pack(side="left", padx=(10, 0))
+
+        # Log card (hidden by default)
+        self.log_card = tk.Frame(log_wrapper, bg=BRAND_BORDER, bd=1, relief='flat')
+        # Don't pack yet - starts collapsed
+
+        log_card_inner = tk.Frame(self.log_card, bg=BRAND_SURFACE, pady=10, padx=15)
+        log_card_inner.pack(fill="both", expand=True, padx=1, pady=1)
+
+        # Log text area
+        log_frame = tk.Frame(log_card_inner, bg=BRAND_SURFACE)
+        log_frame.pack(fill="both", expand=True)
+
+        self.log = tk.Text(log_frame, state="disabled", wrap="word", height=8,
                           bg=BRAND_BG_GRADIENT, fg=BRAND_TEXT,
                           insertbackground=BRAND_TEXT,
                           relief="flat", bd=0, highlightthickness=0,
-                          font=('Consolas', 11), padx=8, pady=8)
-        self.log.pack(fill="both", expand=True, padx=1, pady=1)
+                          font=('Consolas', 10), padx=10, pady=10)
+        self.log.pack(fill="both", expand=True)
 
-        # Configure text tags for better readability
-        self.log.tag_configure("link", foreground="#64B5F6", underline=1, font=('Consolas', 11, 'bold'))
-        self.log.tag_configure("success", foreground=BRAND_SUCCESS_LIGHT, font=('Consolas', 11, 'bold'))
-        self.log.tag_configure("error", foreground=BRAND_ERROR, font=('Consolas', 11, 'bold'))
-        self.log.tag_configure("warning", foreground=BRAND_WARNING, font=('Consolas', 11))
-        self.log.tag_configure("info", foreground=BRAND_SECONDARY_LIGHT, font=('Consolas', 11))
-        self.log.tag_configure("highlight", background=BRAND_SURFACE_ELEVATED, foreground=BRAND_PRIMARY_LIGHT, font=('Consolas', 11, 'bold'))
-        self.log.tag_configure("header", foreground=BRAND_PRIMARY_LIGHT, font=('Consolas', 12, 'bold'))
-        self.log.tag_configure("separator", foreground=BRAND_TEXT_DIM, font=('Consolas', 10))
-        self.log.tag_configure("property", foreground="#FFD700", font=('Consolas', 11, 'bold'))
-        self.log.tag_configure("progress", foreground=BRAND_SECONDARY_LIGHT, font=('Consolas', 11))
+        # Configure text tags
+        self.log.tag_configure("link", foreground="#64B5F6", underline=1, font=('Consolas', 10, 'bold'))
+        self.log.tag_configure("success", foreground=BRAND_SUCCESS_LIGHT, font=('Consolas', 10, 'bold'))
+        self.log.tag_configure("error", foreground=BRAND_ERROR, font=('Consolas', 10, 'bold'))
+        self.log.tag_configure("warning", foreground=BRAND_WARNING, font=('Consolas', 10))
+        self.log.tag_configure("info", foreground=BRAND_SECONDARY_LIGHT, font=('Consolas', 10))
+        self.log.tag_configure("highlight", background=BRAND_SURFACE_ELEVATED, foreground=BRAND_PRIMARY_LIGHT, font=('Consolas', 10, 'bold'))
+        self.log.tag_configure("header", foreground=BRAND_PRIMARY_LIGHT, font=('Consolas', 11, 'bold'))
+        self.log.tag_configure("separator", foreground=BRAND_TEXT_DIM, font=('Consolas', 9))
+        self.log.tag_configure("property", foreground="#FFD700", font=('Consolas', 10, 'bold'))
+        self.log.tag_configure("progress", foreground=BRAND_SECONDARY_LIGHT, font=('Consolas', 10))
         self.log.tag_bind("link", "<Double-Button-1>", self._on_link_click)
         self.log.tag_bind("link", "<Enter>", lambda e: self.log.config(cursor="hand2"))
         self.log.tag_bind("link", "<Leave>", lambda e: self.log.config(cursor=""))
 
-        # Bottom: Enhanced 3D progress bar with glossy effect
-        bar_outer = tk.Frame(right, bg=BRAND_SURFACE, relief='raised', bd=2)
-        bar_outer.pack(fill="x", pady=(4, 0))
-        
-        bar_frame = ttk.Frame(bar_outer)
-        bar_frame.pack(fill="x", expand=True, padx=2, pady=2)
-        
-        self.progress = ttk.Progressbar(bar_frame, orient="horizontal", mode="indeterminate", 
+        # ===== BOTTOM STATUS BAR (always visible - compact) =====
+        bottom_bar = tk.Frame(content_area, bg=BRAND_BG)
+        bottom_bar.pack(fill="x", side="bottom", padx=20, pady=(0, 15))
+
+        # Progress bar
+        self.progress = ttk.Progressbar(bottom_bar, orient="horizontal", mode="indeterminate",
                                        style='Enhanced.Horizontal.TProgressbar')
-        self.progress.pack(fill="x", expand=True)
-        
+        self.progress.pack(fill="x", pady=(0, 8))
+
+        # Status row
+        status_row = tk.Frame(bottom_bar, bg=BRAND_BG)
+        status_row.pack(fill="x")
+
         self.eta_var = tk.StringVar(value="✨ Ready to process")
-        eta_label = tk.Label(right, textvariable=self.eta_var, 
+        eta_label = tk.Label(status_row, textvariable=self.eta_var,
                            bg=BRAND_BG, fg=BRAND_PRIMARY_LIGHT,
                            font=('Segoe UI', 10, 'bold'))
-        eta_label.pack(anchor="w", pady=(4, 0))
+        eta_label.pack(side="left")
 
-        # Enhanced status bar with connection indicators
-        self.status = tk.StringVar(value="✅ Ready")
-        status_frame = tk.Frame(self, bg=BRAND_SURFACE, relief='raised', bd=1)
-        status_frame.pack(fill="x", side="bottom")
-        
-        # Main status container
-        status_container = tk.Frame(status_frame, bg=BRAND_SURFACE_ELEVATED)
-        status_container.pack(fill="x")
-        
-        # Left side - connection status indicators
-        self.conn_frame = tk.Frame(status_container, bg=BRAND_SURFACE_ELEVATED)
-        self.conn_frame.pack(side="left", padx=10)
-        
-        # Portal status
-        self.portal_status = tk.Label(self.conn_frame, text="⚪ Portal: Checking...", 
-                                     bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT_DIM,
-                                     font=('Segoe UI', 9))
-        self.portal_status.pack(side="left", padx=(0, 15))
-        
-        # run_report status
-        self.runreport_status = tk.Label(self.conn_frame, text="⚪ run_report: Checking...",
-                                        bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT_DIM,
-                                        font=('Segoe UI', 9))
-        self.runreport_status.pack(side="left", padx=(0, 15))
-        
-        # API key status
-        self.apikey_status = tk.Label(self.conn_frame, text="⚪ API Key: Checking...",
-                                     bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT_DIM,
-                                     font=('Segoe UI', 9))
-        self.apikey_status.pack(side="left", padx=(0, 15))
-        
-        # Right side - main status text
-        status_bar = tk.Label(status_container, textvariable=self.status, anchor="e",
-                            bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT_SECONDARY,
-                            font=('Segoe UI', 9), padx=10, pady=4)
-        status_bar.pack(side="right", fill="x", expand=True)
-        
+        self.status = tk.StringVar(value="Ready")
+        status_label = tk.Label(status_row, textvariable=self.status,
+                              bg=BRAND_BG, fg=BRAND_TEXT_SECONDARY,
+                              font=('Segoe UI', 9))
+        status_label.pack(side="right")
+
         # Start status checks
         self.after(500, self._check_all_status)
-        self.after(30000, self._start_status_timer)  # Start recurring checks after 30s
+        self.after(30000, self._start_status_timer)
+
+        # Auto-fetch owners on startup
+        self.after(500, self.refresh_owners)
+        self.after(30000, self._auto_refresh_owners)
 
     # ----- File list management -----
     def add_files(self):
@@ -818,7 +905,7 @@ class App(BaseTk):  # type: ignore[misc]
         raw = event.data
         items = self.splitlist(raw)
         self._add_paths(items)
-    
+
     def _on_jobs_configure(self, event=None):
         """Debounced autosize when the table resizes."""
         # Cancel prior pending autosize if any
@@ -828,7 +915,7 @@ class App(BaseTk):  # type: ignore[misc]
             except Exception:
                 pass
         self._autosize_after_id = self.after(120, self._autosize_job_columns)
-    
+
     def _autosize_job_columns(self, pad=24):
         """Auto width for File (#0) and Property columns, capped to 55% each."""
         try:
@@ -838,12 +925,12 @@ class App(BaseTk):  # type: ignore[misc]
         tree = self.jobs
         table_w = max(1, tree.winfo_width() or tree.winfo_reqwidth())
         max_each = int(table_w * 0.55)
-        
+
         cols = [
             ("#0",       280),  # (column id, minwidth)
             ("property", 260),
         ]
-        
+
         for col, minw in cols:
             # Start with heading text width
             try:
@@ -851,19 +938,19 @@ class App(BaseTk):  # type: ignore[misc]
             except Exception:
                 heading_text = ""
             w = fnt.measure(str(heading_text))
-            
+
             # Measure all visible rows
             for iid in tree.get_children(""):
                 txt = tree.item(iid, "text") if col == "#0" else tree.set(iid, col)
                 w = max(w, fnt.measure(str(txt)))
-            
+
             # Apply padding and bounds
             w = max(minw, min(w + pad, max_each))
             try:
                 tree.column(col, width=w)
             except Exception:
                 pass
-    
+
     def _maybe_show_jobs_tooltip(self, event):
         """Show a tooltip with full text when a cell is truncated (File/Property)."""
         tree = self.jobs
@@ -872,18 +959,18 @@ class App(BaseTk):  # type: ignore[misc]
         if not row:
             self._hide_jobs_tooltip()
             return
-        
+
         # Only handle File (#0) and first data column (#1 -> 'property')
         if col_id not in ("#0", "#1"):
             self._hide_jobs_tooltip()
             return
-        
+
         col_name = "#0" if col_id == "#0" else tree["columns"][0]  # 'property'
         text = tree.item(row, "text") if col_name == "#0" else tree.set(row, col_name)
         if not text:
             self._hide_jobs_tooltip()
             return
-        
+
         # If the text actually fits, don't show a tooltip
         fnt = tkFont.Font(font=('Segoe UI', 10))
         text_px = fnt.measure(str(text))
@@ -891,7 +978,7 @@ class App(BaseTk):  # type: ignore[misc]
         if text_px <= col_w - 8:
             self._hide_jobs_tooltip()
             return
-        
+
         # Create or update the tooltip
         x = event.x_root + 14
         y = event.y_root + 12
@@ -908,7 +995,7 @@ class App(BaseTk):  # type: ignore[misc]
             lbl = tip.winfo_children()[0]
             lbl.config(text=str(text))
         tip.geometry(f"+{x}+{y}")
-    
+
     def _hide_jobs_tooltip(self):
         tip = getattr(self, "_jobs_tip", None)
         if tip is not None:
@@ -917,24 +1004,125 @@ class App(BaseTk):  # type: ignore[misc]
             except Exception:
                 pass
             self._jobs_tip = None
-    
+
+    def _show_status_tooltip(self, event, status_type):
+        """Show helpful tooltip for status indicators"""
+        # Get current status text to determine state
+        if status_type == "portal":
+            current_text = self.portal_status.cget("text")
+            if "✅" in current_text:
+                # Extract number of paid customers
+                import re
+                match = re.search(r'\((\d+)\)', current_text)
+                count = match.group(1) if match else "0"
+                tooltip_text = f"Portal API Status: Connected ✓\n\n• Found {count} paid customer(s)\n• Reports can be uploaded\n• Auto-refreshes every 30 seconds"
+            elif "⚠️" in current_text:
+                tooltip_text = "Portal API Status: Warning ⚠️\n\n• Backend responded but with errors\n• Check backend logs\n• Reports may not upload correctly"
+            elif "❌" in current_text:
+                tooltip_text = "Portal API Status: Disconnected ✗\n\n• Cannot reach backend server\n• Reports cannot be uploaded\n\nNext Steps:\n• Check if backend is running\n• Verify backend URL in settings\n• Contact IT support if issue persists"
+            else:
+                tooltip_text = "Portal API Status: Checking...\n\n• Connecting to backend\n• Please wait"
+
+        elif status_type == "runreport":
+            current_text = self.runreport_status.cget("text")
+            if "✅" in current_text:
+                tooltip_text = "Report Generator: Ready ✓\n\n• run_report.py found\n• Can generate inspection reports\n• Uses OpenAI API for analysis"
+            else:
+                tooltip_text = "Report Generator: Not Found ✗\n\n• run_report.py is missing\n• Cannot generate reports\n\nNext Steps:\n• Ensure run_report.py is in app folder\n• Or set RUN_REPORT_CMD environment variable\n• Contact IT support (Error: ERR_RUN_REPORT_001)"
+
+        elif status_type == "apikey":
+            current_text = self.apikey_status.cget("text")
+            if "✅" in current_text:
+                tooltip_text = "OpenAI API Key: Configured ✓\n\n• API key found in environment\n• AI analysis will work\n• Used for photo descriptions"
+            else:
+                tooltip_text = "OpenAI API Key: Missing ✗\n\n• OPENAI_API_KEY not found in .env\n• AI features will not work\n\nNext Steps:\n• Add OPENAI_API_KEY to .env file\n• Get API key from platform.openai.com\n• Contact IT support if needed"
+        else:
+            return
+
+        # Show tooltip
+        x = event.x_root + 10
+        y = event.y_root + 20
+
+        tip = getattr(self, "_status_tip", None)
+        if tip is None:
+            tip = tk.Toplevel(self)
+            tip.wm_overrideredirect(True)
+            tip.wm_attributes("-topmost", True)
+
+            # Use a frame for better styling
+            frame = tk.Frame(tip, bg=BRAND_SURFACE, bd=1, relief="solid")
+            frame.pack(fill="both", expand=True)
+
+            lbl = tk.Label(frame, text=tooltip_text, bg=BRAND_SURFACE, fg=BRAND_TEXT,
+                          font=('Segoe UI', 9), justify="left", padx=12, pady=8)
+            lbl.pack()
+            self._status_tip = tip
+        else:
+            frame = tip.winfo_children()[0]
+            lbl = frame.winfo_children()[0]
+            lbl.config(text=tooltip_text)
+
+        tip.geometry(f"+{x}+{y}")
+
+    def _hide_status_tooltip(self):
+        """Hide status indicator tooltip"""
+        tip = getattr(self, "_status_tip", None)
+        if tip is not None:
+            try:
+                tip.destroy()
+            except Exception:
+                pass
+            self._status_tip = None
+
+    def _show_field_tooltip(self, event, tooltip_text):
+        """Show tooltip for field help icons - reuses status tooltip"""
+        self._show_status_tooltip_generic(event, tooltip_text)
+
+    def _show_status_tooltip_generic(self, event, tooltip_text):
+        """Generic tooltip display for any text"""
+        x = event.x_root + 10
+        y = event.y_root + 20
+
+        tip = getattr(self, "_status_tip", None)
+        if tip is None:
+            tip = tk.Toplevel(self)
+            tip.wm_overrideredirect(True)
+            tip.wm_attributes("-topmost", True)
+
+            frame = tk.Frame(tip, bg=BRAND_SURFACE, bd=1, relief="solid")
+            frame.pack(fill="both", expand=True)
+
+            lbl = tk.Label(frame, text=tooltip_text, bg=BRAND_SURFACE, fg=BRAND_TEXT,
+                          font=('Segoe UI', 9), justify="left", padx=12, pady=8)
+            lbl.pack()
+            self._status_tip = tip
+        else:
+            frame = tip.winfo_children()[0]
+            lbl = frame.winfo_children()[0]
+            lbl.config(text=tooltip_text)
+
+        tip.geometry(f"+{x}+{y}")
+
     def add_job_row(self, zip_path: Path, owner_name: str = "", gallery_name: str = ""):
         """Add a new job row to the treeview table"""
         # Derive property name from ZIP filename (spaces not underscores)
         property_name = zip_path.stem.replace('_', ' ')
-        
+
         # Insert new row with initial values
-        row_id = self.jobs.insert("", "end", 
+        row_id = self.jobs.insert("", "end",
                                   text=zip_path.name,
                                   values=(property_name, owner_name, gallery_name, "0%", "Queued", ""),
                                   tags=("queued",))
-        
+
         # Store the mapping
         self.job_rows[zip_path] = row_id
-        
+
+        # Update job count
+        self._update_job_count()
+
         # Autosize columns after insert
         self._on_jobs_configure()
-        
+
         return row_id
 
     def _add_paths(self, items):
@@ -943,17 +1131,17 @@ class App(BaseTk):  # type: ignore[misc]
         for p in items:
             try:
                 path = Path(str(p).strip("{}"))
-                
+
                 # If path is a directory, zip it first
                 if path.is_dir():
                     # Create tmp_zips directory structure
                     tmp_zip_dir = OUTPUT_DIR / "tmp_zips"
                     tmp_zip_dir.mkdir(parents=True, exist_ok=True)
-                    
+
                     # Create zip file with the folder name
                     zip_filename = f"{path.name}.zip"
                     zip_path = tmp_zip_dir / zip_filename
-                    
+
                     # Create the zip file with compression
                     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
                         # Walk through the directory and add all files
@@ -963,23 +1151,25 @@ class App(BaseTk):  # type: ignore[misc]
                                 # Add file with relative path from the folder root
                                 arcname = file_path.relative_to(path)
                                 zipf.write(file_path, arcname)
-                    
+
                     # Now treat the created zip as the path to add
                     path = zip_path
                     self._log_line(f"📁 Compressed folder to: {zip_filename}")
-                
+
                 # Process zip files (either original or just created from folder)
                 if path.suffix.lower() == ".zip" and path.exists():
                     # Check for duplicates by comparing absolute paths
                     path_absolute = path.resolve()
                     is_duplicate = False
-                    
+
                     for existing_path in self.zip_list:
                         if existing_path.resolve() == path_absolute:
                             is_duplicate = True
                             skipped += 1
+                            # Log duplicate with clear message
+                            self._log_line(f"⏭️  Skipped duplicate: {path.name} (already in list)", level="warning")
                             break
-                    
+
                     if not is_duplicate:
                         self.zip_list.append(path)
                         # Add row to the jobs table
@@ -989,16 +1179,31 @@ class App(BaseTk):  # type: ignore[misc]
                         added += 1
             except Exception:
                 continue
-        
+
         # Provide detailed feedback about what happened
         if added and skipped:
-            self._log_line(f"✅ Added {added} file{'s' if added > 1 else ''} • Skipped {skipped} duplicate{'s' if skipped > 1 else ''}")
+            self._log_line(f"✅ Added {added} file{'s' if added > 1 else ''} • ⏭️  Skipped {skipped} duplicate{'s' if skipped > 1 else ''}")
+            # Show toast notification if multiple duplicates
+            if skipped > 2:
+                messagebox.showinfo(
+                    "Duplicates Skipped",
+                    f"{skipped} file{'s' if skipped > 1 else ''} were already in the list and were skipped.\n\n"
+                    "Only new files have been added."
+                )
         elif added:
             self._log_line(f"✅ Added {added} inspection file{'s' if added > 1 else ''}")
         elif skipped:
-            self._log_line(f"⚠️ File already in list ({skipped} duplicate{'s' if skipped > 1 else ''} skipped)")
+            self._log_line(f"⏭️  All files already in list ({skipped} duplicate{'s' if skipped > 1 else ''} skipped)")
+            messagebox.showwarning(
+                "All Files Already Added",
+                f"The selected file{'s' if skipped > 1 else ''} {'are' if skipped > 1 else 'is'} already in the job list.\n\n"
+                "No new files were added."
+            )
         else:
-            self._log_line("ℹ️ No new files added")
+            self._log_line("ℹ️ No valid files selected")
+
+        # Update window title with job count
+        self._update_window_title()
 
     def clear_list(self):
         self.zip_list.clear()
@@ -1007,10 +1212,18 @@ class App(BaseTk):  # type: ignore[misc]
         for item in self.jobs.get_children():
             self.jobs.delete(item)
         self._log_line("🗑️ File list cleared")
-    
+        self._update_job_count()
+        self._update_window_title()
+
+    def _update_job_count(self):
+        """Update the job count label"""
+        count = len(self.zip_list)
+        if hasattr(self, 'job_count_label'):
+            self.job_count_label.config(text=f"{count} job{'s' if count != 1 else ''}")
+
     def _set_row(self, zip_path: Path, **cols):
         """Update specific columns in a job row.
-        
+
         Args:
             zip_path: Path to the ZIP file
             **cols: Keyword arguments for columns to update:
@@ -1018,32 +1231,36 @@ class App(BaseTk):  # type: ignore[misc]
         """
         if zip_path not in self.job_rows:
             return
-        
+
         row_id = self.job_rows[zip_path]
-        
+
         # Get current values
         current_values = self.jobs.item(row_id, "values")
         if not current_values:
             return
-        
+
         # Create list from current values (convert tuple to list)
         new_values = list(current_values)
-        
+
         # Column indices mapping
         col_indices = {
             "property": 0,
-            "owner": 1, 
+            "owner": 1,
             "gallery": 2,
             "progress": 3,
             "status": 4,
             "actions": 5
         }
-        
+
         # Update specified columns
         for col_name, value in cols.items():
             if col_name in col_indices:
                 new_values[col_indices[col_name]] = value
-        
+
+        # Apply status pill styling
+        if "status" in cols:
+            new_values[col_indices["status"]] = self._create_status_pill(cols["status"])
+
         # Determine appropriate tag based on status
         tag = "queued"
         if "status" in cols:
@@ -1056,40 +1273,43 @@ class App(BaseTk):  # type: ignore[misc]
                 tag = "failed"
             elif "waiting" in status or "queued" in status:
                 tag = "queued"
-        
+
         # Update the row
         self.jobs.item(row_id, values=new_values, tags=(tag,))
-        
+
         # Update actions whenever row changes
         self._update_actions_for(zip_path)
-    
+
     def _update_actions_for(self, zip_path: Path):
         """Update the actions column based on job state."""
         with self._state_lock:
             state = self.jobs_state.get(zip_path, {})
-        
+
         actions = []
-        
+
         # If job has a report_id, can view in portal
         if state.get("report_id"):
             actions.append("View in Portal")
             actions.append("Copy Portal Link")
-        
+
         # If job has output_dir, can open folder
         if state.get("output_dir"):
             actions.append("Open")
-        
+
         # If job is not finished, can cancel
         if not state.get("finished"):
             actions.append("Cancel")
-        
+
         # If job is finished and failed, can retry
         if state.get("finished") and state.get("return_code", 0) != 0:
             actions.append("Retry")
-        
+
         # Update the actions column with available actions
-        actions_text = " | ".join(actions) if actions else "..."
-        
+        # Use clearer separators to make it look more like clickable buttons
+        actions_text = " • ".join(actions) if actions else "•••"
+        if actions:
+            actions_text = f"→ {actions_text}"  # Arrow hint that it's clickable
+
         if zip_path in self.job_rows:
             row_id = self.job_rows[zip_path]
             current_values = list(self.jobs.item(row_id, "values"))
@@ -1097,28 +1317,28 @@ class App(BaseTk):  # type: ignore[misc]
             self.jobs.item(row_id, values=current_values)
 
     # ----- Job Control Methods -----
-    
+
     def toggle_pause(self):
         """Toggle pause/resume for job processing."""
         if self.paused:
             self.pause_event.set()  # Resume
             self.paused = False
-            self.pause_btn.config(text="⏸️ PAUSE")
+            self.pause_btn.config(text="⏸️  PAUSE")
             self._log_line("▶️ Processing resumed")
             self._set_status("🔄 Processing resumed...")
         else:
             self.pause_event.clear()  # Pause
             self.paused = True
-            self.pause_btn.config(text="▶️ RESUME")
+            self.pause_btn.config(text="▶️  RESUME")
             self._log_line("⏸️ Processing paused (no new jobs will start)")
             self._set_status("⏸️ Paused - Click RESUME to continue")
-    
+
     def _cancel_job(self, zip_path: Path):
         """Cancel a running job."""
         with self._state_lock:
             # Mark as canceled
             self.cancel_flags[zip_path] = True
-            
+
             # Try to terminate the process
             proc = self.proc_map.get(zip_path)
             if proc:
@@ -1133,39 +1353,39 @@ class App(BaseTk):  # type: ignore[misc]
                     else:
                         # On Unix-like systems, use terminate
                         proc.terminate()
-                    
+
                     self._log_line(f"⚠️ Canceling job: {zip_path.name}")
-                    
+
                     # Update job state
                     state = self.jobs_state.get(zip_path, {})
                     state["finished"] = True
                     state["return_code"] = -2  # Special code for canceled
                     self.jobs_state[zip_path] = state
-                    
+
                     # Update UI
                     self._set_row(zip_path, status="Canceled", progress="--")
-                    
+
                 except Exception as e:
                     self._log_line(f"❌ Error canceling job {zip_path.name}: {e}")
-    
+
     def _retry_job(self, zip_path: Path):
         """Retry a failed or canceled job."""
         with self._state_lock:
             # Reset job state
             self.jobs_state[zip_path] = {
-                "total": None, "done": 0, "start": None, 
-                "finished": False, "report_id": None, 
+                "total": None, "done": 0, "start": None,
+                "finished": False, "report_id": None,
                 "output_dir": None, "return_code": None
             }
-            
+
             # Clear cancel flag if set
             self.cancel_flags.pop(zip_path, None)
-            
+
             # Update UI
             self._set_row(zip_path, status="Queued (Retry)", progress="0%")
-        
+
         self._log_line(f"🔄 Retrying job: {zip_path.name}")
-        
+
         # Launch worker thread for retry
         t = threading.Thread(
             target=self._run_one_zip_worker,
@@ -1179,10 +1399,10 @@ class App(BaseTk):  # type: ignore[misc]
         if not self.zip_list:
             messagebox.showwarning("No files", "Add or drop at least one ZIP.")
             return
-        
+
         # Save settings when starting processing
         self.save_settings()
-        
+
         # Validate owner selection
         owner_id, owner_display, owner_label = self._resolve_selected_owner()
         if not owner_id:
@@ -1233,11 +1453,11 @@ class App(BaseTk):  # type: ignore[misc]
             for state in self.jobs_state.values():
                 if state.get("output_dir"):
                     most_recent_dir = state["output_dir"]
-            
+
             # If no parallel output, check sequential
             if not most_recent_dir and hasattr(self, 'last_output_dir'):
                 most_recent_dir = self.last_output_dir
-        
+
         if most_recent_dir:
             # Ensure we're not double-nesting the path
             if Path(most_recent_dir).is_absolute():
@@ -1250,10 +1470,10 @@ class App(BaseTk):  # type: ignore[misc]
         else:
             p = OUTPUT_DIR
             self._log_line(f"Opening general output directory: {p}")
-        
+
         p = p.resolve()
         self._log_line(f"Resolved path: {p}")
-        
+
         try:
             if sys.platform == "win32":
                 # Prefer os.startfile when available, otherwise fall back to explorer
@@ -1278,7 +1498,7 @@ class App(BaseTk):  # type: ignore[misc]
             self._log_line("🌐 Opening CheckMyRental Portal in browser...")
         except Exception as e:
             self._log_line(f"⚠️ Could not open portal: {e}")
-    
+
     def refresh_owners(self):
         """Fetch available PAID owners from the API - only paid customers get reports"""
         # Also update status indicators when refreshing
@@ -1287,64 +1507,84 @@ class App(BaseTk):  # type: ignore[misc]
         self.owner_display_by_id = {}
         self.owner_details = {}
 
+        # Show loading state
+        self.owner_combo['values'] = ["🔄 Loading owners..."]
+        self.owner_combo.set("🔄 Loading owners...")
+        self.owner_combo.config(state='disabled')  # Prevent interaction while loading
+
         try:
             # Fetch only PAID owners from the backend API
             # This ensures inspectors only see customers who have paid for service
             api_url = portal_url("/api/owners/paid-owners")
             self._log_line(f"🔍 Fetching paid owners from: {api_url}")
             response = requests.get(api_url, timeout=5)
-            
+
             if response.status_code == 200:
                 data = response.json()
                 owners = data.get("owners", [])
-                
+
                 if owners:
                     # Create display strings that show both name and owner_id
                     owner_display = []
                     self.owner_id_map = {}  # Store mapping of display name to owner_id
                     self.owner_details = {}  # Store full owner details
-                    
+
                     for owner in owners:
                         name = owner.get("name", owner.get("full_name", ""))
                         owner_id = owner.get("owner_id", "")
+                        email = owner.get("email", "")
                         is_paid = owner.get("is_paid", False)
-                        
-                        # Create display string with payment status
-                        if name:
+
+                        # Create display string with full name and email for easy identification
+                        if name and email:
                             status_icon = "✅" if is_paid else "⚠️"
-                            display = f"{status_icon} {name} ({owner_id})"
+                            display = f"{status_icon} {name} ({email})"
                             owner_display.append(display)
                             self.owner_id_map[display] = owner_id
                             self.owner_display_by_id[owner_id] = display
                             # Store full details
                             self.owner_details[owner_id] = owner
+                        elif name:
+                            # Fallback if no email
+                            status_icon = "✅" if is_paid else "⚠️"
+                            display = f"{status_icon} {name} ({owner_id})"
+                            owner_display.append(display)
+                            self.owner_id_map[display] = owner_id
+                            self.owner_display_by_id[owner_id] = display
+                            self.owner_details[owner_id] = owner
                         else:
+                            # Fallback if no name
                             owner_display.append(owner_id)
                             self.owner_id_map[owner_id] = owner_id
                             self.owner_display_by_id[owner_id] = owner_id
                             self.owner_details[owner_id] = owner
-                    
+
                     values = [PLACEHOLDER_OWNER] + owner_display
                     self.owner_combo['values'] = values
                     self.owner_combo.set(PLACEHOLDER_OWNER)
+                    self.owner_combo.config(state='readonly')  # Re-enable after loading
                     self._apply_saved_owner_selection()
                     self._log_line(f"✅ Loaded {len(owners)} PAID customer(s)")
                     self._log_line("💰 Only paid customers appear in this list")
                 else:
                     # No paid owners found
                     self.owner_combo['values'] = ["No paid customers yet"]
+                    self.owner_combo.config(state='readonly')  # Re-enable after loading
                     self._log_line("⚠️ No paid customers found - waiting for payments")
             else:
                 # API not available, use defaults
+                self.owner_combo.config(state='readonly')  # Re-enable after loading
                 self._use_default_owners()
-                
+
         except requests.exceptions.RequestException:
             # Network error or backend not running, use defaults
+            self.owner_combo.config(state='readonly')  # Re-enable after loading
             self._use_default_owners()
         except Exception as e:
             self._log_line(f"⚠️ Could not load owners: {e}")
+            self.owner_combo.config(state='readonly')  # Re-enable after loading
             self._use_default_owners()
-    
+
     def _use_default_owners(self):
         """Fallback when no paid owners are available or API is down"""
         default_owners = [
@@ -1361,7 +1601,7 @@ class App(BaseTk):  # type: ignore[misc]
         self.pending_owner_id = ''
         self.pending_owner_display = ''
         self._log_line("⚠️ No paid customers found - customers must pay to receive reports")
-        
+
     def _apply_saved_owner_selection(self):
         """Apply any saved owner selection after the dropdown is populated"""
         values = list(self.owner_combo['values']) if self.owner_combo['values'] else []
@@ -1423,49 +1663,124 @@ class App(BaseTk):  # type: ignore[misc]
             self.pending_owner_id = ''
             self.pending_owner_display = ''
 
+    def open_owner_dashboard(self):
+        """Open the selected owner's dashboard in their default web browser"""
+        owner_id, owner_display, owner_label = self._resolve_selected_owner()
+
+        if not owner_id or owner_display == PLACEHOLDER_OWNER:
+            messagebox.showwarning(
+                "No Owner Selected",
+                "Please select an owner from the dropdown first.\n\n"
+                "The dashboard will open for the selected owner's portal."
+            )
+            return
+
+        # Get owner details
+        details = getattr(self, 'owner_details', {}).get(owner_id, {})
+        if not details:
+            messagebox.showerror(
+                "Owner Not Found",
+                f"Could not find details for owner: {owner_label}"
+            )
+            return
+
+        # Get the portal token for this owner
+        token = details.get('portal_token', '')
+        email = details.get('email', '')
+        name = details.get('name') or details.get('full_name', owner_label)
+
+        # Construct dashboard URL
+        # Try token-based URL first, fallback to main dashboard
+        dashboard_base = "http://localhost:3000"
+        if token:
+            dashboard_url = f"{dashboard_base}?token={token}"
+        else:
+            dashboard_url = dashboard_base
+
+        # Log the action
+        self._log_line("")
+        self._log_line(f"📊 Opening Dashboard for: {name}")
+        self._log_line(f"   📧 Email: {email}")
+        if token:
+            self._log_line(f"   🔑 Token: {token}")
+        self._log_line(f"   🌐 URL: {dashboard_url}")
+        self._log_line("")
+
+        # Show confirmation dialog
+        confirm = messagebox.askyesno(
+            "Open Dashboard",
+            f"Open dashboard for:\n\n"
+            f"Owner: {name}\n"
+            f"Email: {email}\n\n"
+            f"This will open in your default web browser.\n"
+            f"Continue?"
+        )
+
+        if confirm:
+            try:
+                webbrowser.open(dashboard_url)
+                self._log_line("✅ Dashboard opened successfully", "success")
+                messagebox.showinfo(
+                    "Dashboard Opened",
+                    f"Dashboard for {name} has been opened in your browser.\n\n"
+                    f"Reports you create for this owner will appear in their dashboard."
+                )
+            except Exception as e:
+                self._log_line(f"❌ Error opening dashboard: {e}", "error")
+                messagebox.showerror(
+                    "Error",
+                    f"Failed to open dashboard:\n{e}\n\n"
+                    f"Please open manually: {dashboard_url}"
+                )
+
     # Gallery fetching method removed - not needed
-    
+
     # ----- Status Checking Methods -----
     def _check_all_status(self):
         """Check all connection statuses"""
         self._check_portal_status()
         self._check_runreport_status()
         self._check_apikey_status()
-    
+
     def _check_portal_status(self):
         """Check if the portal API is online"""
         try:
             api_url = portal_url("/api/owners/paid-owners")
+            print(f"[Portal Check] Testing: {api_url}")
             response = requests.get(api_url, timeout=3)
+            print(f"[Portal Check] Response status: {response.status_code}")
             if response.status_code == 200:
                 data = response.json()
                 num_paid = len(data.get("owners", []))
-                self.portal_status.config(text=f"✅ Portal: {num_paid} Paid Owners", fg=BRAND_SUCCESS_LIGHT)
+                print(f"[Portal Check] Found {num_paid} paid owners")
+                self.portal_status.config(text=f"✅ Portal ({num_paid})", fg=BRAND_SUCCESS_LIGHT)
             else:
-                self.portal_status.config(text="⚠️ Portal: Error", fg=BRAND_WARNING)
-        except requests.exceptions.RequestException:
-            self.portal_status.config(text="❌ Portal: Offline", fg=BRAND_ERROR)
-        except Exception:
-            self.portal_status.config(text="❌ Portal: Error", fg=BRAND_ERROR)
-    
+                print(f"[Portal Check] Non-200 status: {response.status_code}")
+                self.portal_status.config(text="⚠️ Portal", fg=BRAND_WARNING)
+        except requests.exceptions.RequestException as e:
+            print(f"[Portal Check] Request error: {e}")
+            self.portal_status.config(text="❌ Portal", fg=BRAND_ERROR)
+        except Exception as e:
+            print(f"[Portal Check] Unexpected error: {e}")
+            self.portal_status.config(text="❌ Portal", fg=BRAND_ERROR)
+
     def _check_runreport_status(self):
         """Check if run_report can be found"""
         dummy_path = Path("test.zip")
         cmd = _resolve_run_report_cmd(dummy_path)
         if cmd:
-            self.runreport_status.config(text="✅ run_report: Found", fg=BRAND_SUCCESS_LIGHT)
+            self.runreport_status.config(text="✅ run_report", fg=BRAND_SUCCESS_LIGHT)
         else:
-            self.runreport_status.config(text="❌ run_report: Not Found", fg=BRAND_ERROR)
-    
+            self.runreport_status.config(text="❌ run_report", fg=BRAND_ERROR)
+
     def _check_apikey_status(self):
         """Check if API key is present"""
         key = os.getenv("OPENAI_API_KEY", "").strip()
         if key:
-            masked = f"{key[:6]}..." if len(key) > 6 else "Present"
-            self.apikey_status.config(text=f"✅ API Key: {masked}", fg=BRAND_SUCCESS_LIGHT)
+            self.apikey_status.config(text=f"✅ API Key", fg=BRAND_SUCCESS_LIGHT)
         else:
-            self.apikey_status.config(text="❌ API Key: Missing", fg=BRAND_ERROR)
-    
+            self.apikey_status.config(text="❌ API Key", fg=BRAND_ERROR)
+
     def _start_status_timer(self):
         """Start recurring status checks every 30 seconds"""
         self._check_all_status()
@@ -1615,11 +1930,11 @@ class App(BaseTk):  # type: ignore[misc]
         with self._state_lock:
             self.jobs_state = {p: {"total": None, "done": 0, "start": None, "finished": False, "report_id": None, "output_dir": None, "return_code": None}
                                for p in self.zip_list}
-        
+
         # Update initial status to "Waiting" for all jobs
         for zip_path in self.zip_list:
             self._set_row(zip_path, status="Waiting", progress="")
-        
+
         self._start_indeterminate("Analyzing (parallel)…")
 
         # Launch workers with a bounded pool
@@ -1629,11 +1944,11 @@ class App(BaseTk):  # type: ignore[misc]
         def launch(zip_path: Path):
             # Wait if paused before acquiring semaphore
             self.pause_event.wait()
-            
+
             # Check if job was canceled before starting
             if self.cancel_flags.get(zip_path, False):
                 return
-            
+
             with sem:
                 self._run_one_zip_worker(zip_path)
 
@@ -1644,7 +1959,7 @@ class App(BaseTk):  # type: ignore[misc]
 
         for t in workers:
             t.join()
-        
+
         # Disable pause button when done
         self.pause_btn.config(state="disabled")
 
@@ -1655,22 +1970,22 @@ class App(BaseTk):  # type: ignore[misc]
         global_total = sum((st.get("total") or 0) for st in totals)
         global_done = sum(st.get("done", 0) for st in totals)
         successful_jobs = sum(1 for st in totals if st.get("finished"))
-        
+
         self._log_line(f"✅ ALL REPORTS COMPLETED SUCCESSFULLY!")
         self._log_line(f"📊 Total: {successful_jobs} report(s) generated")
         self._log_line(f"📸 Images: {global_done}/{global_total} processed")
         self._log_line("="*50)
-        
+
         # Update UI to show completion with visual feedback
         self._set_status("✅ All reports generated successfully!")
         self._set_eta(f"✅ COMPLETED  •  {successful_jobs} reports  •  {global_total} images")
         self._finish_progress()
-        
+
         # Flash the window to get attention
         self.after(100, lambda: self.bell())
         self.after(200, lambda: self.lift())
         self.after(300, lambda: self.focus_force())
-        
+
         # Play a subtle completion sound if available (Windows)
         try:
             if sys.platform == "win32":
@@ -1678,7 +1993,7 @@ class App(BaseTk):  # type: ignore[misc]
                 winsound.MessageBeep(winsound.MB_OK)
         except:
             pass
-        
+
         # Auto-open output folder after a short delay
         self.after(1000, self.open_output)
 
@@ -1730,7 +2045,7 @@ class App(BaseTk):  # type: ignore[misc]
                 bufsize=1,
             )
             assert proc.stdout is not None
-            
+
             # Store process in map for potential cancellation
             with self._state_lock:
                 self.proc_map[zip_path] = proc
@@ -1876,7 +2191,7 @@ class App(BaseTk):  # type: ignore[misc]
             with self._state_lock:
                 states_copy = dict(self.jobs_state)
                 states = list(states_copy.values())
-            
+
             # Update individual job rows in the table
             for zip_path, state in states_copy.items():
                 # Determine status
@@ -1886,7 +2201,7 @@ class App(BaseTk):  # type: ignore[misc]
                     if rc == 0:
                         # Add checkmark if report is ready
                         if state.get("report_id"):
-                            status = "✅ Done"
+                            status = "Done"
                         else:
                             status = "Done"
                         progress_str = "100%"
@@ -1909,10 +2224,10 @@ class App(BaseTk):  # type: ignore[misc]
                 else:
                     status = "Waiting"
                     progress_str = ""
-                
+
                 # Update the row
                 self._set_row(zip_path, progress=progress_str, status=status)
-            
+
             if states:
                 totals_known = [s["total"] for s in states if s.get("total")]
                 global_total = sum(totals_known) if totals_known else 0
@@ -1963,10 +2278,10 @@ class App(BaseTk):  # type: ignore[misc]
             while True:
                 line = self.log_queue.get_nowait()
                 self.log.configure(state="normal")
-                
+
                 # Apply formatting based on message content
                 tag = self._get_message_tag(line)
-                
+
                 # Format the message for better readability
                 formatted_line = self._format_message(line)
 
@@ -1983,7 +2298,7 @@ class App(BaseTk):  # type: ignore[misc]
                         else:
                             self.log.insert("end", seg_text)
 
-                self.log.insert("end", "\\n")
+                self.log.insert("end", "\n")
                 self.log.see("end")
                 self.log.configure(state="disabled")
         except queue.Empty:
@@ -1993,7 +2308,7 @@ class App(BaseTk):  # type: ignore[misc]
     def _get_message_tag(self, line: str):
         """Determine the appropriate tag for a log message based on its content."""
         line_lower = line.lower()
-        
+
         # Check for different message types
         if "✅" in line or "completed" in line_lower or "success" in line_lower or "done" in line_lower:
             return "success"
@@ -2015,14 +2330,14 @@ class App(BaseTk):  # type: ignore[misc]
             return "highlight"
         elif "starting" in line_lower or "analyzing" in line_lower:
             return "info"
-        
+
         return None
-    
+
     def _format_message(self, line: str):
         """Format a log message for better human readability."""
         # Remove excessive technical details
         formatted = line
-        
+
         # Simplify file paths - show only filename for ZIP files
         if ".zip" in line and "/" in line or "\\" in line:
             # Extract just the filename from full paths
@@ -2031,7 +2346,7 @@ class App(BaseTk):  # type: ignore[misc]
             if match and not "→" in line:  # Don't modify lines that already show property mapping
                 filename = match.group(1)
                 formatted = re.sub(r'[^\s]+\.zip', filename, formatted)
-        
+
         # Clean up progress indicators
         if "[" in formatted and "]" in formatted and "elapsed" in formatted:
             # Make progress more readable: "[3/12] IMG_0042.jpg | elapsed 38s  ETA ~72s"
@@ -2045,31 +2360,37 @@ class App(BaseTk):  # type: ignore[misc]
                 elapsed = progress_match.group(5)
                 eta = progress_match.group(6)
                 formatted = f"📸 [{zip_name}] Processing image {current}/{total} • Time: {elapsed}s • Remaining: ~{eta}s"
-        
-        # Simplify technical messages
+
+        # Hide technical details that don't help operators
+        # REPORT_ID and OUTPUT_DIR are captured separately, don't show raw format
+        if formatted.startswith("REPORT_ID=") or formatted.startswith("OUTPUT_DIR="):
+            return ""  # Skip these - they're handled elsewhere
+
+        # Simplify technical messages for better readability
         replacements = {
-            "REPORT_ID=": "📄 Report ID: ",
-            "OUTPUT_DIR=": "📁 Saved to: ",
             "Starting analysis of": "🔍 Analyzing",
             "images in total": "total images",
             "ERROR:": "❌ Error:",
             "WARNING:": "⚠️ Warning:",
             "INFO:": "ℹ️ ",
+            "run_report.py": "Report Generator",
+            "Could not locate run_report": "Report generator not found",
+            "OPENAI_API_KEY not found": "OpenAI API key missing",
         }
-        
+
         for old, new in replacements.items():
             formatted = formatted.replace(old, new)
-        
+
         # Add spacing around important sections
         if "===" in formatted:
             formatted = f"\n{formatted}\n"
-        
+
         return formatted
-    
+
     def _linkify(self, text: str):
         """Return [(segment, tag)] where tag is 'link' or None; naive URL detection."""
         out = []
-        url_re = re.compile(r"(https?://\\S+)")
+        url_re = re.compile(r"(https?://\S+)")
         last = 0
         for m in url_re.finditer(text):
             if m.start() > last:
@@ -2090,86 +2411,86 @@ class App(BaseTk):  # type: ignore[misc]
                 except Exception:
                     pass
                 break
-    
+
     def _on_job_click(self, event):
         """Handle clicks on job rows in the treeview"""
         # Get the clicked item
         item = self.jobs.identify('item', event.x, event.y)
         column = self.jobs.identify('column', event.x, event.y)
-        
+
         if not item:
             return
-        
+
         # Get the values for this row
         values = self.jobs.item(item, 'values')
         if not values or len(values) < 6:
             return
-        
+
         # Check if actions column was clicked (column #6)
         if column == '#6':
             actions = values[5]  # Actions is the 6th column (index 5)
-            
+
             # Find the corresponding zip_path for this row
             zip_path = None
             for path, row_id in self.job_rows.items():
                 if row_id == item:
                     zip_path = path
                     break
-            
+
             if not zip_path:
                 return
-            
+
             # Show context menu with available actions
             if any(action in actions for action in ["View in Portal", "Copy Portal Link", "Open", "Cancel", "Retry"]):
                 menu = tk.Menu(self, tearoff=0)
-                
+
                 if "View in Portal" in actions:
                     menu.add_command(label="View in Portal", command=lambda: self._view_report(zip_path))
-                
+
                 if "Copy Portal Link" in actions:
                     menu.add_command(label="Copy Portal Link", command=lambda: self._copy_portal_link(zip_path))
-                
+
                 if "Open" in actions:
                     menu.add_command(label="Open Folder", command=lambda: self._open_job_folder(zip_path))
-                
+
                 if "Cancel" in actions:
                     menu.add_command(label="Cancel Job", command=lambda: self._cancel_job(zip_path))
-                
+
                 if "Retry" in actions:
                     menu.add_command(label="Retry Job", command=lambda: self._retry_job(zip_path))
-                
+
                 menu.post(event.x_root, event.y_root)
-    
+
     def _view_report(self, zip_path: Path):
         """View the report in the portal"""
         with self._state_lock:
             state = self.jobs_state.get(zip_path, {})
             report_id = state.get("report_id")
-        
+
         if report_id:
             url = portal_url(f'/reports/{report_id}')
             webbrowser.open(url)
             self._log_line(f"🌐 Opening report for {zip_path.name} in browser...")
-    
+
     def _copy_portal_link(self, zip_path: Path):
         """Copy the portal link to clipboard"""
         with self._state_lock:
             state = self.jobs_state.get(zip_path, {})
             report_id = state.get("report_id")
-        
+
         if report_id:
             url = portal_url(f'/reports/{report_id}')
             # Copy to clipboard
             self.clipboard_clear()
             self.clipboard_append(url)
             self._log_line(f"📋 Portal link copied to clipboard for {zip_path.name}")
-    
+
     def _open_job_folder(self, zip_path: Path):
         """Open the output folder for a specific job"""
         with self._state_lock:
             state = self.jobs_state.get(zip_path, {})
             output_dir = state.get("output_dir")
-        
+
         if output_dir:
             p = Path(output_dir) if Path(output_dir).is_absolute() else OUTPUT_DIR / output_dir
             try:
@@ -2186,157 +2507,7 @@ class App(BaseTk):  # type: ignore[misc]
                 self._log_line(f"📁 Opened output folder for {zip_path.name}")
             except Exception as e:
                 self._log_line(f"⚠️ Could not open folder: {e}")
-    
-    def _create_header(self):
-        """Create modern CheckMyRental header with gradient and depth"""
-        # Create header with shadow effect - significantly increased height
-        header_shadow = tk.Frame(self, bg=BRAND_SHADOW, height=110)
-        header_shadow.pack(fill="x")
-        header_shadow.pack_propagate(False)
-        
-        header = tk.Frame(header_shadow, bg=BRAND_SURFACE_ELEVATED, height=105, relief='raised', bd=2)
-        header.pack(fill="x", padx=(0, 0), pady=(0, 5))
-        header.pack_propagate(False)
-        
-        # Main container with gradient background simulation
-        brand_frame = tk.Frame(header, bg=BRAND_SURFACE_ELEVATED)
-        brand_frame.pack(expand=True, pady=15)
-        
-        # Logo and text container with depth
-        logo_container = tk.Frame(brand_frame, bg=BRAND_SURFACE_ELEVATED)
-        logo_container.pack()
-        
-        # Logo with 3D effect and subtle animation
-        logo_frame = tk.Frame(logo_container, bg=BRAND_SURFACE_ELEVATED, relief='raised', bd=2)
-        logo_frame.pack(side="left", padx=(0, 20))
-        
-        # Logo canvas with shadow effect - MUCH larger size
-        logo_canvas = tk.Canvas(logo_frame, width=72, height=72, bg=BRAND_SURFACE_ELEVATED, highlightthickness=0)
-        logo_canvas.pack(padx=3, pady=3)
-        
-        # Draw the rotated square house with 3D depth
-        # Create rotated square for house body with shadow - MUCH larger
-        house_size = 46
-        cx, cy = 36, 36  # Center point adjusted for much larger canvas
-        
-        # Calculate corners of rotated square (45 degrees)
-        import math
-        angle = math.radians(45)
-        half_size = house_size / 2
-        
-        # Rotated square points
-        points = []
-        for dx, dy in [(-half_size, 0), (0, -half_size), (half_size, 0), (0, half_size)]:
-            x = cx + dx * math.cos(angle) - dy * math.sin(angle)
-            y = cy + dx * math.sin(angle) + dy * math.cos(angle)
-            points.extend([x, y])
-        
-        # Draw house shadow first
-        shadow_points = [p + 2 if i % 2 else p + 2 for i, p in enumerate(points)]
-        logo_canvas.create_polygon(shadow_points, fill="#404040", outline="")
-        
-        # Draw house (rotated square) with gradient effect
-        logo_canvas.create_polygon(points, fill="#2c3e50", outline="#34495e", width=1)
-        
-        # Draw window grid (4 panes) - much larger
-        window_size = 16
-        wx, wy = cx, cy - 3
-        
-        # White background for window
-        logo_canvas.create_rectangle(wx - window_size/2, wy - window_size/2, 
-                                    wx + window_size/2, wy + window_size/2,
-                                    fill="white", outline="")
-        
-        # Window cross lines - thicker for larger size
-        logo_canvas.create_line(wx, wy - window_size/2, wx, wy + window_size/2, 
-                               fill="#2c3e50", width=3)
-        logo_canvas.create_line(wx - window_size/2, wy, wx + window_size/2, wy,
-                               fill="#2c3e50", width=3)
-        
-        # Red checkmark circle with glow (bottom right) - much larger
-        circle_r = 14
-        circle_x, circle_y = 54, 54
-        
-        # Glow effect with graduated colors
-        glow_colors = ["#ff9999", "#ff7777", "#ff5555"]
-        for i in range(3):
-            glow_r = circle_r + (3 - i) * 2
-            logo_canvas.create_oval(circle_x - glow_r, circle_y - glow_r,
-                                   circle_x + glow_r, circle_y + glow_r,
-                                   fill='', outline=glow_colors[i], width=1)
-        
-        # Main circle
-        self.logo_circle = logo_canvas.create_oval(circle_x - circle_r, circle_y - circle_r,
-                                                  circle_x + circle_r, circle_y + circle_r,
-                                                  fill=BRAND_PRIMARY, outline=BRAND_PRIMARY_LIGHT, width=1)
-        
-        # White checkmark with enhanced visibility - much larger
-        logo_canvas.create_line(46, 54, 50, 58, fill="white", width=4, capstyle="round")
-        logo_canvas.create_line(50, 58, 60, 48, fill="white", width=4, capstyle="round")
-        
-        # Company name with enhanced typography and depth
-        name_frame = tk.Frame(logo_container, bg=BRAND_SURFACE_ELEVATED)
-        name_frame.pack(side="left")
-        
-        # Main title with text shadow effect
-        title_frame = tk.Frame(name_frame, bg=BRAND_SURFACE_ELEVATED)
-        title_frame.pack(anchor="w")
-        
-        # Create text with shadow effect - MUCH larger font
-        check_shadow = tk.Label(title_frame, text="Check", 
-                              font=('Segoe UI Light', 36, 'bold'),
-                              bg=BRAND_SURFACE_ELEVATED, fg="#2a2a2a")
-        check_shadow.place(x=3, y=3)
-        
-        check_label = tk.Label(title_frame, text="Check", 
-                             font=('Segoe UI Light', 36, 'bold'),
-                             bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT)
-        check_label.pack(side="left")
-        
-        my_label = tk.Label(title_frame, text="My",
-                          font=('Segoe UI Semibold', 36, 'bold'),
-                          bg=BRAND_SURFACE_ELEVATED, fg=BRAND_TEXT)
-        my_label.pack(side="left")
-        
-        rental_label = tk.Label(title_frame, text="Rental",
-                              font=('Segoe UI Semibold', 36, 'bold'),
-                              bg=BRAND_SURFACE_ELEVATED, fg=BRAND_PRIMARY_LIGHT)
-        rental_label.pack(side="left")
-        
-        # Professional tagline with subtle animation
-        tagline_label = tk.Label(
-            name_frame,
-            text="Inspector Portal  •  Professional Property Reports",
-            font=('Segoe UI', 13, 'italic'),
-            bg=BRAND_SURFACE_ELEVATED,
-            fg=BRAND_TEXT_SECONDARY
-        )
-        tagline_label.pack(anchor="w", pady=(4, 0))
-        
-        # Add subtle pulsing animation to logo
-        self.logo_pulse_state = 0
-        self.animate_logo(logo_canvas, cx, cy)
-    
-    def animate_logo(self, canvas, cx, cy):
-        """Add subtle pulsing animation to logo for premium feel"""
-        self.logo_pulse_state = (self.logo_pulse_state + 1) % 60
-        
-        # Calculate pulse scale (subtle breathing effect)
-        scale = 1.0 + 0.02 * math.sin(self.logo_pulse_state * math.pi / 30)
-        
-        # Update logo circle with pulse (if it exists)
-        if hasattr(self, 'logo_circle'):
-            try:
-                # Subtle color pulse for the checkmark circle
-                intensity = int(20 + 10 * math.sin(self.logo_pulse_state * math.pi / 30))
-                pulse_color = f"#{hex(231 + intensity)[2:]}{hex(76)[2:]}{hex(60)[2:]}"
-                canvas.itemconfig(self.logo_circle, fill=pulse_color)
-            except:
-                pass
-        
-        # Continue animation
-        self.after(50, lambda: self.animate_logo(canvas, cx, cy))
-    
+
     # ----- Settings Persistence Methods -----
     def load_and_apply_settings(self):
         """Load settings from JSON file and apply them to the UI"""
@@ -2344,7 +2515,7 @@ class App(BaseTk):  # type: ignore[misc]
             if SETTINGS_FILE.exists():
                 with open(SETTINGS_FILE, 'r') as f:
                     settings = json.load(f)
-                
+
                 # Apply loaded settings to UI fields
                 self.pending_owner_display = settings.get('owner_name', '').strip()
                 self.pending_owner_id = settings.get('owner_id', '').strip()
@@ -2357,7 +2528,7 @@ class App(BaseTk):  # type: ignore[misc]
 
                 if 'inspector_name' in settings:
                     self.client_name_var.set(settings['inspector_name'])
-                
+
                 # Apply concurrency settings if present
                 global JOB_CONCURRENCY, ANALYSIS_CONCURRENCY
                 if 'job_concurrency' in settings:
@@ -2368,26 +2539,26 @@ class App(BaseTk):  # type: ignore[misc]
                     ANALYSIS_CONCURRENCY = max(1, settings['analysis_concurrency'])
                     if hasattr(self, 'analysis_concurrency_var'):
                         self.analysis_concurrency_var.set(ANALYSIS_CONCURRENCY)
-                
+
                 # Update speed label with loaded values
                 if hasattr(self, 'speed_label'):
                     self.speed_label.config(text=f"⚡ Fast Processing ({JOB_CONCURRENCY}×{ANALYSIS_CONCURRENCY})")
-                
+
                 self._log_line(f"✅ Settings loaded from {SETTINGS_FILE.name}")
         except Exception as e:
             # Settings load failed, use defaults
             self._log_line(f"ℹ️ No previous settings found, using defaults")
-    
+
     def update_concurrency(self):
         """Update concurrency values and speed label when spinners change"""
         global JOB_CONCURRENCY, ANALYSIS_CONCURRENCY
         JOB_CONCURRENCY = self.job_concurrency_var.get()
         ANALYSIS_CONCURRENCY = self.analysis_concurrency_var.get()
-        
+
         # Update speed label if it exists
         if hasattr(self, 'speed_label'):
             self.speed_label.config(text=f"⚡ Fast Processing ({JOB_CONCURRENCY}×{ANALYSIS_CONCURRENCY})")
-    
+
     def save_settings(self):
         """Save current UI field values to JSON file"""
         try:
@@ -2399,19 +2570,19 @@ class App(BaseTk):  # type: ignore[misc]
                 'job_concurrency': self.job_concurrency_var.get() if hasattr(self, 'job_concurrency_var') else JOB_CONCURRENCY,
                 'analysis_concurrency': self.analysis_concurrency_var.get() if hasattr(self, 'analysis_concurrency_var') else ANALYSIS_CONCURRENCY
             }
-            
+
             # Don't save placeholder text
             if settings['owner_name'] == PLACEHOLDER_OWNER:
                 settings['owner_name'] = ''
                 settings['owner_id'] = ''
             with open(SETTINGS_FILE, 'w') as f:
                 json.dump(settings, f, indent=2)
-            
+
             return True
         except Exception as e:
             # Silently fail to save settings
             return False
-    
+
     def on_closing(self):
         """Handle window close event"""
         self.save_settings()

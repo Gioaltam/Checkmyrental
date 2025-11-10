@@ -1,0 +1,117 @@
+---
+// Accessibility Helper Functions for Focus Trapping and Keyboard Navigation
+---
+
+<script is:inline>
+  /**
+   * Focus Trap Utility
+   * Traps focus within a modal/overlay for accessibility
+   */
+  class FocusTrap {
+    constructor(element) {
+      this.element = element;
+      this.focusableElements = null;
+      this.firstFocusable = null;
+      this.lastFocusable = null;
+      this.previouslyFocusedElement = null;
+    }
+
+    activate() {
+      // Store the currently focused element
+      this.previouslyFocusedElement = document.activeElement;
+
+      // Get all focusable elements
+      this.updateFocusableElements();
+
+      // Focus the first element
+      if (this.firstFocusable) {
+        this.firstFocusable.focus();
+      }
+
+      // Add event listeners
+      this.element.addEventListener('keydown', this.handleKeyDown);
+      document.addEventListener('focus', this.handleFocus, true);
+    }
+
+    deactivate() {
+      // Remove event listeners
+      this.element.removeEventListener('keydown', this.handleKeyDown);
+      document.removeEventListener('focus', this.handleFocus, true);
+
+      // Restore focus
+      if (this.previouslyFocusedElement && this.previouslyFocusedElement.focus) {
+        this.previouslyFocusedElement.focus();
+      }
+    }
+
+    updateFocusableElements() {
+      const focusableSelector =
+        'a[href], button:not([disabled]), textarea:not([disabled]), ' +
+        'input:not([disabled]):not([type="hidden"]), select:not([disabled]), ' +
+        '[tabindex]:not([tabindex="-1"])';
+
+      this.focusableElements = Array.from(
+        this.element.querySelectorAll(focusableSelector)
+      ).filter(el => el.offsetParent !== null); // Only visible elements
+
+      this.firstFocusable = this.focusableElements[0];
+      this.lastFocusable = this.focusableElements[this.focusableElements.length - 1];
+    }
+
+    handleKeyDown = (e) => {
+      if (e.key === 'Tab') {
+        if (this.focusableElements.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        if (e.shiftKey) {
+          // Shift + Tab
+          if (document.activeElement === this.firstFocusable) {
+            e.preventDefault();
+            this.lastFocusable.focus();
+          }
+        } else {
+          // Tab
+          if (document.activeElement === this.lastFocusable) {
+            e.preventDefault();
+            this.firstFocusable.focus();
+          }
+        }
+      }
+    }
+
+    handleFocus = (e) => {
+      // If focus moves outside the trap, bring it back
+      if (!this.element.contains(e.target)) {
+        e.stopPropagation();
+        if (this.firstFocusable) {
+          this.firstFocusable.focus();
+        }
+      }
+    }
+  }
+
+  /**
+   * ESC Key Handler
+   * Closes modals/overlays when ESC is pressed
+   */
+  function addEscapeKeyHandler(element, closeCallback) {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        closeCallback();
+      }
+    };
+
+    element.addEventListener('keydown', handleEscape);
+
+    // Return cleanup function
+    return () => {
+      element.removeEventListener('keydown', handleEscape);
+    };
+  }
+
+  // Make utilities globally available
+  window.FocusTrap = FocusTrap;
+  window.addEscapeKeyHandler = addEscapeKeyHandler;
+</script>

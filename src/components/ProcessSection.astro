@@ -1,0 +1,185 @@
+---
+// Process/How It Works Section
+---
+
+<section class="process-section" id="process">
+  <h2 class="process-title">How It Works</h2>
+  <div class="process-steps">
+    <div class="process-step">
+      <div class="step-number">1</div>
+      <h3 class="step-title">Easy Online Booking</h3>
+      <p class="step-description">Book your quarterly plan instantly online. Set up automatic inspections every 3 months.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-number">2</div>
+      <h3 class="step-title">On‑Site Inspection by a Pro</h3>
+      <p class="step-description">A professional inspector captures 200+ photos and performs a thorough interior & exterior check.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-number">3</div>
+      <h3 class="step-title">Issue Detection & Risk Checklist</h3>
+      <p class="step-description">Potential wear, leaks, and safety concerns are documented and prioritized for action.</p>
+    </div>
+    <div class="process-step">
+      <div class="step-number">4</div>
+      <h3 class="step-title">Owner Dashboard Access</h3>
+      <p class="step-description">Included with quarterly plans: Track all your properties, view reports, and monitor issues through your personalized dashboard.</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .process-section {
+    padding: 8rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .process-section::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(100, 116, 139, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    animation: pulse 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.8; transform: translateX(-50%) scale(1.1); }
+  }
+
+  .process-title {
+    text-align: center;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    z-index: 1;
+  }
+
+  body.light-mode .process-title {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .process-step {
+    text-align: center;
+    padding: 2.5rem;
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.02) 50%,
+      rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .process-step:hover {
+    transform: translateY(-8px);
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.03) 50%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border-color: rgba(100, 116, 139, 0.15);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+
+  body.light-mode .process-step {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  body.light-mode .process-step:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .step-number {
+    display: inline-block;
+    width: 70px;
+    height: 70px;
+    line-height: 70px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .process-step:hover .step-number {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light-mode .step-number {
+    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+  }
+
+  .step-title {
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .step-title {
+    color: #1a1a1a;
+  }
+
+  .step-description {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 400;
+    line-height: 1.7;
+    font-size: 1rem;
+  }
+
+  body.light-mode .step-description {
+    color: #4a4a4a;
+  }
+
+  @media (max-width: 768px) {
+    .process-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .process-title {
+      font-size: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .process-steps {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .process-section::before {
+      animation: none;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import Header from '../components/Header.astro';
+import HeroSection from '../components/HeroSection.astro';
+import GallerySection from '../components/GallerySection.astro';
+import StatsSection from '../components/StatsSection.astro';
+import ProcessSection from '../components/ProcessSection.astro';
+import DashboardPreview from '../components/DashboardPreview.astro';
+import CTASection from '../components/CTASection.astro';
+import LandingFooter from '../components/LandingFooter.astro';
+import ShoppingCart from '../components/ShoppingCart.astro';
+import LocalBusinessSchema from '../components/LocalBusinessSchema.astro';
+---
+
+<LandingLayout>
+  <LocalBusinessSchema />
+  <Header />
+
+  <main id="main-content" tabindex="-1">
+    <HeroSection />
+    <DashboardPreview />
+    <GallerySection />
+    <StatsSection />
+    <ProcessSection />
+    <CTASection />
+  </main>
+
+  <LandingFooter />
+  <ShoppingCart />
+</LandingLayout>

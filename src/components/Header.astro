@@ -1,0 +1,438 @@
+---
+import LoginWidget from './LoginWidget.astro';
+---
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<header class="header vt-header">
+  <div class="header-content">
+    <a href="/landing" class="logo-container vt-logo">
+      <div class="logo-icon">
+        <div class="logo-house">
+          <div class="logo-window">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <div class="logo-check"></div>
+      </div>
+      <div class="logo-text">
+        <span class="check">Check</span><span class="my">My</span><span class="rental">Rental</span>
+      </div>
+    </a>
+    <nav class="main-nav" aria-label="Primary navigation">
+      <ul class="menu">
+        <li><a href="/#gallery">Services</a></li>
+        <li><a href="/#process">How It Works</a></li>
+        <li><a href="/pricing">Pricing</a></li>
+        <li><a href="/service-area">Service Area</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li>
+          <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark/light mode">
+            <div class="toggle-track">
+              <div class="toggle-thumb" id="toggle-thumb">
+                <span class="theme-icon" id="theme-icon">🌙</span>
+              </div>
+            </div>
+          </button>
+        </li>
+        <li class="pos-relative">
+          <a href="#" class="cta-button" onclick="toggleLoginWidget(event)">Owner Login</a>
+          <LoginWidget />
+        </li>
+        <li>
+          <button id="cart-toggle" class="cart-icon-btn" aria-label="Open shopping cart">
+            🛒
+            <span id="cart-count" class="cart-count">0</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<script is:inline>
+  function toggleTheme() {
+    const body = document.body;
+    const themeIcon = document.getElementById('theme-icon');
+    const toggleThumb = document.getElementById('toggle-thumb');
+    const isLightMode = body.classList.toggle('light-mode');
+
+    // Animate thumb bounce
+    if (toggleThumb) {
+      toggleThumb.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        toggleThumb.style.transform = 'scale(1)';
+      }, 200);
+    }
+
+    // Update icon with animation
+    if (themeIcon) {
+      themeIcon.style.transform = 'rotate(360deg) scale(0)';
+      setTimeout(() => {
+        themeIcon.textContent = isLightMode ? '☀️' : '🌙';
+        themeIcon.style.transform = 'rotate(0deg) scale(1)';
+      }, 200);
+    }
+
+    // Save preference to localStorage
+    localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+  }
+
+  // Initialize theme icon on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const isLightMode = document.body.classList.contains('light-mode');
+    const themeIcon = document.getElementById('theme-icon');
+    if (themeIcon) {
+      themeIcon.textContent = isLightMode ? '☀️' : '🌙';
+    }
+  });
+
+  // Make toggle function globally available
+  window.toggleTheme = toggleTheme;
+</script>
+
+<style>
+  .skip-link {
+    position: absolute;
+    top: -48px;
+    left: 1.5rem;
+    background: #ffffff;
+    color: #0a0a0f;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0 0 0.75rem 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: top 0.3s ease, box-shadow 0.3s ease;
+    z-index: 2000;
+    text-decoration: none;
+  }
+
+  .skip-link:focus {
+    top: 1.25rem;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.35);
+    outline: none;
+  }
+
+  body.light-mode .skip-link {
+    background: #10121b;
+    color: #f8f9fc;
+  }
+
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(10, 10, 15, 0.85);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .header {
+    background: rgba(248, 249, 252, 0.85);
+    border-bottom-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .logo-container:hover {
+    transform: translateY(-2px);
+  }
+
+  .logo-icon {
+    position: relative;
+    width: 55px;
+    height: 55px;
+    flex-shrink: 0;
+  }
+
+  .logo-house {
+    width: 42px;
+    height: 42px;
+    background: #2c3e50;
+    transform: rotate(45deg);
+    position: absolute;
+    top: 6px;
+    left: 6px;
+  }
+
+  .logo-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2.5px;
+  }
+
+  .logo-window span {
+    background: white;
+    display: block;
+  }
+
+  .logo-check {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 24px;
+    height: 24px;
+    background: #e74c3c;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(231, 76, 60, 0.25);
+  }
+
+  .logo-check::after {
+    content: '';
+    width: 10px;
+    height: 5px;
+    border: 2.5px solid white;
+    border-top: none;
+    border-right: none;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+
+  .logo-text {
+    font-size: 1.85rem;
+    font-weight: 600;
+    letter-spacing: -1px;
+    white-space: nowrap;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .logo-text {
+    background: linear-gradient(135deg, #1a1a1a 0%, #666666 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo-text .rental {
+    background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+  }
+
+  .menu {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+  }
+
+  .menu a {
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.6rem 1.2rem;
+    border-radius: 12px;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  body.light-mode .menu a {
+    color: rgba(0, 0, 0, 0.75);
+  }
+
+  .menu a:hover {
+    background: rgba(100, 116, 139, 0.1);
+    color: #cbd5e1;
+    transform: translateY(-1px);
+  }
+
+  body.light-mode .menu a:hover {
+    background: rgba(100, 116, 139, 0.1);
+    color: #334155;
+  }
+
+  .theme-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .theme-toggle:hover {
+    transform: scale(1.05);
+  }
+
+  .toggle-track {
+    width: 60px;
+    height: 30px;
+    background: rgba(100, 116, 139, 0.2);
+    border: 2px solid rgba(100, 116, 139, 0.3);
+    border-radius: 30px;
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  body.light-mode .toggle-track {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(255, 107, 107, 0.15));
+    border-color: rgba(231, 76, 60, 0.3);
+    box-shadow: inset 0 2px 8px rgba(231, 76, 60, 0.1);
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    background: linear-gradient(135deg, #475569, #334155);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  body.light-mode .toggle-thumb {
+    left: 32px;
+    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+    box-shadow: 0 2px 8px rgba(231, 76, 60, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .theme-icon {
+    font-size: 0.75rem;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  .cta-button {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  }
+
+  .cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+  }
+
+  .pos-relative {
+    position: relative;
+  }
+
+  /* Cart Icon in Header */
+  .cart-icon-btn {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cart-icon-btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
+  }
+
+  .cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: white;
+    color: #e74c3c;
+    border-radius: 50%;
+    min-width: 22px;
+    height: 22px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (max-width: 1024px) {
+    .header-content {
+      padding: 1rem 1.5rem;
+    }
+
+    .menu {
+      gap: 1rem;
+    }
+
+    .menu a {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.9rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .logo-text {
+      font-size: 1.2rem;
+    }
+
+    .menu {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .menu a {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+    }
+
+    .cta-button {
+      padding: 0.6rem 1rem;
+      font-size: 0.85rem;
+    }
+  }
+</style>

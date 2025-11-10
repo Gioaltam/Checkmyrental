@@ -1,0 +1,447 @@
+---
+// Pricing Cards Section with Quarterly Plan and Add-Ons
+
+// Main quarterly service
+const quarterlyPlan = {
+  id: "quarterly",
+  title: "Quarterly Maintenance Inspections",
+  price: 99.90,
+  priceFormatted: "$99.90",
+  priceNote: "per inspection",
+  description: "Complete property checkup every 3 months with 24-hour photo-rich reports",
+  features: [
+    "Interior Damage Assessment",
+    "Exterior Damage Assessment",
+    "HVAC System Inspections",
+    "Plumbing System Inspections",
+    "Appliance Assessments (Oven, Dishwasher, etc.)",
+    "Kitchen Appliance Checks",
+    "Owner Dashboard Access",
+    "24-Hour Report Delivery",
+    "Photo Documentation",
+    "PDF Report Download",
+    "Quarterly Scheduling"
+  ],
+  type: "subscription",
+  featured: true
+};
+
+---
+
+<section class="pricing-cards-section">
+  <!-- Featured Quarterly Plan -->
+  <div class="featured-plan-wrapper">
+    <div class="featured-badge">Most Popular</div>
+    <div class="pricing-card featured">
+      <div class="card-header">
+        <h2>{quarterlyPlan.title}</h2>
+        <p class="card-description">{quarterlyPlan.description}</p>
+      </div>
+
+      <div class="price-display">
+        <span class="price-amount">{quarterlyPlan.priceFormatted}</span>
+        <span class="price-note">{quarterlyPlan.priceNote}</span>
+      </div>
+
+      <ul class="features-list">
+        {quarterlyPlan.features.map(feature => (
+          <li>
+            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+            </svg>
+            {feature}
+          </li>
+        ))}
+      </ul>
+
+      <button
+        class="add-to-cart-btn featured-btn"
+        onclick={`addToCart(${JSON.stringify({
+          id: quarterlyPlan.id,
+          title: quarterlyPlan.title,
+          description: quarterlyPlan.description,
+          price: quarterlyPlan.price,
+          type: quarterlyPlan.type
+        })})`}
+      >
+        Add to Cart
+      </button>
+    </div>
+  </div>
+
+</section>
+
+<style>
+  .pricing-cards-section {
+    padding: 4rem 3rem 8rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* Featured Plan Styles */
+  .featured-plan-wrapper {
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto 6rem;
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    z-index: 10;
+  }
+
+  .pricing-card {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.04) 100%);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 3rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pricing-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(231, 76, 60, 0.03) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+
+  .pricing-card:hover::before {
+    opacity: 1;
+  }
+
+  .pricing-card.featured {
+    border-color: rgba(231, 76, 60, 0.3);
+    box-shadow: 0 12px 48px rgba(231, 76, 60, 0.15);
+    animation: featuredGlow 3s ease-in-out infinite;
+  }
+
+  @keyframes featuredGlow {
+    0%, 100% {
+      box-shadow: 0 12px 48px rgba(231, 76, 60, 0.15);
+    }
+    50% {
+      box-shadow: 0 16px 56px rgba(231, 76, 60, 0.25);
+    }
+  }
+
+  .pricing-card:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  }
+
+  .pricing-card.featured:hover {
+    box-shadow: 0 24px 72px rgba(231, 76, 60, 0.3);
+  }
+
+  body.light-mode .pricing-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fc 100%);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  body.light-mode .pricing-card.featured {
+    border-color: rgba(231, 76, 60, 0.2);
+    box-shadow: 0 12px 48px rgba(231, 76, 60, 0.1);
+  }
+
+  .card-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .card-header h2 {
+    color: #1a1a1a;
+  }
+
+  .card-description {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  body.light-mode .card-description {
+    color: #4a4a4a;
+  }
+
+  .price-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  body.light-mode .price-display {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .price-amount {
+    font-size: 4rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .price-note {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 500;
+  }
+
+  body.light-mode .price-note {
+    color: #666666;
+  }
+
+  .features-list {
+    list-style: none;
+    margin-bottom: 2.5rem;
+  }
+
+  .features-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.05rem;
+    opacity: 0;
+    animation: featureFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .features-list li:nth-child(1) { animation-delay: 0.1s; }
+  .features-list li:nth-child(2) { animation-delay: 0.2s; }
+  .features-list li:nth-child(3) { animation-delay: 0.3s; }
+  .features-list li:nth-child(4) { animation-delay: 0.4s; }
+  .features-list li:nth-child(5) { animation-delay: 0.5s; }
+  .features-list li:nth-child(6) { animation-delay: 0.6s; }
+  .features-list li:nth-child(7) { animation-delay: 0.7s; }
+  .features-list li:nth-child(8) { animation-delay: 0.8s; }
+  .features-list li:nth-child(9) { animation-delay: 0.9s; }
+  .features-list li:nth-child(10) { animation-delay: 1.0s; }
+  .features-list li:nth-child(11) { animation-delay: 1.1s; }
+
+  @keyframes featureFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  body.light-mode .features-list li {
+    color: #333333;
+  }
+
+  .check-icon {
+    width: 20px;
+    height: 20px;
+    color: #e74c3c;
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .features-list li:hover .check-icon {
+    transform: scale(1.2) rotate(10deg);
+  }
+
+  .add-to-cart-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 2rem;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 24px rgba(231, 76, 60, 0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .add-to-cart-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .add-to-cart-btn:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .add-to-cart-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(231, 76, 60, 0.5);
+  }
+
+  .add-to-cart-btn:active {
+    transform: translateY(-1px) scale(0.98);
+  }
+
+  /* Add-On Services Styles */
+  .addon-section {
+    margin-top: 4rem;
+  }
+
+  .addon-header {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .addon-header {
+    color: #1a1a1a;
+  }
+
+  .addon-subheader {
+    text-align: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.light-mode .addon-subheader {
+    color: #4a4a4a;
+  }
+
+  .addon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .pricing-card.addon {
+    padding: 2.5rem;
+  }
+
+  .addon-badge {
+    display: inline-block;
+    background: rgba(100, 116, 139, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.4rem 1rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1.5rem;
+  }
+
+  body.light-mode .addon-badge {
+    background: rgba(0, 0, 0, 0.08);
+    color: #666666;
+  }
+
+  .pricing-card.addon h4 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .pricing-card.addon h4 {
+    color: #1a1a1a;
+  }
+
+  .addon-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 1.5rem;
+  }
+
+  .addon-description {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+  }
+
+  body.light-mode .addon-description {
+    color: #4a4a4a;
+  }
+
+  .pricing-card.addon .add-to-cart-btn {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    .pricing-cards-section {
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .pricing-card {
+      padding: 2rem;
+    }
+
+    .featured-plan-wrapper {
+      margin-bottom: 4rem;
+    }
+
+    .card-header h2 {
+      font-size: 1.75rem;
+    }
+
+    .price-amount {
+      font-size: 3rem;
+    }
+
+    .addon-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .addon-header {
+      font-size: 2rem;
+    }
+  }
+</style>

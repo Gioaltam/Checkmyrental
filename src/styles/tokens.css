@@ -1,0 +1,15 @@
+:root {
+  /* CheckMyRental Brand Colors */
+  --brand-red: #e74c3c;
+  --brand-red-light: #ff6b6b;
+  --brand-navy: #2c3e50;
+  --bg: #0a0a0f;
+  --bg-elev: #101317;
+  --text: #f0f0f0;
+  --text-muted: #cbd5e1;
+  --muted: #94a3b8;
+  --white: #ffffff;
+  --radius: 16px;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  --shadow-glow: 0 3px 10px rgba(231, 76, 60, 0.25);
+}

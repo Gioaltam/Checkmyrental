@@ -1,0 +1,281 @@
+---
+// Hero Section with animations and light effects
+---
+
+<section class="hero-section vt-hero">
+  <!-- Premium light beam effects with parallax -->
+  <div class="light-beams scroll-parallax" data-speed="0.3"></div>
+  <div class="scan-light scroll-parallax" data-speed="0.2"></div>
+
+  <!-- Animated gradient overlay with parallax -->
+  <div class="hero-gradient-overlay scroll-parallax" data-speed="0.15"></div>
+
+  <div class="hero-content">
+    <h1 class="hero-title">
+      Quarterly Maintenance Property Inspections<br>
+      <strong>24‑Hour Reports You Can Trust</strong>
+    </h1>
+    <p class="hero-subtitle">
+      Professional inspectors document your rental property every quarter. Get a photo‑rich condition report within 24 hours — catch small issues before they become expensive problems.
+    </p>
+    <div class="hero-cta">
+      <a href="#contact" class="btn btn-primary">Start Quarterly Plan</a>
+      <a href="#gallery" class="btn btn-secondary">See What's Included</a>
+    </div>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="scroll-cue">
+    <span>Scroll to explore</span>
+  </div>
+</section>
+
+<style>
+  .hero-section {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8rem 3rem 4rem;
+    overflow: hidden;
+  }
+
+  .light-beams {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200%;
+    height: 800px;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(100, 116, 139, 0.02) 20%,
+      rgba(100, 116, 139, 0.04) 40%,
+      rgba(100, 116, 139, 0.03) 60%,
+      rgba(100, 116, 139, 0.02) 80%,
+      transparent 100%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: beamSweep 8s ease-in-out infinite;
+  }
+
+  @keyframes beamSweep {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  .scan-light {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(100, 116, 139, 0.5) 50%,
+      transparent 100%
+    );
+    animation: scanMove 4s ease-in-out infinite;
+    z-index: 1;
+  }
+
+  @keyframes scanMove {
+    0%, 100% { left: -100%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { left: 100%; opacity: 0; }
+  }
+
+  .hero-gradient-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse at 50% 30%,
+      rgba(100, 116, 139, 0.08) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+    animation: gradientPulse 6s ease-in-out infinite;
+  }
+
+  @keyframes gradientPulse {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.8; }
+  }
+
+  .hero-content {
+    max-width: 1100px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+    font-weight: 300;
+    line-height: 1.15;
+    margin-bottom: 2rem;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.03em;
+  }
+
+  .hero-title strong {
+    font-weight: 800;
+    background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  body.light-mode .hero-title {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #404040 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .hero-title strong {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 50%, #a93226 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.8;
+    margin-bottom: 3rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.light-mode .hero-subtitle {
+    color: #4a4a4a;
+  }
+
+  .hero-cta {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 1rem 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    border-radius: 16px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    box-shadow: 0 6px 25px rgba(231, 76, 60, 0.35);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 35px rgba(231, 76, 60, 0.45);
+  }
+
+  .btn-secondary {
+    background: rgba(100, 116, 139, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(100, 116, 139, 0.25);
+    transform: translateY(-4px);
+  }
+
+  body.light-mode .btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  body.light-mode .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .scroll-cue {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+    font-weight: 500;
+    z-index: 10;
+  }
+
+  .scroll-cue::after {
+    content: '';
+    display: block;
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent);
+    margin: 0.75rem auto 0;
+    animation: scrollBounce 2s ease-in-out infinite;
+  }
+
+  @keyframes scrollBounce {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(10px); opacity: 1; }
+  }
+
+  body.light-mode .scroll-cue {
+    color: #666666;
+  }
+
+  body.light-mode .scroll-cue::after {
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent);
+  }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 6rem 1.5rem 3rem;
+    }
+
+    .hero-cta {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn {
+      text-align: center;
+    }
+
+    .scroll-cue {
+      bottom: 2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .light-beams,
+    .scan-light,
+    .hero-gradient-overlay,
+    .scroll-cue::after {
+      animation: none;
+    }
+  }
+</style>

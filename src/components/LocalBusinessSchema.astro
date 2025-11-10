@@ -1,0 +1,140 @@
+---
+// JSON-LD Structured Data for Local Business SEO
+---
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "@id": "https://checkmyrental.io/#organization",
+  "name": "CheckMyRental",
+  "legalName": "Altam CO LLC",
+  "url": "https://checkmyrental.io",
+  "logo": "https://checkmyrental.io/logo.png",
+  "image": "https://checkmyrental.io/og-image.jpg",
+  "description": "Professional rental property inspection services in Tampa Bay, St Petersburg, and Clearwater. Quarterly maintenance inspections with 24-hour photo-rich reports.",
+  "telephone": "+17276424457",
+  "email": "checkmyrentals.fl@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressRegion": "FL",
+    "addressCountry": "US",
+    "addressLocality": "Tampa Bay Area"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 27.9506,
+    "longitude": -82.4572
+  },
+  "areaServed": [
+    {
+      "@type": "City",
+      "name": "Tampa",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "FL",
+        "addressCountry": "US"
+      }
+    },
+    {
+      "@type": "City",
+      "name": "St Petersburg",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "FL",
+        "addressCountry": "US"
+      }
+    },
+    {
+      "@type": "City",
+      "name": "Clearwater",
+      "address": {
+        "@type": "PostalAddress",
+        "addressRegion": "FL",
+        "addressCountry": "US"
+      }
+    }
+  ],
+  "priceRange": "$$",
+  "openingHoursSpecification": [
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday"
+      ],
+      "opens": "08:00",
+      "closes": "18:00"
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": "Saturday",
+      "opens": "09:00",
+      "closes": "15:00"
+    }
+  ],
+  "sameAs": [
+    "https://facebook.com/checkmyrental",
+    "https://instagram.com/checkmyrental"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Property Inspection Services",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Quarterly Maintenance Inspection",
+          "description": "Complete property checkup every 3 months with 24-hour photo-rich reports",
+          "provider": {
+            "@type": "LocalBusiness",
+            "name": "CheckMyRental"
+          },
+          "areaServed": {
+            "@type": "State",
+            "name": "Florida"
+          },
+          "offers": {
+            "@type": "Offer",
+            "price": "99.90",
+            "priceCurrency": "USD"
+          }
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "Move-In/Move-Out Inspection",
+          "description": "Comprehensive property inspection for tenant transitions",
+          "provider": {
+            "@type": "LocalBusiness",
+            "name": "CheckMyRental"
+          }
+        }
+      },
+      {
+        "@type": "Offer",
+        "itemOffered": {
+          "@type": "Service",
+          "name": "HVAC System Inspection",
+          "description": "Detailed HVAC system assessment and maintenance recommendations",
+          "provider": {
+            "@type": "LocalBusiness",
+            "name": "CheckMyRental"
+          }
+        }
+      }
+    ]
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "127",
+    "bestRating": "5",
+    "worstRating": "1"
+  }
+})} />

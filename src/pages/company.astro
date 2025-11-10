@@ -1,0 +1,409 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Reveal from "../components/Reveal.astro";
+---
+
+<BaseLayout
+  title="Company - InspectionAgent"
+  description="Learn about our mission to transform the property inspection industry."
+>
+  <!-- Hero Section -->
+  <section class="hero section">
+    <div class="container">
+      <Reveal>
+        <p class="eyebrow">Company</p>
+        <h1 class="h1" transition:name="hero-title">
+          Building the future of <span style="color:var(--brand-orange)">property inspections</span>
+        </h1>
+        <p class="hero-description">
+          We're on a mission to make property inspections faster, more reliable, and more accessible for everyone.
+        </p>
+      </Reveal>
+    </div>
+  </section>
+
+  <!-- Mission Section -->
+  <section class="section">
+    <div class="container">
+      <div class="mission-grid">
+        <Reveal>
+          <div class="mission-content">
+            <h2 class="h2">Our Mission</h2>
+            <p>
+              InspectionAgent was founded on the belief that property inspection should be simple,
+              transparent, and efficient. We leverage cutting-edge technology to eliminate bottlenecks
+              and empower professionals to deliver exceptional service.
+            </p>
+            <p>
+              Our platform serves thousands of inspectors, property managers, and real estate
+              professionals worldwide, processing millions of inspections annually with industry-leading
+              reliability and performance.
+            </p>
+          </div>
+        </Reveal>
+        <Reveal delay={200}>
+          <div class="stats-highlight card">
+            <div class="stat-item">
+              <div class="stat-value">2019</div>
+              <div class="stat-label">Founded</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">50+</div>
+              <div class="stat-label">Team Members</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value">120+</div>
+              <div class="stat-label">Countries Served</div>
+            </div>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  <!-- Values Section -->
+  <section class="section values-section" id="team">
+    <div class="container">
+      <Reveal>
+        <h2 class="h2 section-title">Our Values</h2>
+        <p class="section-subtitle">
+          The principles that guide everything we build and every decision we make.
+        </p>
+      </Reveal>
+      <div class="values-grid">
+        <Reveal delay={100}>
+          <div class="value-card card">
+            <div class="value-icon">⚡</div>
+            <h3>Speed & Performance</h3>
+            <p>We obsess over milliseconds and optimize for every interaction. Fast isn't just a feature—it's fundamental.</p>
+          </div>
+        </Reveal>
+        <Reveal delay={200}>
+          <div class="value-card card">
+            <div class="value-icon">🔒</div>
+            <h3>Security First</h3>
+            <p>Your data's safety is paramount. We employ industry-leading security practices and maintain rigorous compliance standards.</p>
+          </div>
+        </Reveal>
+        <Reveal delay={300}>
+          <div class="value-card card">
+            <div class="value-icon">🌍</div>
+            <h3>Global Scale</h3>
+            <p>Built for worldwide deployment with multi-region infrastructure, localization support, and 24/7 uptime.</p>
+          </div>
+        </Reveal>
+        <Reveal delay={400}>
+          <div class="value-card card">
+            <div class="value-icon">💡</div>
+            <h3>Innovation</h3>
+            <p>We push boundaries with AI-powered insights, advanced analytics, and continuous platform evolution.</p>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Section -->
+  <section class="section team-section">
+    <div class="container">
+      <Reveal>
+        <h2 class="h2 section-title">Leadership Team</h2>
+        <p class="section-subtitle">
+          Experienced professionals from leading tech companies and inspection services.
+        </p>
+      </Reveal>
+      <div class="team-grid">
+        <Reveal delay={100}>
+          <div class="team-card card">
+            <div class="avatar">JD</div>
+            <h3>Jane Doe</h3>
+            <p class="role">CEO & Co-Founder</p>
+            <p class="bio">Former VP of Product at PropTech Inc. 15+ years in real estate technology.</p>
+          </div>
+        </Reveal>
+        <Reveal delay={200}>
+          <div class="team-card card">
+            <div class="avatar">JS</div>
+            <h3>John Smith</h3>
+            <p class="role">CTO & Co-Founder</p>
+            <p class="bio">Previously led engineering at Scale Systems. Expert in distributed systems.</p>
+          </div>
+        </Reveal>
+        <Reveal delay={300}>
+          <div class="team-card card">
+            <div class="avatar">AC</div>
+            <h3>Alex Chen</h3>
+            <p class="role">Head of Product</p>
+            <p class="bio">Product leader from Cloud Platform Co. Focused on customer-centric design.</p>
+          </div>
+        </Reveal>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="section contact-section" id="contact">
+    <div class="container">
+      <Reveal>
+        <div class="contact-card card">
+          <h2 class="h2">Get in Touch</h2>
+          <p>Interested in partnering with us or learning more? We'd love to hear from you.</p>
+          <div class="contact-methods">
+            <div class="contact-item">
+              <div class="contact-icon">📧</div>
+              <div>
+                <div class="contact-label">Email</div>
+                <a href="mailto:hello@inspectionagent.com">hello@inspectionagent.com</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">💼</div>
+              <div>
+                <div class="contact-label">Sales</div>
+                <a href="mailto:sales@inspectionagent.com">sales@inspectionagent.com</a>
+              </div>
+            </div>
+            <div class="contact-item">
+              <div class="contact-icon">🛠️</div>
+              <div>
+                <div class="contact-label">Support</div>
+                <a href="mailto:support@inspectionagent.com">support@inspectionagent.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding-top: 120px;
+    padding-bottom: 80px;
+  }
+
+  .hero-description {
+    max-width: 740px;
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1.7;
+  }
+
+  .section-title {
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .section-subtitle {
+    text-align: center;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto 48px;
+    font-size: 1.05rem;
+  }
+
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+
+  .mission-content h2 {
+    margin-bottom: 24px;
+  }
+
+  .mission-content p {
+    color: var(--text);
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-size: 1.05rem;
+  }
+
+  .stats-highlight {
+    padding: 40px 32px;
+  }
+
+  .stat-item {
+    padding: 24px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+  }
+
+  .stat-item:last-child {
+    border-bottom: none;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--white), var(--brand-orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .values-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 48px;
+  }
+
+  .value-card {
+    padding: 32px;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .value-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(255, 127, 17, 0.15);
+  }
+
+  .value-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+  }
+
+  .value-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--white);
+  }
+
+  .value-card p {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .team-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 48px;
+  }
+
+  .team-card {
+    padding: 32px;
+    text-align: center;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .team-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(255, 127, 17, 0.15);
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--brand-orange), var(--brand-navy));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin: 0 auto 16px;
+  }
+
+  .team-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--white);
+  }
+
+  .role {
+    color: var(--brand-orange);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+  }
+
+  .bio {
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  .contact-card {
+    padding: 64px 48px;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .contact-card h2 {
+    margin-bottom: 16px;
+  }
+
+  .contact-card > p {
+    color: var(--muted);
+    margin-bottom: 40px;
+    font-size: 1.05rem;
+  }
+
+  .contact-methods {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 32px;
+  }
+
+  .contact-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .contact-icon {
+    font-size: 2rem;
+  }
+
+  .contact-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .contact-item a {
+    color: var(--brand-orange);
+    font-weight: 600;
+    transition: color 0.2s;
+  }
+
+  .contact-item a:hover {
+    color: var(--white);
+  }
+
+  @media (max-width: 968px) {
+    .mission-grid,
+    .values-grid,
+    .team-grid,
+    .contact-methods {
+      grid-template-columns: 1fr;
+    }
+
+    .contact-card {
+      padding: 48px 32px;
+    }
+  }
+</style>

@@ -1431,7 +1431,7 @@ def upload_to_backend(artifacts: Dict[str, Any], owner_id: str, property_address
                 report_data['important_issues'] = important_count
 
         # Send to backend API
-        api_url = "http://localhost:5000/api/reports/save"
+        api_url = "http://localhost:8000/api/reports/save"
         response = requests.post(api_url, json=report_data, timeout=10)
 
         if response.status_code == 200:

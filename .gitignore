@@ -42,3 +42,6 @@ dashboard_data.json
 # Temp/workspace
 temp_zips/
 workspace/
+
+# Cache directory
+.cache/

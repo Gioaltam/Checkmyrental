@@ -19,7 +19,7 @@ class PortalClient(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String(320), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    full_name = Column(String(200), nullable=True)
+    full_name = Column(String(200), nullable=False)
     is_active = Column(Boolean, default=True)
     is_paid = Column(Boolean, default=False)  # Has client paid for access
     payment_date = Column(DateTime, nullable=True)  # When payment was made

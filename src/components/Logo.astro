@@ -1,0 +1,115 @@
+---
+const { size = "medium" } = Astro.props;
+const sizes = {
+  small: { icon: 40, text: "1.2rem" },
+  medium: { icon: 55, text: "1.85rem" },
+  large: { icon: 70, text: "2.2rem" }
+};
+const current = sizes[size];
+---
+
+<div class="logo-container">
+  <div class="logo-icon">
+    <div class="logo-house">
+      <div class="logo-window">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="logo-check"></div>
+  </div>
+  <div class="logo-text">
+    <span class="check">Check</span><span class="my">My</span><span class="rental">Rental</span>
+  </div>
+</div>
+
+<style define:vars={{ iconSize: `${current.icon}px`, textSize: current.text }}>
+  .logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .logo-icon {
+    position: relative;
+    width: var(--iconSize);
+    height: var(--iconSize);
+    flex-shrink: 0;
+  }
+
+  .logo-house {
+    width: calc(var(--iconSize) * 0.76);
+    height: calc(var(--iconSize) * 0.76);
+    background: var(--brand-navy);
+    transform: rotate(45deg);
+    position: absolute;
+    top: calc(var(--iconSize) * 0.11);
+    left: calc(var(--iconSize) * 0.11);
+  }
+
+  .logo-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 2.5px;
+  }
+
+  .logo-window span {
+    background: white;
+    display: block;
+  }
+
+  .logo-check {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: calc(var(--iconSize) * 0.44);
+    height: calc(var(--iconSize) * 0.44);
+    background: var(--brand-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .logo-check::after {
+    content: '';
+    width: 10px;
+    height: 5px;
+    border: 2.5px solid white;
+    border-top: none;
+    border-right: none;
+    transform: rotate(-45deg) translateY(-1px);
+  }
+
+  .logo-text {
+    font-size: var(--textSize);
+    font-weight: 600;
+    letter-spacing: -1px;
+    white-space: nowrap;
+  }
+
+  .check, .my {
+    background: linear-gradient(135deg, #ffffff 0%, var(--text-muted) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .rental {
+    background: linear-gradient(135deg, var(--brand-red-light) 0%, var(--brand-red) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+  }
+</style>

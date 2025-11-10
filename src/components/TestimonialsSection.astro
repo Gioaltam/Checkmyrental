@@ -1,0 +1,343 @@
+---
+// Social Proof & Testimonials Section
+---
+
+<section class="testimonials-section">
+  <div class="testimonials-header">
+    <p class="section-eyebrow">Trusted by Property Owners</p>
+    <h2>Real Results from Real Landlords</h2>
+    <p class="section-subtitle">See how quarterly inspections help property owners catch issues early and save thousands</p>
+  </div>
+
+  <div class="testimonials-grid">
+    <!-- Testimonial 1 -->
+    <div class="testimonial-card">
+      <div class="quote-icon">"</div>
+      <p class="testimonial-text">
+        The quarterly inspection caught a small roof leak before it became a major problem. Saved me at least $8,000 in potential water damage repairs. The 24-hour turnaround is incredible.
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">SJ</div>
+        <div class="author-info">
+          <div class="author-name">Sarah Johnson</div>
+          <div class="author-title">3 Properties in Seattle</div>
+        </div>
+      </div>
+      <div class="result-badge">Saved $8,000+</div>
+    </div>
+
+    <!-- Testimonial 2 -->
+    <div class="testimonial-card featured">
+      <div class="featured-badge">Most Popular</div>
+      <div class="quote-icon">"</div>
+      <p class="testimonial-text">
+        As a property manager handling 12 units, the dashboard is a game-changer. I can see all properties at once, track issues over time, and show owners detailed photo reports. Worth every penny.
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">MR</div>
+        <div class="author-info">
+          <div class="author-name">Michael Rodriguez</div>
+          <div class="author-title">Property Manager, 12 Units</div>
+        </div>
+      </div>
+      <div class="result-badge">12 Properties Managed</div>
+    </div>
+
+    <!-- Testimonial 3 -->
+    <div class="testimonial-card">
+      <div class="quote-icon">"</div>
+      <p class="testimonial-text">
+        Found a major HVAC issue during the winter quarterly inspection. The detailed photos and recommendations helped me get it fixed fast. Tenants stayed comfortable and happy.
+      </p>
+      <div class="testimonial-author">
+        <div class="author-avatar">DL</div>
+        <div class="author-info">
+          <div class="author-name">David Lee</div>
+          <div class="author-title">Rental Property Owner</div>
+        </div>
+      </div>
+      <div class="result-badge">Issue Caught Early</div>
+    </div>
+  </div>
+
+  <!-- Results Stats Bar -->
+  <div class="results-bar">
+    <div class="result-stat">
+      <div class="result-number">94%</div>
+      <div class="result-label">Issues Found Early</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-number">$12K</div>
+      <div class="result-label">Avg. Savings/Year</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-number">200+</div>
+      <div class="result-label">Properties Inspected</div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .testimonials-section {
+    padding: 8rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .testimonials-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-eyebrow {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  body.light-mode .section-eyebrow {
+    color: #666666;
+  }
+
+  .testimonials-header h2 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .testimonials-header h2 {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .section-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  body.light-mode .section-subtitle {
+    color: #4a4a4a;
+  }
+
+  .testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem;
+    margin-bottom: 4rem;
+  }
+
+  .testimonial-card {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 2.5rem;
+    position: relative;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .testimonial-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(100, 116, 139, 0.2);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  }
+
+  .testimonial-card.featured {
+    border-color: rgba(231, 76, 60, 0.3);
+    background: linear-gradient(135deg,
+      rgba(231, 76, 60, 0.05) 0%,
+      rgba(192, 57, 43, 0.03) 100%);
+  }
+
+  .testimonial-card.featured:hover {
+    border-color: rgba(231, 76, 60, 0.4);
+    box-shadow: 0 20px 50px rgba(231, 76, 60, 0.2);
+  }
+
+  body.light-mode .testimonial-card {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  body.light-mode .testimonial-card.featured {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(231, 76, 60, 0.2);
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: -12px;
+    right: 2rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+  }
+
+  .quote-icon {
+    font-size: 4rem;
+    line-height: 1;
+    color: rgba(231, 76, 60, 0.2);
+    margin-bottom: 1rem;
+    font-family: Georgia, serif;
+  }
+
+  .testimonial-text {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  body.light-mode .testimonial-text {
+    color: rgba(0, 0, 0, 0.7);
+  }
+
+  .testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .author-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  body.light-mode .author-avatar {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  }
+
+  .author-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 0.25rem;
+  }
+
+  body.light-mode .author-name {
+    color: #1a1a1a;
+  }
+
+  .author-title {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  body.light-mode .author-title {
+    color: #666666;
+  }
+
+  .result-badge {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.15);
+    color: rgb(16, 185, 129);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  body.light-mode .result-badge {
+    background: rgba(16, 185, 129, 0.1);
+  }
+
+  /* Results Stats Bar */
+  .results-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    padding: 3rem;
+    background: linear-gradient(135deg,
+      rgba(100, 116, 139, 0.08) 0%,
+      rgba(100, 116, 139, 0.04) 100%);
+    border-radius: 24px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+  }
+
+  body.light-mode .results-bar {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .result-stat {
+    text-align: center;
+  }
+
+  .result-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-label {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+
+  body.light-mode .result-label {
+    color: #4a4a4a;
+  }
+
+  @media (max-width: 768px) {
+    .testimonials-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .testimonials-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .testimonial-card {
+      padding: 2rem;
+    }
+
+    .results-bar {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .result-number {
+      font-size: 2rem;
+    }
+  }
+</style>

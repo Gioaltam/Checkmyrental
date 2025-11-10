@@ -1,0 +1,378 @@
+---
+// FAQ Section with Accordion
+---
+
+<section class="faq-section" id="faq">
+  <div class="faq-header">
+    <p class="section-eyebrow">Frequently Asked Questions</p>
+    <h2>Everything You Need to Know</h2>
+    <p class="section-subtitle">Quick answers to common questions about our quarterly inspection service</p>
+  </div>
+
+  <div class="faq-container">
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>How long does a quarterly inspection take?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Most inspections take 1-2 hours depending on property size. Our inspectors work efficiently while being thorough, capturing 200+ photos and checking all major systems. Tenants can typically remain in the unit during the inspection.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>What happens if issues are found during inspection?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>All findings are documented with photos and categorized by severity (Critical, Important, or OK). You'll receive detailed recommendations in your 24-hour report. Critical issues like safety hazards are flagged immediately. You can then coordinate repairs with your preferred contractors or property manager.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>Can I share reports with my property manager or tenants?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Absolutely! Your dashboard includes easy report sharing features. You can generate shareable links, download PDFs, or export specific photos. Property managers love the ability to track multiple properties from one dashboard.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>What areas do you service?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>We currently serve the Greater Seattle area including King County, Snohomish County, and Pierce County. Expanding to additional markets soon! Contact us if you're outside these areas — we may be able to accommodate special requests.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>Do I need to be present during the inspection?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>No, you don't need to be present. We coordinate directly with your tenants or property manager for access. Many landlords prefer this hands-off approach. You'll get the full report within 24 hours regardless.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>What's included in the interior assessment?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>We check walls, floors, ceilings, doors, windows, fixtures, and all rooms. This includes documenting damage, wear and tear, cleanliness, and potential safety concerns. We also test appliances like dishwashers, ovens, and disposal units. Detailed photos capture the condition of every area.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>How do quarterly inspections differ from move-in/move-out inspections?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Quarterly inspections focus on ongoing maintenance and early issue detection while tenants are living there. Move-in/move-out inspections document property condition for security deposit purposes and tenant turnover. Quarterly inspections help you catch problems between turnovers — preventing small issues from becoming expensive repairs.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>Can I cancel or pause my quarterly plan?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Yes! You can pause or cancel anytime with 30 days notice. If a property becomes vacant or you sell it, just let us know. We understand that property ownership situations change. No long-term contracts or cancellation fees.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>How does the 24-hour turnaround work?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>After your inspection is completed, our team processes all photos, writes observations and recommendations, and uploads everything to your dashboard within 24 business hours. You'll receive an email notification when your report is ready. Critical issues are flagged immediately by phone if needed.</p>
+      </div>
+    </div>
+
+    <div class="faq-item" data-faq>
+      <button class="faq-question" aria-expanded="false">
+        <span>Do you offer discounts for multiple properties?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-answer">
+        <p>Yes! Property managers and owners with multiple rentals get volume pricing. Contact us for a custom quote. We also offer scheduling flexibility to inspect multiple properties in the same area on the same day for maximum convenience.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-cta">
+    <p>Still have questions?</p>
+    <a href="#contact" class="faq-contact-btn">Contact Us</a>
+  </div>
+</section>
+
+<script>
+  // FAQ Accordion functionality
+  function initFAQ() {
+    const faqItems = document.querySelectorAll('[data-faq]');
+
+    faqItems.forEach(item => {
+      const question = item.querySelector('.faq-question');
+      const answer = item.querySelector('.faq-answer');
+
+      if (!question || !answer) return;
+
+      question.addEventListener('click', () => {
+        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+
+        // Close all other FAQ items
+        faqItems.forEach(otherItem => {
+          const otherQuestion = otherItem.querySelector('.faq-question');
+          const otherAnswer = otherItem.querySelector('.faq-answer');
+          if (otherItem !== item && otherQuestion && otherAnswer) {
+            otherQuestion.setAttribute('aria-expanded', 'false');
+            otherAnswer.style.maxHeight = '0';
+            otherItem.classList.remove('active');
+          }
+        });
+
+        // Toggle current item
+        if (isExpanded) {
+          question.setAttribute('aria-expanded', 'false');
+          answer.style.maxHeight = '0';
+          item.classList.remove('active');
+        } else {
+          question.setAttribute('aria-expanded', 'true');
+          answer.style.maxHeight = answer.scrollHeight + 'px';
+          item.classList.add('active');
+        }
+      });
+    });
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    initFAQ();
+  });
+
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:page-load', () => {
+    initFAQ();
+  });
+</script>
+
+<style>
+  .faq-section {
+    padding: 8rem 3rem;
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .faq-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .section-eyebrow {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  body.light-mode .section-eyebrow {
+    color: #666666;
+  }
+
+  .faq-header h2 {
+    font-size: clamp(2.2rem, 4vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .faq-header h2 {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .section-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  body.light-mode .section-subtitle {
+    color: #4a4a4a;
+  }
+
+  .faq-container {
+    margin-bottom: 4rem;
+  }
+
+  .faq-item {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+  }
+
+  .faq-item:hover {
+    border-color: rgba(100, 116, 139, 0.15);
+  }
+
+  .faq-item.active {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.03) 100%);
+    border-color: rgba(231, 76, 60, 0.3);
+  }
+
+  body.light-mode .faq-item {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  body.light-mode .faq-item.active {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(231, 76, 60, 0.2);
+  }
+
+  .faq-question {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    background: transparent;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .faq-question:hover {
+    color: rgb(231, 76, 60);
+  }
+
+  body.light-mode .faq-question {
+    color: #1a1a1a;
+  }
+
+  .faq-icon {
+    font-size: 1.5rem;
+    font-weight: 300;
+    color: rgba(231, 76, 60, 0.8);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+  }
+
+  .faq-item.active .faq-icon {
+    transform: rotate(45deg);
+  }
+
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .faq-answer p {
+    padding: 0 2rem 1.5rem 2rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+
+  body.light-mode .faq-answer p {
+    color: #4a4a4a;
+  }
+
+  .faq-cta {
+    text-align: center;
+    padding: 3rem;
+    background: linear-gradient(135deg,
+      rgba(100, 116, 139, 0.08) 0%,
+      rgba(100, 116, 139, 0.04) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(100, 116, 139, 0.15);
+  }
+
+  body.light-mode .faq-cta {
+    background: rgba(255, 255, 255, 0.6);
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .faq-cta p {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 1.5rem;
+  }
+
+  body.light-mode .faq-cta p {
+    color: #1a1a1a;
+  }
+
+  .faq-contact-btn {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 25px rgba(231, 76, 60, 0.35);
+  }
+
+  .faq-contact-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 35px rgba(231, 76, 60, 0.45);
+  }
+
+  @media (max-width: 768px) {
+    .faq-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    .faq-answer p {
+      padding: 0 1.5rem 1.25rem 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .faq-cta {
+      padding: 2rem;
+    }
+  }
+</style>

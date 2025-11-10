@@ -1,106 +1,81 @@
 """Photo-specific report viewer"""
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 import json
 import sqlite3
+from urllib.parse import unquote
 
 router = APIRouter()
 
 @router.get("/{report_id}/{photo_filename}/json")
 def get_photo_analysis_json(report_id: str, photo_filename: str):
-    """Get individual photo analysis as JSON"""
+    """Get individual photo analysis as JSON from existing report data"""
     try:
-        # Get report from database
-        db_path = Path("../workspace/inspection_portal.db")
-        conn = sqlite3.connect(str(db_path))
-        cur = conn.cursor()
-        
-        cur.execute("SELECT web_dir FROM reports WHERE id = ?", (report_id,))
-        row = cur.fetchone()
-        conn.close()
-        
-        if not row:
-            return {"error": "Report not found"}
-        
-        web_dir = row[0]
-        
-        # Load JSON report
-        json_path = Path("..") / web_dir.replace("\\", "/") / "report.json"
-        
+        # Import path utilities
+        from ..lib.paths import outputs_root
+
+        outputs_dir = outputs_root()
+
+        # The report_id is now the directory name like "904 marshal st_20251009_203310"
+        # Find the specific report directory
+        report_dir = outputs_dir / report_id
+
+        if not report_dir.exists():
+            # Try URL decoding the report_id in case it was encoded
+            from urllib.parse import unquote
+            report_id_decoded = unquote(report_id)
+            report_dir = outputs_dir / report_id_decoded
+
+            if not report_dir.exists():
+                return {
+                    "error": f"Report directory not found: {report_id}",
+                    "severity": "error",
+                    "observations": ["Report directory not found"],
+                    "potential_issues": [],
+                    "recommendations": []
+                }
+
+        # Load the report.json for this specific report
+        json_path = report_dir / "web" / "report.json"
+
         if not json_path.exists():
-            return {"error": "Report JSON not found"}
-        
-        with open(json_path, 'r') as f:
-            report_data = json.load(f)
-        
-        # Find the specific item for this photo
-        print(f"Looking for photo: {photo_filename}")
-        
-        # Try different matching strategies
-        for report_item in report_data.get("items", []):
-            image_url = report_item.get("image_url", "")
-            print(f"Checking against: {image_url}")
-            
-            # Try exact match first
-            if image_url == photo_filename:
-                print(f"Found exact match for {photo_filename}")
-                return {
-                    "location": report_item.get("location", "Unknown Location"),
-                    "severity": report_item.get("severity", "informational"),
-                    "observations": report_item.get("observations", []),
-                    "potential_issues": report_item.get("potential_issues", []),
-                    "recommendations": report_item.get("recommendations", [])
-                }
-            
-            # Try endswith match
-            if image_url.endswith(photo_filename):
-                print(f"Found endswith match for {photo_filename}")
-                return {
-                    "location": report_item.get("location", "Unknown Location"),
-                    "severity": report_item.get("severity", "informational"),
-                    "observations": report_item.get("observations", []),
-                    "potential_issues": report_item.get("potential_issues", []),
-                    "recommendations": report_item.get("recommendations", [])
-                }
-            
-            # Try matching just the filename without path
-            if photo_filename in image_url:
-                print(f"Found partial match for {photo_filename}")
-                return {
-                    "location": report_item.get("location", "Unknown Location"),
-                    "severity": report_item.get("severity", "informational"),
-                    "observations": report_item.get("observations", []),
-                    "potential_issues": report_item.get("potential_issues", []),
-                    "recommendations": report_item.get("recommendations", [])
-                }
-            
-            # Try matching with different extensions or naming patterns
-            photo_base = photo_filename.split('.')[0]
-            if photo_base in image_url:
-                print(f"Found base name match for {photo_filename}")
-                return {
-                    "location": report_item.get("location", "Unknown Location"),
-                    "severity": report_item.get("severity", "informational"),
-                    "observations": report_item.get("observations", []),
-                    "potential_issues": report_item.get("potential_issues", []),
-                    "recommendations": report_item.get("recommendations", [])
-                }
-        
-        # If no match found, return the first item as fallback with a note
-        print(f"No match found for {photo_filename}, returning first item as fallback")
-        if report_data.get("items"):
-            first_item = report_data["items"][0]
             return {
-                "location": first_item.get("location", "Unknown Location"),
-                "severity": first_item.get("severity", "informational"),
-                "observations": first_item.get("observations", []),
-                "potential_issues": first_item.get("potential_issues", []),
-                "recommendations": first_item.get("recommendations", []),
-                "note": f"Using general analysis - specific match not found for {photo_filename}"
+                "error": "Report JSON not found",
+                "severity": "error",
+                "observations": ["Report data file not found"],
+                "potential_issues": [],
+                "recommendations": []
             }
-        
-        return {"error": f"Analysis not found for {photo_filename}"}
+
+        # Read the report data
+        with open(json_path, 'r', encoding='utf-8') as f:
+            report_data = json.load(f)
+
+        # Look for the specific photo in this report's items
+        for item in report_data.get("items", []):
+            image_url = item.get("image_url", "")
+
+            # The image_url in report.json is like "photos/photo_001.jpg"
+            # and photo_filename is like "photo_001.jpg"
+            if image_url.endswith(photo_filename) or photo_filename in image_url:
+                # Found the matching analysis!
+                return {
+                    "location": item.get("location", "Unknown Location"),
+                    "severity": item.get("severity", "informational"),
+                    "observations": item.get("observations", []),
+                    "potential_issues": item.get("potential_issues", []),
+                    "recommendations": item.get("recommendations", [])
+                }
+
+        # If no exact match found, return an error
+        return {
+            "error": f"Analysis not found for photo {photo_filename} in report {report_id}",
+            "severity": "error",
+            "observations": ["Photo analysis not found in this report"],
+            "potential_issues": [],
+            "recommendations": []
+        }
         
     except Exception as e:
         print(f"Error getting photo analysis JSON: {e}")
@@ -110,8 +85,25 @@ def get_photo_analysis_json(report_id: str, photo_filename: str):
 def get_photo_analysis(report_id: str, photo_filename: str):
     """Get individual photo analysis from report"""
     try:
-        # Get report from database
-        db_path = Path("../workspace/inspection_portal.db")
+        # Get report from database - check multiple possible locations
+        possible_paths = [
+            Path("workspace/inspection_portal.db"),
+            Path("../workspace/inspection_portal.db"),
+            Path("backend/inspection_portal.db"),
+            Path("inspection_portal.db"),
+            Path("app.db")
+        ]
+
+        db_path = None
+        for path in possible_paths:
+            if path.exists():
+                db_path = path
+                break
+
+        if not db_path:
+            # Default to app.db in backend folder
+            db_path = Path("app.db")
+
         conn = sqlite3.connect(str(db_path))
         cur = conn.cursor()
         

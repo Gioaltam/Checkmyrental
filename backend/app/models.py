@@ -45,11 +45,13 @@ class Client(Base):
     phone = Column(String)
     address = Column(Text)
     is_paid = Column(Boolean, default=False)  # Track if owner has paid for access
+    theme_config = Column(JSON, nullable=True)  # Custom branding/theme configuration
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
     user = relationship("User", back_populates="client")
     properties = relationship("Property", back_populates="client", foreign_keys="Property.client_id")
+    seasonal_tasks = relationship("SeasonalTask", back_populates="client", foreign_keys="SeasonalTask.client_id")
 
 
 class Property(Base):
@@ -91,6 +93,10 @@ class Report(Base):
     critical_count = Column(Integer, default=0)
     important_count = Column(Integer, default=0)
 
+    # Portal client linkage
+    portal_client_id = Column(Integer, nullable=True)
+    property_name = Column(String, nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -111,3 +117,20 @@ class Asset(Base):
 
     # Relationships
     report = relationship("Report", back_populates="assets")
+
+
+class SeasonalTask(Base):
+    __tablename__ = "seasonal_tasks"
+
+    id = Column(String, primary_key=True, default=_uuid)
+    client_id = Column(String, ForeignKey("clients.id"), nullable=False)
+    task_key = Column(String, nullable=False)  # unique identifier like "aug_storm_shutters"
+    task_name = Column(String, nullable=False)  # display name
+    month = Column(Integer, nullable=False)  # 1-12
+    completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    year = Column(Integer, nullable=False)  # track which year task was completed
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    client = relationship("Client", back_populates="seasonal_tasks", foreign_keys=[client_id])

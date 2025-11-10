@@ -1,0 +1,25 @@
+---
+const { class: extraClass = "", delay = 0 } = Astro.props;
+---
+
+<div class={`reveal ${extraClass}`} data-delay={delay}>
+  <slot />
+</div>
+
+<script>
+  const io = new IntersectionObserver(
+    (entries) =>
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          const delay = Number(e.target.getAttribute('data-delay')) || 0;
+          setTimeout(() => {
+            e.target.classList.add('in');
+          }, delay);
+          io.unobserve(e.target);
+        }
+      }),
+    { threshold: 0.18 }
+  );
+
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>

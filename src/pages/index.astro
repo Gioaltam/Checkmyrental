@@ -1,0 +1,47 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import Header from '../components/Header.astro';
+import HeroSection from '../components/HeroSection.astro';
+import StatsSection from '../components/StatsSection.astro';
+import GallerySection from '../components/GallerySection.astro';
+import DashboardPreview from '../components/DashboardPreview.astro';
+import ProcessSection from '../components/ProcessSection.astro';
+import PricingSection from '../components/PricingSection.astro';
+import FAQSection from '../components/FAQSection.astro';
+import CTASection from '../components/CTASection.astro';
+import LandingFooter from '../components/LandingFooter.astro';
+import ShoppingCart from '../components/ShoppingCart.astro';
+---
+
+<LandingLayout>
+  <Header />
+
+  <main id="main-content" tabindex="-1">
+    <!-- 1. Hero: Grab attention with value proposition -->
+    <HeroSection />
+
+    <!-- 2. Stats: Build credibility immediately with numbers -->
+    <StatsSection />
+
+    <!-- 3. Services: Show what's included while interest is high -->
+    <GallerySection />
+
+    <!-- 4. Dashboard Demo: Show the tool after they understand the value -->
+    <DashboardPreview />
+
+    <!-- 6. Process: Explain how it works -->
+    <ProcessSection />
+
+    <!-- 7. Pricing: Show transparent pricing and value comparison -->
+    <PricingSection />
+
+    <!-- 8. FAQ: Address common questions and remove objections -->
+    <FAQSection />
+
+    <!-- 9. Final CTA: Convert interested visitors -->
+    <CTASection />
+  </main>
+
+  <LandingFooter />
+  <ShoppingCart />
+</LandingLayout>

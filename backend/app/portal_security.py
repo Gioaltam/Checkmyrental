@@ -28,7 +28,8 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(client_id: int, email: str) -> str:
-    now = datetime.utcnow()
+    from datetime import timezone
+    now = datetime.now(timezone.utc)
     exp = now + timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)
     payload = {
         "sub": str(client_id),

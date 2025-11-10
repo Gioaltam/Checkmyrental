@@ -1,0 +1,23 @@
+# CheckMyRental Robots.txt
+# https://checkmyrental.io/robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+
+# Disallow internal/testing pages
+Disallow: /test
+Disallow: /_*
+
+# Allow specific crawlers
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Sitemap location
+Sitemap: https://checkmyrental.io/sitemap-index.xml

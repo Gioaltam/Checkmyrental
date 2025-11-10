@@ -1,0 +1,154 @@
+---
+// Stats Counter Section
+---
+
+<section class="stats-section">
+  <div class="stats-container">
+    <div class="stat" data-stat>
+      <div class="stat-number" data-target="4" data-suffix="x/yr">0x/yr</div>
+      <div class="stat-label">Quarterly Maintenance</div>
+    </div>
+    <div class="stat" data-stat>
+      <div class="stat-number" data-target="24" data-suffix="h">0h</div>
+      <div class="stat-label">Report Turnaround</div>
+    </div>
+    <div class="stat" data-stat>
+      <div class="stat-number" data-target="200" data-suffix="+">0+</div>
+      <div class="stat-label">Photos Per Inspection</div>
+    </div>
+    <div class="stat" data-stat>
+      <div class="stat-number" data-target="100" data-suffix="%">0%</div>
+      <div class="stat-label">Property Coverage</div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Stats Counter Animation
+  document.addEventListener('DOMContentLoaded', () => {
+    const stats = document.querySelectorAll('[data-stat]');
+    if (!stats.length) return;
+
+    function animateCounter(element: Element) {
+      const numberEl = element.querySelector('.stat-number') as HTMLElement;
+      if (!numberEl) return;
+
+      const target = parseInt(numberEl.dataset.target || '0');
+      const suffix = numberEl.dataset.suffix || '';
+      const duration = 2000;
+      const steps = 60;
+      const stepDuration = duration / steps;
+      const increment = target / steps;
+
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          current = target;
+          clearInterval(timer);
+        }
+        numberEl.textContent = Math.floor(current) + suffix;
+      }, stepDuration);
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('reveal');
+          setTimeout(() => {
+            animateCounter(entry.target);
+          }, 200);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.2,
+      rootMargin: '0px 0px -100px 0px'
+    });
+
+    stats.forEach(stat => observer.observe(stat));
+
+    // Respect reduced motion preference
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      stats.forEach(stat => {
+        stat.classList.add('reveal');
+        const statNumber = stat.querySelector('.stat-number') as HTMLElement;
+        if (statNumber && statNumber.dataset.target) {
+          statNumber.textContent = statNumber.dataset.target + (statNumber.dataset.suffix || '');
+        }
+      });
+    }
+  });
+</script>
+
+<style>
+  .stats-section {
+    padding: 6rem 3rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  body.light-mode .stats-section {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .stats-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 3rem;
+  }
+
+  .stat {
+    text-align: center;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .stat.reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .stat-number {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.75rem;
+  }
+
+  body.light-mode .stat-number {
+    background: linear-gradient(135deg, #334155 0%, #475569 50%, #64748b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+
+  body.light-mode .stat-label {
+    color: #4a4a4a;
+  }
+
+  @media (max-width: 768px) {
+    .stats-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .stats-container {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+  }
+</style>

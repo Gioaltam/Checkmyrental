@@ -1,0 +1,105 @@
+{
+    "owner": "Juliana Shewmaker",
+    "full_name": "Juliana Shewmaker",
+    "email": "juliana.shewmaker@checkmyrental.com",
+    "properties": [
+        {
+            "id": "prop_91c9e9e1",
+            "address": "13699 99th ave unit 3 ",
+            "type": "residential",
+            "label": "13699 99th ave unit 3 ",
+            "lastInspection": null,
+            "reportCount": 1,
+            "criticalIssues": 3,
+            "importantIssues": 9,
+            "reports": [
+                {
+                    "id": "91c9e9e1f493e2031b8069f6017a294a",
+                    "date": null,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": 3,
+                    "importantIssues": 9,
+                    "hasPdf": true,
+                    "hasInteractiveView": false
+                }
+            ]
+        },
+        {
+            "id": "prop_86036178",
+            "address": "13699 99th ave unit 2",
+            "type": "residential",
+            "label": "13699 99th ave unit 2",
+            "lastInspection": null,
+            "reportCount": 2,
+            "criticalIssues": 18,
+            "importantIssues": 14,
+            "reports": [
+                {
+                    "id": "860361780358994af28f5d5f7ec2c5c2",
+                    "date": null,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": 9,
+                    "importantIssues": 7,
+                    "hasPdf": true,
+                    "hasInteractiveView": false
+                },
+                {
+                    "id": "12add96b128b1812230deb7319b98cf7",
+                    "date": null,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": 9,
+                    "importantIssues": 7,
+                    "hasPdf": true,
+                    "hasInteractiveView": false
+                }
+            ]
+        },
+        {
+            "id": "prop_aa449304",
+            "address": "1799 highland ave unit o 7",
+            "type": "residential",
+            "label": "1799 highland ave unit o 7",
+            "lastInspection": null,
+            "reportCount": 1,
+            "criticalIssues": 4,
+            "importantIssues": 13,
+            "reports": [
+                {
+                    "id": "aa44930414fb6b0a7232d186f99c3d21",
+                    "date": null,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": 4,
+                    "importantIssues": 13,
+                    "hasPdf": true,
+                    "hasInteractiveView": false
+                }
+            ]
+        },
+        {
+            "id": "prop_53a7fc48",
+            "address": "2460 Melrose Ave S",
+            "type": "residential",
+            "label": "2460 Melrose Ave S",
+            "lastInspection": null,
+            "reportCount": 1,
+            "criticalIssues": 20,
+            "importantIssues": 27,
+            "reports": [
+                {
+                    "id": "53a7fc482fe8cadd8a8f9f77c32176eb",
+                    "date": null,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": 20,
+                    "importantIssues": 27,
+                    "hasPdf": true,
+                    "hasInteractiveView": false
+                }
+            ]
+        }
+    ]
+}

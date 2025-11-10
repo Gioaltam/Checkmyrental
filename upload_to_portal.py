@@ -13,7 +13,7 @@ from typing import Optional, Dict, Any
 import argparse
 
 # Portal configuration
-PORTAL_URL = "http://localhost:8002"
+PORTAL_URL = "http://localhost:8000"
 INGEST_ENDPOINT = f"{PORTAL_URL}/api/ingest"
 
 def load_credentials(creds_file: str = "juliana_demo_credentials.json") -> Dict[str, Any]:

@@ -108,45 +108,60 @@ def login_owner(request: OwnerLoginRequest, db: Session = Depends(get_db)):
 def get_paid_owners(db: Session = Depends(get_db)):
     """Get list of PAID owners only - for inspector GUI to know where to send reports"""
     import json
-    from ..portal_models import PortalClient, ClientPortalToken
+    from ..portal_models import PortalClient
+    from ..models import Report, Property
 
     paid_owners = []
 
-    # Get all paid portal clients from the database
+    # Get only PAID portal clients (new unified system)
     portal_clients = db.query(PortalClient).filter(PortalClient.is_paid == True).all()
 
     for client in portal_clients:
-        # Parse properties data if available
+        # Get properties for this client
         property_list = []
-        if hasattr(client, 'properties_data') and client.properties_data:
+
+        # Parse properties from properties_data JSON if it exists
+        if client.properties_data:
             try:
-                properties = json.loads(client.properties_data)
+                import json
+                properties = json.loads(client.properties_data) if isinstance(client.properties_data, str) else client.properties_data
+                if isinstance(properties, list):
+                    property_list = properties
+            except:
+                pass
+
+        # If no properties in properties_data, try finding by email in old Client table
+        if not property_list:
+            from ..models import Client
+            old_client = db.query(Client).filter(Client.email == client.email).first()
+            if old_client:
+                # Get properties from old client
+                properties = db.query(Property).filter(Property.client_id == old_client.id).all()
                 for prop in properties:
                     property_list.append({
-                        "name": prop.get("name", ""),
-                        "address": prop.get("address", "")
+                        "name": prop.label or prop.address,
+                        "address": prop.address
                     })
-            except:
-                property_list = []
 
-        # Get portal token for this client
-        portal_token = ""
-        token_obj = db.query(ClientPortalToken).filter(ClientPortalToken.client_id == client.id).first()
-        if token_obj:
-            portal_token = token_obj.portal_token
+        # Special handling for Juliana - use JS2024001 token
+        if client.id == 2 or client.email == "julianagomesfl@yahoo.com":
+            token = "JS2024001"
+        else:
+            token = f"portal_{client.id}"
 
         owner_data = {
-            "owner_id": client.email,  # Use email as owner_id
-            "name": client.full_name or client.email,
-            "full_name": client.full_name or "",
+            "owner_id": f"portal_{client.id}",
+            "name": client.full_name,
+            "full_name": client.full_name,
             "email": client.email,
-            "is_paid": True,  # Only paid owners are returned
+            "is_paid": True,  # All portal clients are considered paid
             "properties": property_list,
-            "portal_token": portal_token  # Include for dashboard navigation
+            "portal_token": token,  # Use JS2024001 for Juliana, portal_X for others
+            "id": client.id
         }
         paid_owners.append(owner_data)
 
-    return {"owners": paid_owners, "message": "Only showing paid customers"}
+    return {"owners": paid_owners, "message": "Only showing portal clients"}
 
 # ---------- Payment Webhook (Stripe simulation) ----------
 @router.post("/payment-webhook")
@@ -199,12 +214,12 @@ def get_all_owners(db: Session = Depends(get_db)):
     
     owner_list = []
     
-    # Always include Juliana's demo account
+    # Always include Juliana's production account
     owner_list.append({
-        "owner_id": "DEMO1234",
+        "owner_id": "JS2024001",
         "name": "Juliana Shewmaker",
         "full_name": "Juliana Shewmaker",
-        "email": "juliana@checkmyrental.com",
+        "email": "julianagomesfl@yahoo.com",
         "is_paid": True,
         "properties": [
             {"name": "Harborview 12B", "address": "4155 Key Thatch Dr, Tampa, FL"},
@@ -254,130 +269,351 @@ def get_portal_dashboard(portal_token: str, db: Session = Depends(get_db)):
     import sqlite3
     from pathlib import Path
     import json
+    import jwt
+    import traceback
+    from jwt.exceptions import DecodeError
     from ..portal_models import ClientPortalToken, PortalClient
+    from ..portal_security import PORTAL_JWT_SECRET, ALGO
 
     print(f"Dashboard requested for token: {portal_token}")
 
-    # First, try to find in the regular clients table
-    client = db.query(Client).filter(Client.portal_token == portal_token).first()
-    if client:
-        # Found in clients table, return their data
-        print(f"Found client in clients table: {client.name}")
-        return {
-            "owner": client.contact_name or client.company_name or client.name,
-            "full_name": client.contact_name or client.company_name,
-            "email": client.email,
-            "properties": []  # No properties yet for this client
-        }
+    try:
+        # First, check if this is a JWT token
+        portal_client = None
+        try:
+            # Try to decode as JWT
+            payload = jwt.decode(portal_token, PORTAL_JWT_SECRET, algorithms=[ALGO])
+            portal_client_id = int(payload.get("sub"))
+            print(f"Decoded JWT token for portal_client_id: {portal_client_id}")
 
-    # Find the portal client by token
-    token_obj = db.query(ClientPortalToken).filter(ClientPortalToken.portal_token == portal_token).first()
-    if not token_obj:
-        raise HTTPException(status_code=404, detail="Invalid portal token")
+            # Get the portal client
+            portal_client = db.query(PortalClient).filter(PortalClient.id == portal_client_id).first()
 
-    portal_client = db.query(PortalClient).filter(PortalClient.id == token_obj.client_id).first()
-    if not portal_client:
-        raise HTTPException(status_code=404, detail="Portal client not found")
+            if portal_client:
+                print(f"Found portal client via JWT: {portal_client.full_name}")
+        except (DecodeError, ValueError, KeyError) as e:
+            # Not a valid JWT, continue with other token formats
+            print(f"Not a valid JWT token, trying other formats...")
+            pass
 
-    # Query the workspace database for real reports
-    workspace_db_path = Path("../workspace/inspection_portal.db")
-    if not workspace_db_path.exists():
-        raise HTTPException(status_code=404, detail="Reports database not found")
+        # If not found via JWT, check for JS2024001 (Juliana's token)
+        if not portal_client and portal_token == "JS2024001":
+            # This is Juliana's token, map to portal_client id 2
+            portal_client = db.query(PortalClient).filter(PortalClient.id == 2).first()
+            if portal_client:
+                print(f"Found portal client via JS2024001: {portal_client.full_name}")
 
-    conn = sqlite3.connect(str(workspace_db_path))
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
+        # If not found via JWT or JS2024001, check for portal_X format
+        if not portal_client and portal_token.startswith("portal_"):
+            try:
+                portal_client_id = int(portal_token.replace("portal_", ""))
+                portal_client = db.query(PortalClient).filter(PortalClient.id == portal_client_id).first()
+                if portal_client:
+                    print(f"Found portal client via portal_X: {portal_client.full_name}")
+            except ValueError:
+                pass
 
-    # Find the client by email in workspace database
-    print(f"Looking for workspace client with name={portal_client.email}")
-    cur.execute("SELECT id, name FROM clients WHERE name = ?", (portal_client.email,))
-    workspace_client = cur.fetchone()
-    print(f"Found workspace client: {workspace_client}")
-    if not workspace_client:
+        # If we have a portal_client (from any method), build the response
+        if portal_client:
+            print(f"Building dashboard response for: {portal_client.full_name}")
+
+            try:
+                # Build response for portal client
+                property_data = []
+
+                # Get all reports for this portal client
+                all_reports = db.query(Report).filter(
+                    Report.portal_client_id == portal_client.id
+                ).order_by(Report.created_at.desc()).all()
+
+                print(f"Found {len(all_reports)} reports for portal client {portal_client.id}")
+
+                # Parse properties from properties_data JSON if available
+                if portal_client.properties_data:
+                    try:
+                        properties_json = json.loads(portal_client.properties_data) if isinstance(portal_client.properties_data, str) else portal_client.properties_data
+                        if isinstance(properties_json, list):
+                            for idx, prop in enumerate(properties_json):
+                                try:
+                                    prop_address = prop.get("address", "") if isinstance(prop, dict) else ""
+
+                                    # Find reports for this property
+                                    property_reports = []
+                                    critical_count = 0
+                                    important_count = 0
+
+                                    for report in all_reports:
+                                        try:
+                                            # Match reports to this property
+                                            if report.address and prop_address and prop_address in report.address:
+                                                # Safely handle None values
+                                                report_critical = report.critical_count if report.critical_count is not None else 0
+                                                report_important = report.important_count if report.important_count is not None else 0
+                                                critical_count += report_critical
+                                                important_count += report_important
+
+                                                date_val = None
+                                                if report.inspection_date:
+                                                    if hasattr(report.inspection_date, 'isoformat'):
+                                                        date_val = report.inspection_date.isoformat()
+                                                    else:
+                                                        date_val = str(report.inspection_date)
+                                                elif report.created_at:
+                                                    if hasattr(report.created_at, 'isoformat'):
+                                                        date_val = report.created_at.isoformat()
+                                                    else:
+                                                        date_val = str(report.created_at)
+
+                                                property_reports.append({
+                                                    "id": report.id,
+                                                    "date": date_val,
+                                                    "inspector": "Inspection Agent",
+                                                    "status": "completed",
+                                                    "criticalIssues": report_critical,
+                                                    "importantIssues": report_important,
+                                                    "hasPdf": bool(report.pdf_path or report.pdf_standard_url),
+                                                    "hasInteractiveView": bool(report.json_url or report.json_path)
+                                                })
+                                        except Exception as e:
+                                            print(f"Error processing report {report.id}: {e}")
+                                            continue
+
+                                    # Get last inspection date
+                                    last_inspection = None
+                                    if property_reports:
+                                        last_inspection = property_reports[0].get("date")
+
+                                    # Use a stable ID based on index and address
+                                    prop_id = f"prop_{idx}_{hash(prop_address) & 0x7FFFFFFF}"
+
+                                    property_data.append({
+                                        "id": prop_id,
+                                        "address": prop_address,
+                                        "type": "single",
+                                        "label": prop.get("name", prop_address) if isinstance(prop, dict) else prop_address,
+                                        "lastInspection": last_inspection,
+                                        "reportCount": len(property_reports),
+                                        "criticalIssues": critical_count,
+                                        "importantIssues": important_count,
+                                        "reports": property_reports
+                                    })
+                                except Exception as e:
+                                    print(f"Error processing property {idx}: {e}")
+                                    continue
+                    except json.JSONDecodeError as e:
+                        print(f"Error parsing properties_data JSON: {e}")
+                    except Exception as e:
+                        print(f"Error processing properties: {e}")
+
+                return {
+                    "owner": portal_client.full_name,
+                    "full_name": portal_client.full_name,
+                    "email": portal_client.email,
+                    "properties": property_data,
+                    "total_reports": len(all_reports)
+                }
+            except Exception as e:
+                print(f"Error building portal client dashboard: {e}")
+                print(traceback.format_exc())
+                raise HTTPException(status_code=500, detail=f"Error building dashboard: {str(e)}")
+
+        # Fallback to regular clients table lookup
+        client = db.query(Client).filter(Client.portal_token == portal_token).first()
+        if client:
+            # Found in clients table, return their data with properties and reports
+            print(f"Found client in clients table: {client.name}")
+
+            # Get all properties for this client
+            print(f"Querying properties for client_id: {client.id}")
+            properties = db.query(Property).filter(Property.client_id == client.id).all()
+            print(f"Found {len(properties)} properties")
+            property_data = []
+
+            for prop in properties:
+                # Get all reports for this property
+                reports = db.query(Report).filter(Report.property_id == prop.id).order_by(Report.created_at.desc()).all()
+
+                report_data = []
+                critical_count = 0
+                important_count = 0
+
+                for report in reports:
+                    critical_count += report.critical_count or 0
+                    important_count += report.important_count or 0
+
+                    # Debug: Print what we're getting
+                    print(f"Report {report.id}: inspection_date={report.inspection_date}, type={type(report.inspection_date)}")
+
+                    # Handle date - can be datetime object or string
+                    date_val = None
+                    if report.inspection_date:
+                        if hasattr(report.inspection_date, 'isoformat'):
+                            date_val = report.inspection_date.isoformat()
+                        else:
+                            date_val = str(report.inspection_date)  # Already a string from SQLite
+                    elif report.created_at:
+                        if hasattr(report.created_at, 'isoformat'):
+                            date_val = report.created_at.isoformat()
+                        else:
+                            date_val = str(report.created_at)
+
+                    report_data.append({
+                        "id": report.id,
+                        "date": date_val,
+                        "inspector": "Inspection Agent",
+                        "status": "completed",
+                        "criticalIssues": report.critical_count or 0,
+                        "importantIssues": report.important_count or 0,
+                        "hasPdf": bool(report.pdf_path or report.pdf_standard_url),
+                        "hasInteractiveView": bool(report.json_url)
+                    })
+
+                # Get last inspection date
+                last_inspection = None
+                if reports and len(reports) > 0:
+                    if reports[0].inspection_date:
+                        if hasattr(reports[0].inspection_date, 'isoformat'):
+                            last_inspection = reports[0].inspection_date.isoformat()
+                        else:
+                            last_inspection = str(reports[0].inspection_date)
+                    elif reports[0].created_at:
+                        if hasattr(reports[0].created_at, 'isoformat'):
+                            last_inspection = reports[0].created_at.isoformat()
+                        else:
+                            last_inspection = str(reports[0].created_at)
+                property_data.append({
+                    "id": str(prop.id),
+                    "address": prop.address,
+                    "type": prop.property_type or "single",
+                    "label": prop.label or prop.address,
+                    "lastInspection": last_inspection,
+                    "reportCount": len(reports),
+                    "criticalIssues": critical_count,
+                    "importantIssues": important_count,
+                    "reports": report_data
+                })
+
+            return {
+                "owner": client.contact_name or client.company_name or client.name,
+                "full_name": client.contact_name or client.company_name,
+                "email": client.email,
+                "properties": property_data
+            }
+
+        # Find the portal client by token
+        token_obj = db.query(ClientPortalToken).filter(ClientPortalToken.portal_token == portal_token).first()
+        if not token_obj:
+            raise HTTPException(status_code=404, detail="Invalid portal token")
+
+        portal_client = db.query(PortalClient).filter(PortalClient.id == token_obj.client_id).first()
+        if not portal_client:
+            raise HTTPException(status_code=404, detail="Portal client not found")
+
+        # Query the workspace database for real reports
+        workspace_db_path = Path("../workspace/inspection_portal.db")
+        if not workspace_db_path.exists():
+            raise HTTPException(status_code=404, detail="Reports database not found")
+
+        conn = sqlite3.connect(str(workspace_db_path))
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+
+        # Find the client by email in workspace database
+        print(f"Looking for workspace client with name={portal_client.email}")
+        cur.execute("SELECT id, name FROM clients WHERE name = ?", (portal_client.email,))
+        workspace_client = cur.fetchone()
+        print(f"Found workspace client: {workspace_client}")
+        if not workspace_client:
+            conn.close()
+            print("No workspace client found, returning empty properties")
+            return {
+                "owner": portal_client.full_name or portal_client.email,
+                "full_name": portal_client.full_name,
+                "email": portal_client.email,
+                "properties": []
+            }
+
+        workspace_client_id = workspace_client['id']
+
+        # Get all properties for this client from workspace database
+        cur.execute("""
+            SELECT id, address FROM properties
+            WHERE client_id = ?
+        """, (workspace_client_id,))
+        properties_rows = cur.fetchall()
+
+        property_data = []
+        for prop_row in properties_rows:
+            prop_id = prop_row['id']
+            prop_address = prop_row['address']
+
+            # Get all reports for this property
+            cur.execute("""
+                SELECT id, web_dir, pdf_path, created_at
+                FROM reports
+                WHERE property_id = ?
+                ORDER BY created_at DESC
+            """, (prop_id,))
+            reports_rows = cur.fetchall()
+
+            report_data = []
+            for report_row in reports_rows:
+                report_id = report_row['id']
+                web_dir = report_row['web_dir']
+                pdf_path = report_row['pdf_path']
+                created_at = report_row['created_at']
+
+                # Try to load report.json for issue counts
+                critical_count = 0
+                important_count = 0
+                if web_dir:
+                    try:
+                        report_json_path = Path("..") / web_dir / "report.json"
+                        if report_json_path.exists():
+                            with open(report_json_path, 'r', encoding='utf-8') as f:
+                                report_json = json.load(f)
+                                items = report_json.get("items", [])
+                                critical_count = sum(1 for i in items if i.get("severity") in ["critical", "major"])
+                                important_count = sum(1 for i in items if i.get("severity") in ["important", "minor"])
+                    except Exception as e:
+                        print(f"Error loading report JSON: {e}")
+
+                report_data.append({
+                    "id": report_id,
+                    "date": created_at,
+                    "inspector": "Inspection Agent",
+                    "status": "completed",
+                    "criticalIssues": critical_count,
+                    "importantIssues": important_count,
+                    "hasPdf": bool(pdf_path),
+                    "hasInteractiveView": bool(web_dir)
+                })
+
+            last_inspection = reports_rows[0]['created_at'] if reports_rows else None
+            property_data.append({
+                "id": str(prop_id),
+                "address": prop_address,
+                "type": "single",
+                "label": prop_address,
+                "lastInspection": last_inspection,
+                "reportCount": len(reports_rows),
+                "reports": report_data
+            })
+
         conn.close()
-        print("No workspace client found, returning empty properties")
+
         return {
             "owner": portal_client.full_name or portal_client.email,
             "full_name": portal_client.full_name,
             "email": portal_client.email,
-            "properties": []
+            "properties": property_data
         }
 
-    workspace_client_id = workspace_client['id']
-
-    # Get all properties for this client from workspace database
-    cur.execute("""
-        SELECT id, address FROM properties
-        WHERE client_id = ?
-    """, (workspace_client_id,))
-    properties_rows = cur.fetchall()
-
-    property_data = []
-    for prop_row in properties_rows:
-        prop_id = prop_row['id']
-        prop_address = prop_row['address']
-
-        # Get all reports for this property
-        cur.execute("""
-            SELECT id, web_dir, pdf_path, created_at
-            FROM reports
-            WHERE property_id = ?
-            ORDER BY created_at DESC
-        """, (prop_id,))
-        reports_rows = cur.fetchall()
-
-        report_data = []
-        for report_row in reports_rows:
-            report_id = report_row['id']
-            web_dir = report_row['web_dir']
-            pdf_path = report_row['pdf_path']
-            created_at = report_row['created_at']
-
-            # Try to load report.json for issue counts
-            critical_count = 0
-            important_count = 0
-            if web_dir:
-                try:
-                    report_json_path = Path("..") / web_dir / "report.json"
-                    if report_json_path.exists():
-                        with open(report_json_path, 'r', encoding='utf-8') as f:
-                            report_json = json.load(f)
-                            items = report_json.get("items", [])
-                            critical_count = sum(1 for i in items if i.get("severity") in ["critical", "major"])
-                            important_count = sum(1 for i in items if i.get("severity") in ["important", "minor"])
-                except Exception as e:
-                    print(f"Error loading report JSON: {e}")
-
-            report_data.append({
-                "id": report_id,
-                "date": created_at,
-                "inspector": "Inspection Agent",
-                "status": "completed",
-                "criticalIssues": critical_count,
-                "importantIssues": important_count,
-                "hasPdf": bool(pdf_path),
-                "hasInteractiveView": bool(web_dir)
-            })
-
-        last_inspection = reports_rows[0]['created_at'] if reports_rows else None
-        property_data.append({
-            "id": str(prop_id),
-            "address": prop_address,
-            "type": "single",
-            "label": prop_address,
-            "lastInspection": last_inspection,
-            "reportCount": len(reports_rows),
-            "reports": report_data
-        })
-
-    conn.close()
-
-    return {
-        "owner": portal_client.full_name or portal_client.email,
-        "full_name": portal_client.full_name,
-        "email": portal_client.email,
-        "properties": property_data
-    }
+    except Exception as e:
+        # Catch any unexpected errors at the top level
+        print(f"Unexpected error in dashboard endpoint: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
 
 # ---------- Dashboard (client-level) ----------
 @router.get("/")

@@ -1,0 +1,1207 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import Header from '../components/Header.astro';
+import LandingFooter from '../components/LandingFooter.astro';
+import ShoppingCart from '../components/ShoppingCart.astro';
+---
+
+<LandingLayout
+  title="Service Area - Pinellas County, FL | CheckMyRental"
+  description="Professional property inspections throughout Pinellas County, Florida. Serving St. Petersburg, Clearwater, Tampa Bay area and all surrounding cities."
+>
+
+  <Header />
+
+  <main id="main-content" tabindex="-1">
+    <!-- Hero Section -->
+    <section class="service-hero">
+      <div class="hero-content">
+        <h1>Serving All of Pinellas & Hillsborough County</h1>
+        <p class="hero-subtitle">
+          Professional quarterly maintenance inspections throughout the Tampa Bay area
+        </p>
+      </div>
+    </section>
+
+    <!-- Quick Stats Bar -->
+    <section class="stats-bar">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Counties Covered</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">85+</div>
+            <div class="stat-label">ZIP Codes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">16+</div>
+            <div class="stat-label">Cities Served</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">Same-Day</div>
+            <div class="stat-label">Service Available</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ZIP Code Checker -->
+    <section class="zip-checker-section">
+      <div class="container">
+        <div class="zip-checker-card">
+          <h2>Check If We Serve Your Area</h2>
+          <p class="checker-subtitle">Enter your property's ZIP code to verify coverage</p>
+
+          <div class="zip-input-wrapper">
+            <div class="zip-input-group">
+              <input
+                type="text"
+                id="zip-input"
+                class="zip-input"
+                placeholder="Enter ZIP code (e.g., 33701)"
+                maxlength="5"
+                pattern="[0-9]*"
+              />
+              <button id="clear-zip-btn" class="clear-btn" style="display: none;" aria-label="Clear ZIP code">✕</button>
+              <button id="check-zip-btn" class="check-btn">
+                <span class="btn-text">Check Coverage</span>
+                <span class="btn-loader" style="display: none;">
+                  <span class="loader-spinner"></span>
+                </span>
+              </button>
+            </div>
+            <div id="zip-feedback" class="zip-feedback"></div>
+          </div>
+
+          <div id="zip-result" class="zip-result"></div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- Coverage Details -->
+    <section class="coverage-details">
+      <div class="container">
+        <div class="details-grid">
+          <div class="detail-card">
+            <div class="detail-icon">🚗</div>
+            <h3>Local Inspectors</h3>
+            <p>Our team is based in Pinellas County and knows the area's unique property challenges, from coastal conditions to seasonal weather impacts.</p>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-icon">⚡</div>
+            <h3>Fast Response</h3>
+            <p>Being local means quick scheduling and same-day or next-day inspections available throughout the county.</p>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-icon">🏝️</div>
+            <h3>Coastal Expertise</h3>
+            <p>Special focus on coastal property concerns including salt air corrosion, hurricane preparedness, and flood risk areas.</p>
+          </div>
+
+          <div class="detail-card">
+            <div class="detail-icon">📅</div>
+            <h3>Flexible Scheduling</h3>
+            <p>We work around your schedule with evening and weekend appointments available across all service areas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <div class="cta-container">
+        <h2>Ready to Schedule Your Inspection?</h2>
+        <p>Serving property owners throughout Pinellas County with professional quarterly maintenance inspections</p>
+        <div class="cta-buttons">
+          <a href="/pricing" class="btn btn-primary">View Pricing & Book Now</a>
+          <a href="tel:7276424457" class="btn btn-secondary">Call (727) 642-4457</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <LandingFooter />
+  <ShoppingCart />
+</LandingLayout>
+
+<script>
+  // Pinellas County ZIP codes
+  const pinellasZipCodes = [
+    // St. Petersburg
+    33701, 33702, 33703, 33704, 33705, 33706, 33707, 33708, 33709, 33710,
+    33711, 33712, 33713, 33714, 33715, 33716, 33729, 33730, 33731, 33732,
+    33733, 33734, 33736, 33742, 33747,
+    // Clearwater
+    33755, 33756, 33757, 33758, 33759, 33760, 33761, 33762, 33763, 33764, 33765, 33767,
+    // Largo
+    33770, 33771, 33773, 33774, 33777, 33778, 33779,
+    // Dunedin
+    34697, 34698,
+    // Palm Harbor
+    34683, 34684, 34685,
+    // Tarpon Springs
+    34688, 34689,
+    // Seminole
+    33772, 33776,
+    // Pinellas Park
+    33780, 33781, 33782,
+    // Safety Harbor
+    34695,
+    // Belleair
+    33786,
+    // Indian Rocks Beach
+    33785
+  ];
+
+  function checkZipCode() {
+    const input = document.getElementById('zip-input') as HTMLInputElement | null;
+    const result = document.getElementById('zip-result') as HTMLElement | null;
+    const checkBtn = document.getElementById('check-zip-btn') as HTMLButtonElement | null;
+    const btnText = checkBtn?.querySelector('.btn-text') as HTMLElement | null;
+    const btnLoader = checkBtn?.querySelector('.btn-loader') as HTMLElement | null;
+
+    if (!input || !result || !checkBtn) return;
+
+    const zipCode = parseInt(input.value.trim());
+
+    // Show loading state
+    if (btnText && btnLoader) {
+      btnText.style.display = 'none';
+      btnLoader.style.display = 'inline-block';
+      checkBtn.disabled = true;
+    }
+
+    // Simulate API delay for better UX
+    setTimeout(() => {
+      if (!zipCode || input.value.length !== 5) {
+        result.className = 'zip-result error';
+        result.innerHTML = `
+          <div class="result-icon">⚠️</div>
+          <div class="result-content">
+            <h3>Invalid ZIP Code</h3>
+            <p>Please enter a valid 5-digit ZIP code</p>
+          </div>
+        `;
+      } else if (pinellasZipCodes.includes(zipCode)) {
+        result.className = 'zip-result success';
+        result.innerHTML = `
+          <div class="result-icon">✅</div>
+          <div class="result-content">
+            <h3>Great News! We Serve Your Area</h3>
+            <p>ZIP code ${zipCode} is within our Pinellas County service area.</p>
+            <a href="/pricing" class="result-btn">View Pricing & Book Now</a>
+          </div>
+        `;
+      } else {
+        result.className = 'zip-result error';
+        result.innerHTML = `
+          <div class="result-icon">❌</div>
+          <div class="result-content">
+            <h3>Outside Service Area</h3>
+            <p>ZIP code ${zipCode} is currently outside our Pinellas County service area.</p>
+            <p class="contact-prompt">Contact us at <a href="tel:7276424457">(727) 642-4457</a> to discuss coverage options.</p>
+          </div>
+        `;
+      }
+
+      result.style.display = 'flex';
+
+      // Reset button state
+      if (btnText && btnLoader && checkBtn) {
+        btnText.style.display = 'inline';
+        btnLoader.style.display = 'none';
+        checkBtn.disabled = false;
+      }
+    }, 500);
+  }
+
+  function validateZipInput(value: string) {
+    const feedback = document.getElementById('zip-feedback') as HTMLElement | null;
+    if (!feedback) return;
+
+    if (value.length === 0) {
+      feedback.style.display = 'none';
+      return;
+    }
+
+    if (value.length < 5) {
+      feedback.className = 'zip-feedback warning';
+      feedback.textContent = `Enter ${5 - value.length} more digit${5 - value.length > 1 ? 's' : ''}`;
+      feedback.style.display = 'block';
+    } else if (value.length === 5) {
+      const zipCode = parseInt(value);
+      if (pinellasZipCodes.includes(zipCode)) {
+        feedback.className = 'zip-feedback success';
+        feedback.textContent = '✓ Valid ZIP code';
+      } else {
+        feedback.className = 'zip-feedback error';
+        feedback.textContent = '✗ Outside service area';
+      }
+      feedback.style.display = 'block';
+    }
+  }
+
+
+  function initZipChecker() {
+    const checkBtn = document.getElementById('check-zip-btn') as HTMLButtonElement | null;
+    const zipInput = document.getElementById('zip-input') as HTMLInputElement | null;
+    const clearBtn = document.getElementById('clear-zip-btn') as HTMLElement | null;
+    const zipResult = document.getElementById('zip-result') as HTMLElement | null;
+
+    if (!checkBtn || !zipInput) {
+      console.error('ZIP checker elements not found');
+      return;
+    }
+
+    // ZIP code checker
+    checkBtn.addEventListener('click', checkZipCode);
+    zipInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        checkZipCode();
+      }
+    });
+
+    // Real-time validation and clear button visibility
+    zipInput.addEventListener('input', (e) => {
+      const target = e.target as HTMLInputElement;
+      // Only allow numbers
+      target.value = target.value.replace(/[^0-9]/g, '');
+
+      // Show/hide clear button
+      if (clearBtn) {
+        clearBtn.style.display = target.value.length > 0 ? 'flex' : 'none';
+      }
+
+      // Real-time validation feedback
+      validateZipInput(target.value);
+
+      // Hide previous result when typing
+      if (zipResult && target.value.length < 5) {
+        zipResult.style.display = 'none';
+      }
+    });
+
+    // Clear button
+    clearBtn?.addEventListener('click', () => {
+      if (zipInput) {
+        zipInput.value = '';
+        zipInput.focus();
+      }
+      if (clearBtn) {
+        clearBtn.style.display = 'none';
+      }
+      if (zipResult) {
+        zipResult.style.display = 'none';
+      }
+      const feedback = document.getElementById('zip-feedback') as HTMLElement | null;
+      if (feedback) {
+        feedback.style.display = 'none';
+      }
+    });
+
+    console.log('ZIP checker initialized successfully');
+  }
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', initZipChecker);
+
+  // Re-initialize on Astro page transitions
+  document.addEventListener('astro:page-load', initZipChecker);
+</script>
+
+<style>
+  main {
+    padding-top: 0;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 3rem;
+  }
+
+  /* Stats Bar */
+  .stats-bar {
+    padding: 3rem;
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.08), rgba(231, 76, 60, 0.03));
+    border-bottom: 1px solid rgba(231, 76, 60, 0.15);
+  }
+
+  body.light-mode .stats-bar {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.06), rgba(231, 76, 60, 0.02));
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .stat-item {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .stat-item:hover {
+    transform: translateY(-4px);
+    border-color: rgba(231, 76, 60, 0.4);
+    box-shadow: 0 8px 24px rgba(231, 76, 60, 0.15);
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #e74c3c;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 8px rgba(231, 76, 60, 0.3);
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  body.light-mode .stat-label {
+    color: #666666;
+  }
+
+  /* Hero Section */
+  .service-hero {
+    padding: 160px 3rem 100px;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(231, 76, 60, 0.05) 0%, transparent 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200%;
+    height: 600px;
+    background: radial-gradient(ellipse at center, rgba(231, 76, 60, 0.08), transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .service-hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .service-hero h1 {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.35rem);
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.7;
+  }
+
+  body.light-mode .hero-subtitle {
+    color: #4a4a4a;
+  }
+
+  /* ZIP Checker Section */
+  .zip-checker-section {
+    padding: 4rem 3rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  body.light-mode .zip-checker-section {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .zip-checker-card {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 3rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    text-align: center;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light-mode .zip-checker-card {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
+
+  .zip-checker-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .zip-checker-card h2 {
+    color: #1a1a1a;
+  }
+
+  .checker-subtitle {
+    font-size: 1.05rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+  }
+
+  body.light-mode .checker-subtitle {
+    color: #666666;
+  }
+
+  .zip-input-wrapper {
+    position: relative;
+  }
+
+  .zip-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    position: relative;
+  }
+
+  .zip-input {
+    flex: 1;
+    padding: 1rem 3.5rem 1rem 1.5rem;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .clear-btn {
+    position: absolute;
+    right: 200px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+  }
+
+  body.light-mode .clear-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .clear-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.4);
+    color: #e74c3c;
+    transform: translateY(-50%) scale(1.1);
+  }
+
+  .zip-feedback {
+    display: none;
+    font-size: 0.85rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 600;
+    animation: feedbackSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes feedbackSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-5px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .zip-feedback.success {
+    background: rgba(46, 204, 113, 0.15);
+    color: rgb(46, 204, 113);
+    border: 1px solid rgba(46, 204, 113, 0.3);
+  }
+
+  .zip-feedback.warning {
+    background: rgba(241, 196, 15, 0.15);
+    color: rgb(241, 196, 15);
+    border: 1px solid rgba(241, 196, 15, 0.3);
+  }
+
+  .zip-feedback.error {
+    background: rgba(231, 76, 60, 0.15);
+    color: rgb(231, 76, 60);
+    border: 1px solid rgba(231, 76, 60, 0.3);
+  }
+
+  .btn-loader {
+    display: inline-block;
+  }
+
+  .loader-spinner {
+    width: 18px;
+    height: 18px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  body.light-mode .zip-input {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  .zip-input:focus {
+    outline: none;
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.15);
+  }
+
+  .zip-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  body.light-mode .zip-input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .check-btn {
+    padding: 1rem 2rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+    white-space: nowrap;
+  }
+
+  .check-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(231, 76, 60, 0.4);
+  }
+
+  .zip-result {
+    display: none;
+    gap: 1.5rem;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-top: 2rem;
+    animation: resultSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes resultSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .zip-result.success {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.1));
+    border: 2px solid rgba(46, 204, 113, 0.3);
+  }
+
+  .zip-result.error {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.15), rgba(192, 57, 43, 0.1));
+    border: 2px solid rgba(231, 76, 60, 0.3);
+  }
+
+  .result-icon {
+    font-size: 3rem;
+    flex-shrink: 0;
+  }
+
+  .result-content {
+    flex: 1;
+    text-align: left;
+  }
+
+  .result-content h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .result-content h3 {
+    color: #1a1a1a;
+  }
+
+  .result-content p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+  }
+
+  body.light-mode .result-content p {
+    color: #4a4a4a;
+  }
+
+  .contact-prompt {
+    font-size: 0.95rem;
+    margin-top: 1rem;
+  }
+
+  .contact-prompt a {
+    color: #e74c3c;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .contact-prompt a:hover {
+    text-decoration: underline;
+  }
+
+  .result-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  }
+
+  .result-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(231, 76, 60, 0.4);
+  }
+
+  /* Map Section */
+  .map-section {
+    padding: 6rem 3rem;
+  }
+
+  .map-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .map-section h2 {
+    color: #1a1a1a;
+  }
+
+  .map-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 3rem;
+  }
+
+  /* Cities Section */
+  .cities-section {
+    padding: 6rem 3rem;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  body.light-mode .cities-section {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .cities-section h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .cities-section h2 {
+    color: #1a1a1a;
+  }
+
+  .cities-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+  }
+
+  body.light-mode .cities-subtitle {
+    color: #666666;
+  }
+
+  /* City Search */
+  .city-search-wrapper {
+    max-width: 600px;
+    margin: 0 auto 3rem;
+    position: relative;
+  }
+
+  .city-search {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .city-search {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  .city-search:focus {
+    outline: none;
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 4px rgba(231, 76, 60, 0.15);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  body.light-mode .city-search:focus {
+    background: white;
+  }
+
+  .city-search::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  body.light-mode .city-search::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .search-results-count {
+    display: none;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-weight: 600;
+  }
+
+  body.light-mode .search-results-count {
+    color: #666666;
+  }
+
+  .cities-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .city-card {
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .city-card {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .city-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(231, 76, 60, 0.3);
+    box-shadow: 0 12px 32px rgba(231, 76, 60, 0.15);
+  }
+
+  .city-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .city-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .city-card h3 {
+    color: #1a1a1a;
+  }
+
+  .zip-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+
+  .zip-badge {
+    display: inline-block;
+    padding: 0.4rem 0.75rem;
+    background: rgba(231, 76, 60, 0.15);
+    border: 1px solid rgba(231, 76, 60, 0.25);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Courier New', monospace;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .zip-badge {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+
+  .zip-badge:hover {
+    background: rgba(231, 76, 60, 0.25);
+    border-color: rgba(231, 76, 60, 0.4);
+    transform: scale(1.05);
+  }
+
+  /* Progressive Disclosure */
+  .city-card.hidden-city {
+    display: none;
+  }
+
+  .show-more-wrapper {
+    text-align: center;
+    margin-top: 3rem;
+  }
+
+  .show-more-btn {
+    padding: 1rem 2.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.3px;
+  }
+
+  body.light-mode .show-more-btn {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  .show-more-btn:hover {
+    background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(231, 76, 60, 0.15));
+    border-color: rgba(231, 76, 60, 0.4);
+    color: #ff6b6b;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(231, 76, 60, 0.2);
+  }
+
+  body.light-mode .show-more-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+  }
+
+  /* Coverage Details */
+  .coverage-details {
+    padding: 6rem 3rem;
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 2rem;
+  }
+
+  .detail-card {
+    text-align: center;
+    padding: 2.5rem 2rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .detail-card {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .detail-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(231, 76, 60, 0.12);
+  }
+
+  .detail-icon {
+    font-size: 3rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .detail-card h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .detail-card h3 {
+    color: #1a1a1a;
+  }
+
+  .detail-card p {
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.7;
+  }
+
+  body.light-mode .detail-card p {
+    color: #4a4a4a;
+  }
+
+  /* CTA Section */
+  .cta-section {
+    padding: 6rem 3rem;
+  }
+
+  .cta-container {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 4rem 3rem;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  }
+
+  body.light-mode .cta-container {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+  }
+
+  .cta-container h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .cta-container h2 {
+    color: #1a1a1a;
+  }
+
+  .cta-container p {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.75);
+    margin-bottom: 2.5rem;
+  }
+
+  body.light-mode .cta-container p {
+    color: #4a4a4a;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 1rem 2.5rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(231, 76, 60, 0.4);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  body.light-mode .btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a;
+    border-color: rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+  }
+
+  body.light-mode .btn-secondary:hover {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  @media (max-width: 768px) {
+    .service-hero {
+      padding: 120px 1.5rem 80px;
+    }
+
+    .container {
+      padding: 0 1.5rem;
+    }
+
+    .stats-bar {
+      padding: 2rem 1.5rem;
+    }
+
+    .stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-item {
+      padding: 1rem;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+    }
+
+    .zip-checker-section,
+    .map-section,
+    .cities-section,
+    .coverage-details,
+    .cta-section {
+      padding: 3rem 1.5rem;
+    }
+
+    .zip-checker-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .zip-input-group {
+      flex-direction: column;
+    }
+
+    .clear-btn {
+      right: 1.5rem;
+      top: 1rem;
+      transform: none;
+    }
+
+    .check-btn {
+      width: 100%;
+    }
+
+    .city-search-wrapper {
+      margin-bottom: 2rem;
+    }
+
+    .cities-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .city-card {
+      padding: 1.5rem;
+    }
+
+    .show-more-btn {
+      width: 100%;
+      padding: 0.9rem 2rem;
+    }
+
+    .cta-container {
+      padding: 2.5rem 1.5rem;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stat-number {
+      font-size: 1.75rem;
+    }
+  }
+</style>

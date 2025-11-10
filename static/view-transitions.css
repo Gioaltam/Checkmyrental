@@ -1,0 +1,361 @@
+/**
+ * View Transitions API CSS
+ * Smooth cross-page animations similar to Avax.network
+ */
+
+/* ===== Root Transitions (Page-level) ===== */
+
+/* Smooth cross-document transitions with optimized timing */
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.35s;
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+/* Old page fade out with slight scale */
+::view-transition-old(root) {
+    animation: fadeOutScale 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+/* New page fade in with slight scale */
+::view-transition-new(root) {
+    animation: fadeInScale 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes fadeOutScale {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(1.02);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* ===== Shared Element Continuity ===== */
+
+/* Header, logo, and hero maintain continuity across pages */
+::view-transition-group(site-header),
+::view-transition-group(logo),
+::view-transition-group(hero) {
+    animation-duration: 0.35s;
+}
+
+/* Persistent Elements (Don't animate) */
+/* Header stays in place */
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Logo stays in place */
+::view-transition-old(logo),
+::view-transition-new(logo) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* Navigation stays in place */
+::view-transition-old(nav),
+::view-transition-new(nav) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+/* ===== Custom Transition Groups ===== */
+
+/* Hero sections with slide up animation */
+::view-transition-old(hero) {
+    animation: slideOutUp 0.4s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+::view-transition-new(hero) {
+    animation: slideInUp 0.4s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes slideOutUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Content sections with fade */
+::view-transition-old(content) {
+    animation: fadeOut 0.3s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+::view-transition-new(content) {
+    animation: fadeIn 0.3s 0.1s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* ===== Apply transition names to elements ===== */
+
+/* These can be added via inline styles or JavaScript */
+.vt-header {
+    view-transition-name: site-header;
+}
+
+.logo,
+.logo-container {
+    view-transition-name: logo;
+}
+
+.main-nav {
+    view-transition-name: nav;
+}
+
+.hero-section {
+    view-transition-name: hero;
+}
+
+main,
+.main-content {
+    view-transition-name: content;
+}
+
+/* ===== Fallback for reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root),
+    ::view-transition-old(hero),
+    ::view-transition-new(hero),
+    ::view-transition-old(content),
+    ::view-transition-new(content) {
+        animation-duration: 0.001s !important;
+    }
+}
+
+/* ===== Loading State ===== */
+.view-transition-loading {
+    cursor: wait;
+    pointer-events: none;
+}
+
+/* ===== Smooth transition for theme toggle ===== */
+::view-transition-old(theme-toggle),
+::view-transition-new(theme-toggle) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
+.theme-toggle {
+    view-transition-name: theme-toggle;
+}
+
+/* ===== Progressive Enhancement ===== */
+
+/* If View Transitions not supported, ensure smooth page loads */
+@supports not (view-transition-name: none) {
+    * {
+        animation: none !important;
+        transition: opacity 0.2s ease, transform 0.2s ease !important;
+    }
+
+    body {
+        opacity: 1;
+        animation: pageLoad 0.3s ease-out;
+    }
+
+    @keyframes pageLoad {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
+/* ===== Custom transitions for specific routes ===== */
+
+/* Dashboard route gets a slide from right */
+::view-transition-old(root):has(.dashboard-page) {
+    animation: slideOutLeft 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+::view-transition-new(root):has(.dashboard-page) {
+    animation: slideInRight 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+@keyframes slideOutLeft {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* ===== Image transitions ===== */
+::view-transition-old(gallery-image),
+::view-transition-new(gallery-image) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+
+/* ===== Back navigation gets reversed animation ===== */
+[data-transition-direction="back"] ::view-transition-old(root) {
+    animation: slideInRight 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+[data-transition-direction="back"] ::view-transition-new(root) {
+    animation: slideOutLeft 0.35s cubic-bezier(0.2, 0.6, 0.2, 1) forwards;
+}
+
+/* ===== Scroll Animation Enhancements ===== */
+
+/* Smooth elastic easing for scroll animations */
+@keyframes scrollFadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scrollFadeDown {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scrollFadeLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scrollFadeRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scrollScaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes scrollBlurIn {
+    from {
+        opacity: 0;
+        filter: blur(10px);
+    }
+    to {
+        opacity: 1;
+        filter: blur(0);
+    }
+}
+
+/* Smooth momentum scrolling */
+body {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth scroll snap for sections (optional enhancement) */
+.scroll-snap-container {
+    scroll-snap-type: y proximity;
+    scroll-padding-top: 80px;
+}
+
+.scroll-snap-section {
+    scroll-snap-align: start;
+    scroll-snap-stop: normal;
+}
+
+/* Enhance view transition smoothness */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-padding-top: 80px;
+    }
+
+    /* Add slight delay to page transitions for smoother feel */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 0.4s;
+    }
+}

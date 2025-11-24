@@ -1,5 +1,4 @@
 ---
-import LoginWidget from './LoginWidget.astro';
 ---
 
 <a href="#main-content" class="skip-link">Skip to main content</a>
@@ -36,16 +35,6 @@ import LoginWidget from './LoginWidget.astro';
                 <span class="theme-icon" id="theme-icon">🌙</span>
               </div>
             </div>
-          </button>
-        </li>
-        <li class="pos-relative">
-          <a href="#" class="cta-button" onclick="toggleLoginWidget(event)">Owner Login</a>
-          <LoginWidget />
-        </li>
-        <li>
-          <button id="cart-toggle" class="cart-icon-btn" aria-label="Open shopping cart">
-            🛒
-            <span id="cart-count" class="cart-count">0</span>
           </button>
         </li>
       </ul>
@@ -353,51 +342,6 @@ import LoginWidget from './LoginWidget.astro';
   .cta-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-  }
-
-  .pos-relative {
-    position: relative;
-  }
-
-  /* Cart Icon in Header */
-  .cart-icon-btn {
-    position: relative;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    border: none;
-    color: white;
-    font-size: 1.3rem;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .cart-icon-btn:hover {
-    transform: translateY(-2px) scale(1.05);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.5);
-  }
-
-  .cart-count {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    background: white;
-    color: #e74c3c;
-    border-radius: 50%;
-    min-width: 22px;
-    height: 22px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 0 4px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   }
 
   @media (max-width: 1024px) {

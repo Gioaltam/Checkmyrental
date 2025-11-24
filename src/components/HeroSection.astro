@@ -12,16 +12,49 @@
 
   <div class="hero-content">
     <h1 class="hero-title">
-      Quarterly Maintenance Property Inspections<br>
-      <strong>24‑Hour Reports You Can Trust</strong>
+      Professional Property Documentation<br>
+      <strong>for Tampa Bay Landlords</strong>
     </h1>
     <p class="hero-subtitle">
-      Professional inspectors document your rental property every quarter. Get a photo‑rich condition report within 24 hours — catch small issues before they become expensive problems.
+      Comprehensive photo documentation of your rental properties with AI-powered organization. Detailed PDF report delivered within 24 hours.
     </p>
-    <div class="hero-cta">
-      <a href="#contact" class="btn btn-primary">Start Quarterly Plan</a>
-      <a href="#gallery" class="btn btn-secondary">See What's Included</a>
+
+    <!-- Trust signals -->
+    <div class="trust-signals">
+      <div class="signal-item">
+        <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span>Every room documented</span>
+      </div>
+      <div class="signal-item">
+        <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span>24-hour PDF delivery</span>
+      </div>
+      <div class="signal-item">
+        <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span>Track changes over time</span>
+      </div>
+      <div class="signal-item">
+        <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+        </svg>
+        <span>Just $100 per property</span>
+      </div>
     </div>
+
+    <div class="hero-cta">
+      <a href="/sample-report.pdf" class="btn btn-primary" download>Download Sample Report</a>
+      <a href="#contact" class="btn btn-secondary">Book Documentation</a>
+    </div>
+
+    <p class="disclaimer">
+      Visual records that protect your investment. This is a documentation service, not a home inspection.
+    </p>
   </div>
 
   <!-- Scroll cue -->
@@ -216,6 +249,48 @@
     background: rgba(0, 0, 0, 0.1);
   }
 
+  .trust-signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin: 2rem 0 2.5rem;
+  }
+
+  .signal-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  body.light-mode .signal-item {
+    color: rgba(0, 0, 0, 0.75);
+  }
+
+  .check-icon {
+    width: 20px;
+    height: 20px;
+    color: #e74c3c;
+    flex-shrink: 0;
+  }
+
+  .disclaimer {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.light-mode .disclaimer {
+    color: rgba(0, 0, 0, 0.6);
+  }
+
   .scroll-cue {
     position: absolute;
     bottom: 3rem;
@@ -256,6 +331,19 @@
       padding: 6rem 1.5rem 3rem;
     }
 
+    .trust-signals {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1rem;
+      max-width: 280px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .signal-item {
+      font-size: 0.9rem;
+    }
+
     .hero-cta {
       flex-direction: column;
       align-items: stretch;
@@ -263,6 +351,10 @@
 
     .btn {
       text-align: center;
+    }
+
+    .disclaimer {
+      font-size: 0.85rem;
     }
 
     .scroll-cue {

@@ -7,25 +7,23 @@
   <div class="process-steps">
     <div class="process-step">
       <div class="step-number">1</div>
-      <h3 class="step-title">Easy Online Booking</h3>
-      <p class="step-description">Book your quarterly plan instantly online. Set up automatic inspections every 3 months.</p>
+      <h3 class="step-title">Schedule Your Documentation</h3>
+      <p class="step-description">Book online or call. We'll confirm within 2 hours and coordinate property access.</p>
     </div>
     <div class="process-step">
       <div class="step-number">2</div>
-      <h3 class="step-title">On‑Site Inspection by a Pro</h3>
-      <p class="step-description">A professional inspector captures 200+ photos and performs a thorough interior & exterior check.</p>
+      <h3 class="step-title">We Document Everything</h3>
+      <p class="step-description">Our systematic photography captures 80-120 images of all visible areas and conditions.</p>
     </div>
     <div class="process-step">
       <div class="step-number">3</div>
-      <h3 class="step-title">Issue Detection & Risk Checklist</h3>
-      <p class="step-description">Potential wear, leaks, and safety concerns are documented and prioritized for action.</p>
-    </div>
-    <div class="process-step">
-      <div class="step-number">4</div>
-      <h3 class="step-title">Owner Dashboard Access</h3>
-      <p class="step-description">Included with quarterly plans: Track all your properties, view reports, and monitor issues through your personalized dashboard.</p>
+      <h3 class="step-title">Receive Your PDF Report</h3>
+      <p class="step-description">Organized photo documentation delivered via email within 24 hours.</p>
     </div>
   </div>
+  <p class="process-disclaimer">
+    Note: This is a property documentation service using photography and AI organization. We are not licensed home inspectors and this is not a home inspection.
+  </p>
 </section>
 
 <style>
@@ -76,10 +74,11 @@
 
   .process-steps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 3rem;
     position: relative;
     z-index: 1;
+    margin-bottom: 3rem;
   }
 
   .process-step {
@@ -159,6 +158,32 @@
 
   body.light-mode .step-description {
     color: #4a4a4a;
+  }
+
+  .process-disclaimer {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: rgba(100, 116, 139, 0.05);
+    border: 1px solid rgba(100, 116, 139, 0.1);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  body.light-mode .process-disclaimer {
+    background: rgba(231, 76, 60, 0.05);
+    border-color: rgba(231, 76, 60, 0.1);
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  @media (max-width: 1024px) {
+    .process-steps {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
   }
 
   @media (max-width: 768px) {

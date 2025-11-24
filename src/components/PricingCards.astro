@@ -4,18 +4,18 @@
 // Main quarterly service
 const quarterlyPlan = {
   id: "quarterly",
-  title: "Quarterly Maintenance Inspections",
+  title: "Quarterly Property Documentation",
   price: 99.90,
   priceFormatted: "$99.90",
-  priceNote: "per inspection",
-  description: "Complete property checkup every 3 months with 24-hour photo-rich reports",
+  priceNote: "per visit",
+  description: "Complete property documentation every 3 months with 24-hour photo-rich reports",
   features: [
-    "Interior Damage Assessment",
-    "Exterior Damage Assessment",
-    "HVAC System Inspections",
-    "Plumbing System Inspections",
-    "Appliance Assessments (Oven, Dishwasher, etc.)",
-    "Kitchen Appliance Checks",
+    "Interior Condition Documentation",
+    "Exterior Condition Documentation",
+    "HVAC System Photography",
+    "Plumbing System Documentation",
+    "Appliance Condition Photos",
+    "Kitchen Equipment Documentation",
     "Owner Dashboard Access",
     "24-Hour Report Delivery",
     "Photo Documentation",
@@ -54,18 +54,12 @@ const quarterlyPlan = {
         ))}
       </ul>
 
-      <button
+      <a
+        href="/#contact"
         class="add-to-cart-btn featured-btn"
-        onclick={`addToCart(${JSON.stringify({
-          id: quarterlyPlan.id,
-          title: quarterlyPlan.title,
-          description: quarterlyPlan.description,
-          price: quarterlyPlan.price,
-          type: quarterlyPlan.type
-        })})`}
       >
-        Add to Cart
-      </button>
+        Get Started
+      </a>
     </div>
   </div>
 

@@ -618,10 +618,9 @@ class App(BaseTk):  # type: ignore[misc]
         owner_help.bind("<Enter>", lambda e: self._show_field_tooltip(e,
             "Owner Portal\n\n"
             "• Select the property owner's paid account\n"
-            "• Reports will be uploaded to their dashboard\n"
+            "• Reports will be uploaded to their portal\n"
             "• Only paid customers appear in this list\n"
-            "• Click 🔄 to refresh the list\n"
-            "• Click 📊 Dashboard to view their portal"))
+            "• Click 🔄 to refresh the list"))
         owner_help.bind("<Leave>", lambda e: self._hide_status_tooltip())
 
         self.owner_var = tk.StringVar()
@@ -634,10 +633,6 @@ class App(BaseTk):  # type: ignore[misc]
         self.refresh_btn = ttk.Button(owner_row, text="🔄", width=3,
                                      command=self.refresh_owners, style='Secondary.TButton')
         self.refresh_btn.pack(side="left", padx=(5, 0))
-
-        self.dashboard_btn = ttk.Button(owner_row, text="📊 Dashboard", width=12,
-                                       command=self.open_owner_dashboard, style='Accent.TButton')
-        self.dashboard_btn.pack(side="left", padx=(5, 0))
 
         self.owner_id_var = tk.StringVar()
 
@@ -1663,77 +1658,6 @@ class App(BaseTk):  # type: ignore[misc]
             self.pending_owner_id = ''
             self.pending_owner_display = ''
 
-    def open_owner_dashboard(self):
-        """Open the selected owner's dashboard in their default web browser"""
-        owner_id, owner_display, owner_label = self._resolve_selected_owner()
-
-        if not owner_id or owner_display == PLACEHOLDER_OWNER:
-            messagebox.showwarning(
-                "No Owner Selected",
-                "Please select an owner from the dropdown first.\n\n"
-                "The dashboard will open for the selected owner's portal."
-            )
-            return
-
-        # Get owner details
-        details = getattr(self, 'owner_details', {}).get(owner_id, {})
-        if not details:
-            messagebox.showerror(
-                "Owner Not Found",
-                f"Could not find details for owner: {owner_label}"
-            )
-            return
-
-        # Get the portal token for this owner
-        token = details.get('portal_token', '')
-        email = details.get('email', '')
-        name = details.get('name') or details.get('full_name', owner_label)
-
-        # Construct dashboard URL
-        # Try token-based URL first, fallback to main dashboard
-        dashboard_base = "http://localhost:3000"
-        if token:
-            dashboard_url = f"{dashboard_base}?token={token}"
-        else:
-            dashboard_url = dashboard_base
-
-        # Log the action
-        self._log_line("")
-        self._log_line(f"📊 Opening Dashboard for: {name}")
-        self._log_line(f"   📧 Email: {email}")
-        if token:
-            self._log_line(f"   🔑 Token: {token}")
-        self._log_line(f"   🌐 URL: {dashboard_url}")
-        self._log_line("")
-
-        # Show confirmation dialog
-        confirm = messagebox.askyesno(
-            "Open Dashboard",
-            f"Open dashboard for:\n\n"
-            f"Owner: {name}\n"
-            f"Email: {email}\n\n"
-            f"This will open in your default web browser.\n"
-            f"Continue?"
-        )
-
-        if confirm:
-            try:
-                webbrowser.open(dashboard_url)
-                self._log_line("✅ Dashboard opened successfully", "success")
-                messagebox.showinfo(
-                    "Dashboard Opened",
-                    f"Dashboard for {name} has been opened in your browser.\n\n"
-                    f"Reports you create for this owner will appear in their dashboard."
-                )
-            except Exception as e:
-                self._log_line(f"❌ Error opening dashboard: {e}", "error")
-                messagebox.showerror(
-                    "Error",
-                    f"Failed to open dashboard:\n{e}\n\n"
-                    f"Please open manually: {dashboard_url}"
-                )
-
-    # Gallery fetching method removed - not needed
 
     # ----- Status Checking Methods -----
     def _check_all_status(self):

@@ -70,8 +70,8 @@ class ReportGeneratorApp(tk.Tk):
 
         self.title(f"{COMPANY_NAME} - {APP_TITLE}")
         self.configure(bg=BRAND_BG)
-        self.geometry("750x650")
-        self.minsize(650, 550)
+        self.geometry("750x720")
+        self.minsize(700, 700)
 
         # State
         self.sources = []  # List of (path, type) tuples - type is 'zip' or 'folder'
@@ -247,7 +247,7 @@ class ReportGeneratorApp(tk.Tk):
         log_frame = tk.Frame(progress_card, bg=BRAND_SURFACE)
         log_frame.pack(fill="both", expand=True)
 
-        self.log_text = tk.Text(log_frame, height=8, font=('Consolas', 9),
+        self.log_text = tk.Text(log_frame, height=6, font=('Consolas', 9),
                                bg=BRAND_BG, fg=BRAND_TEXT,
                                borderwidth=0, highlightthickness=1,
                                highlightcolor=BRAND_BORDER,

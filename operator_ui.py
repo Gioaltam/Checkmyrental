@@ -205,26 +205,17 @@ class ReportGeneratorApp(tk.Tk):
         details_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
         details_card.pack(fill="x", pady=(0, 15))
 
-        tk.Label(details_card, text="Report Details",
-                font=('Segoe UI', 12, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(anchor="w", pady=(0, 10))
+        tk.Label(details_card, text="Inspector Info",
+                font=('Segoe UI', 12, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(anchor="w")
 
-        # Property Address
-        addr_row = tk.Frame(details_card, bg=BRAND_SURFACE)
-        addr_row.pack(fill="x", pady=(0, 10))
-
-        tk.Label(addr_row, text="Property Address:", width=15, anchor="w",
-                font=('Segoe UI', 10), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(side="left")
-
-        self.address_var = tk.StringVar()
-        self.address_entry = ttk.Entry(addr_row, textvariable=self.address_var,
-                                       font=('Segoe UI', 10), width=50)
-        self.address_entry.pack(side="left", fill="x", expand=True)
+        tk.Label(details_card, text="Property address is extracted from filename automatically",
+                font=('Segoe UI', 9), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE).pack(anchor="w", pady=(2, 10))
 
         # Inspector Name
         name_row = tk.Frame(details_card, bg=BRAND_SURFACE)
         name_row.pack(fill="x")
 
-        tk.Label(name_row, text="Inspector Name:", width=15, anchor="w",
+        tk.Label(name_row, text="Your Name:", width=12, anchor="w",
                 font=('Segoe UI', 10), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(side="left")
 
         self.inspector_var = tk.StringVar()
@@ -365,11 +356,6 @@ class ReportGeneratorApp(tk.Tk):
             messagebox.showwarning("No Sources", "Please add ZIP files or photo folders first.")
             return
 
-        address = self.address_var.get().strip()
-        if not address:
-            messagebox.showwarning("Missing Address", "Please enter a property address.")
-            return
-
         inspector = self.inspector_var.get().strip() or "Inspector"
 
         # Start processing
@@ -381,11 +367,11 @@ class ReportGeneratorApp(tk.Tk):
 
         # Run in background thread
         thread = threading.Thread(target=self._run_reports,
-                                 args=(self.sources.copy(), address, inspector))
+                                 args=(self.sources.copy(), inspector))
         thread.daemon = True
         thread.start()
 
-    def _run_reports(self, sources, address, inspector):
+    def _run_reports(self, sources, inspector):
         """Run report generation in background thread"""
         total = len(sources)
         generated_pdfs = []
@@ -397,18 +383,17 @@ class ReportGeneratorApp(tk.Tk):
 
             try:
                 # Build command based on source type
+                # Property address is extracted from filename by run_report.py
                 if source_type == 'zip':
                     cmd = [
                         sys.executable, "run_report.py",
                         "--zip", source_path,
-                        "--property", address,
                         "--client", inspector
                     ]
                 else:  # folder
                     cmd = [
                         sys.executable, "run_report.py",
                         "--dir", source_path,
-                        "--property", address,
                         "--client", inspector
                     ]
 

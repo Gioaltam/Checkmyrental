@@ -1527,16 +1527,27 @@ def main():
         print("Error: Please specify --zip or --dir")
         parser.print_help()
         sys.exit(1)
-    
+
+    # Extract property address from filename if not provided
+    property_address = args.property
+    if property_address == 'Property Address' or not property_address:
+        # Use the source filename (without extension) as the property address
+        # Replace underscores and dashes with spaces for readability
+        filename = source.stem  # filename without extension
+        property_address = filename.replace('_', ' ').replace('-', ' ')
+        # Clean up multiple spaces
+        property_address = ' '.join(property_address.split())
+        print(f"Using filename as property address: {property_address}")
+
     try:
         # Generate reports
         gallery = getattr(args, 'gallery', None)
-        artifacts = build_reports(source, args.client, args.property, gallery)
+        artifacts = build_reports(source, args.client, property_address, gallery)
         
         # Register with portal if requested
         if args.register:
             owner_id = getattr(args, 'owner_id', None)
-            register_with_portal(artifacts, args.client, args.email, args.property, owner_id)
+            register_with_portal(artifacts, args.client, args.email, property_address, owner_id)
         
         print("\nReport generation complete!")
         

@@ -1,7 +1,6 @@
 # operator_ui.py - CheckMyRental Inspection Report Generator
-# Simple tool for photographers to generate property inspection reports
+# Clean, minimal design inspired by ExpressVPN
 # Uses vision.py for AI analysis and run_report.py for PDF generation
-# Accepts: ZIP files or folders (including Mac photo albums)
 
 import os
 import sys
@@ -12,7 +11,7 @@ from pathlib import Path
 import platform
 import subprocess
 
-# Enable DPI awareness for Windows (sharper text)
+# Enable DPI awareness for Windows
 if platform.system() == 'Windows':
     import ctypes
     try:
@@ -23,11 +22,9 @@ if platform.system() == 'Windows':
         except Exception:
             pass
 
-# GUI
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 
-# .env for API keys
 try:
     from dotenv import load_dotenv
     load_dotenv(override=True)
@@ -37,454 +34,349 @@ except Exception:
 # ============ BRANDING ============
 COMPANY_NAME = "CheckMyRental"
 APP_TITLE = "Report Generator"
-APP_VERSION = "v3.0"
 
-# Colors - Dark professional theme
-BRAND_PRIMARY = "#e74c3c"       # Red accent
-BRAND_BG = "#0f0f0f"            # Dark background
-BRAND_SURFACE = "#1a1a1a"       # Card background
-BRAND_SURFACE_HOVER = "#252525" # Hover state
-BRAND_TEXT = "#fafafa"          # White text
-BRAND_TEXT_DIM = "#888888"      # Dimmed text
-BRAND_SUCCESS = "#10b981"       # Green
-BRAND_ERROR = "#dc2626"         # Red
-BRAND_WARNING = "#f59e0b"       # Orange/yellow
-BRAND_BORDER = "#333333"        # Border color
+# Colors - Clean dark theme
+BG_DARK = "#1a1a2e"          # Deep blue-black background
+BG_CARD = "#16213e"          # Card background
+ACCENT = "#e74c3c"           # Red accent (brand color)
+ACCENT_HOVER = "#c0392b"     # Darker red
+TEXT_PRIMARY = "#ffffff"     # White
+TEXT_SECONDARY = "#8892b0"   # Muted blue-gray
+SUCCESS = "#00d09c"          # Green
+ERROR = "#ff6b6b"            # Red
 
 # Output directory
 OUTPUT_DIR = Path("workspace/outputs")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Progress parsing
 PROGRESS_RE = re.compile(r"\[(\d+)\s*/\s*(\d+)\]")
-
-# Supported image extensions
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif'}
 
 
 class ReportGeneratorApp(tk.Tk):
-    """Simple app for generating property inspection reports from ZIP files or folders"""
-
     def __init__(self):
         super().__init__()
 
-        self.title(f"{COMPANY_NAME} - {APP_TITLE}")
-        self.configure(bg=BRAND_BG)
-        self.geometry("750x800")
-        self.minsize(700, 780)
-        self.resizable(False, False)  # Disable resizing/fullscreen
+        self.title(f"{COMPANY_NAME} {APP_TITLE}")
+        self.configure(bg=BG_DARK)
+        self.geometry("420x600")
+        self.resizable(False, False)
 
         # State
-        self.sources = []  # List of (path, type) tuples - type is 'zip' or 'folder'
+        self.sources = []
         self.is_running = False
         self.output_queue = queue.Queue()
 
-        # Build UI
-        self._setup_styles()
         self._build_ui()
-
-        # Check for API key
         self.after(500, self._check_api_key)
-
-        # Start output polling
         self._poll_output()
 
-    def _setup_styles(self):
-        """Configure ttk styles"""
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
-
-        # Button styles
-        self.style.configure('Primary.TButton',
-            background=BRAND_PRIMARY,
-            foreground='white',
-            font=('Segoe UI', 11, 'bold'),
-            padding=(20, 12))
-        self.style.map('Primary.TButton',
-            background=[('active', '#c0392b'), ('disabled', '#555555')])
-
-        self.style.configure('Secondary.TButton',
-            background=BRAND_SURFACE,
-            foreground=BRAND_TEXT,
-            font=('Segoe UI', 10),
-            padding=(15, 10))
-        self.style.map('Secondary.TButton',
-            background=[('active', BRAND_SURFACE_HOVER)])
-
-        # Entry style
-        self.style.configure('TEntry',
-            fieldbackground=BRAND_SURFACE,
-            foreground=BRAND_TEXT,
-            insertcolor=BRAND_TEXT,
-            padding=10)
-
-        # Label style
-        self.style.configure('TLabel',
-            background=BRAND_BG,
-            foreground=BRAND_TEXT,
-            font=('Segoe UI', 10))
-
     def _build_ui(self):
-        """Build the main UI"""
+        """Build clean, minimal UI"""
+
+        # Main container with padding
+        main = tk.Frame(self, bg=BG_DARK, padx=30, pady=25)
+        main.pack(fill="both", expand=True)
 
         # ===== HEADER =====
-        header = tk.Frame(self, bg=BRAND_SURFACE, height=70)
-        header.pack(fill="x")
-        header.pack_propagate(False)
+        header = tk.Frame(main, bg=BG_DARK)
+        header.pack(fill="x", pady=(0, 20))
 
-        # Header content
-        header_content = tk.Frame(header, bg=BRAND_SURFACE)
-        header_content.pack(fill="both", expand=True, padx=25, pady=15)
+        # Logo
+        tk.Label(header, text="✓", font=('Segoe UI', 28, 'bold'),
+                fg=ACCENT, bg=BG_DARK).pack(side="left")
 
-        # Logo and title
-        logo = tk.Label(header_content, text="✓", font=('Segoe UI', 24, 'bold'),
-                       fg=BRAND_PRIMARY, bg=BRAND_SURFACE)
-        logo.pack(side="left")
+        tk.Label(header, text=f" {COMPANY_NAME}",
+                font=('Segoe UI', 18, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_DARK).pack(side="left")
 
-        title = tk.Label(header_content, text=f"  {COMPANY_NAME} {APP_TITLE}",
-                        font=('Segoe UI', 16, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE)
-        title.pack(side="left")
+        # API Status (small, top right)
+        self.api_status = tk.Label(header, text="",
+                                  font=('Segoe UI', 9), bg=BG_DARK)
+        self.api_status.pack(side="right")
 
-        # Right side: version and API status (pack in reverse order)
-        version = tk.Label(header_content, text=APP_VERSION,
-                          font=('Segoe UI', 10), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE)
-        version.pack(side="right")
+        # ===== BIG GENERATE BUTTON =====
+        btn_frame = tk.Frame(main, bg=BG_DARK)
+        btn_frame.pack(pady=20)
 
-        self.api_status = tk.Label(header_content, text="",
-                                  font=('Segoe UI', 10), bg=BRAND_SURFACE)
-        self.api_status.pack(side="right", padx=(0, 15))
+        # Create circular-ish button using Canvas
+        self.btn_canvas = tk.Canvas(btn_frame, width=160, height=160,
+                                   bg=BG_DARK, highlightthickness=0)
+        self.btn_canvas.pack()
 
-        # Border
-        tk.Frame(self, bg=BRAND_PRIMARY, height=3).pack(fill="x")
+        # Draw button circle
+        self._draw_button("normal")
 
-        # ===== MAIN CONTENT =====
-        content = tk.Frame(self, bg=BRAND_BG)
-        content.pack(fill="both", expand=True, padx=25, pady=15)
+        # Bind click events
+        self.btn_canvas.bind("<Button-1>", self._on_button_click)
+        self.btn_canvas.bind("<Enter>", lambda e: self._draw_button("hover"))
+        self.btn_canvas.bind("<Leave>", lambda e: self._draw_button("normal"))
 
-        # --- File Selection Card ---
-        file_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
-        file_card.pack(fill="x", pady=(0, 15))
+        # Status text below button
+        self.status_label = tk.Label(main, text="Ready",
+                                    font=('Segoe UI', 12),
+                                    fg=SUCCESS, bg=BG_DARK)
+        self.status_label.pack(pady=(10, 20))
 
-        tk.Label(file_card, text="Photo Sources",
-                font=('Segoe UI', 12, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(anchor="w")
+        # ===== FILE INFO CARD =====
+        card = tk.Frame(main, bg=BG_CARD, padx=20, pady=15)
+        card.pack(fill="x", pady=(0, 15))
 
-        tk.Label(file_card, text="Add ZIP files or photo folders (including Mac albums via AirDrop)",
-                font=('Segoe UI', 9), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE).pack(anchor="w", pady=(2, 10))
+        # Files row
+        files_row = tk.Frame(card, bg=BG_CARD)
+        files_row.pack(fill="x", pady=(0, 10))
 
-        # File list
-        list_frame = tk.Frame(file_card, bg=BRAND_BG)
-        list_frame.pack(fill="x", pady=(0, 10))
+        tk.Label(files_row, text="Photos:",
+                font=('Segoe UI', 10), fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
 
-        self.file_listbox = tk.Listbox(list_frame, height=4, font=('Segoe UI', 10),
-                                       bg=BRAND_BG, fg=BRAND_TEXT,
-                                       selectbackground=BRAND_PRIMARY,
-                                       borderwidth=0, highlightthickness=1,
-                                       highlightcolor=BRAND_BORDER,
-                                       highlightbackground=BRAND_BORDER)
-        self.file_listbox.pack(side="left", fill="x", expand=True)
+        self.file_count_label = tk.Label(files_row, text="No files selected",
+                                        font=('Segoe UI', 10, 'bold'),
+                                        fg=TEXT_PRIMARY, bg=BG_CARD)
+        self.file_count_label.pack(side="right")
 
-        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=self.file_listbox.yview)
-        scrollbar.pack(side="right", fill="y")
-        self.file_listbox.config(yscrollcommand=scrollbar.set)
-
-        # File buttons
-        btn_row = tk.Frame(file_card, bg=BRAND_SURFACE)
+        # Add files buttons
+        btn_row = tk.Frame(card, bg=BG_CARD)
         btn_row.pack(fill="x")
 
-        ttk.Button(btn_row, text="+ Add ZIP Files", command=self._add_zip_files,
-                  style='Secondary.TButton').pack(side="left")
-        ttk.Button(btn_row, text="+ Add Photo Folder", command=self._add_folder,
-                  style='Secondary.TButton').pack(side="left", padx=(10, 0))
-        ttk.Button(btn_row, text="Clear All", command=self._clear_sources,
-                  style='Secondary.TButton').pack(side="left", padx=(10, 0))
+        add_zip_btn = tk.Label(btn_row, text="+ ZIP",
+                              font=('Segoe UI', 10, 'bold'),
+                              fg=ACCENT, bg=BG_CARD, cursor="hand2")
+        add_zip_btn.pack(side="left")
+        add_zip_btn.bind("<Button-1>", lambda e: self._add_zip_files())
 
-        self.file_count = tk.Label(btn_row, text="0 sources",
-                                  font=('Segoe UI', 10), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE)
-        self.file_count.pack(side="right")
+        tk.Label(btn_row, text="  |  ", fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
 
-        # --- Details Card ---
-        details_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
-        details_card.pack(fill="x", pady=(0, 15))
+        add_folder_btn = tk.Label(btn_row, text="+ Folder",
+                                 font=('Segoe UI', 10, 'bold'),
+                                 fg=ACCENT, bg=BG_CARD, cursor="hand2")
+        add_folder_btn.pack(side="left")
+        add_folder_btn.bind("<Button-1>", lambda e: self._add_folder())
 
-        tk.Label(details_card, text="Inspector Info",
-                font=('Segoe UI', 12, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(anchor="w")
+        tk.Label(btn_row, text="  |  ", fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
 
-        tk.Label(details_card, text="Property address is extracted from filename automatically",
-                font=('Segoe UI', 9), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE).pack(anchor="w", pady=(2, 10))
+        clear_btn = tk.Label(btn_row, text="Clear",
+                            font=('Segoe UI', 10),
+                            fg=TEXT_SECONDARY, bg=BG_CARD, cursor="hand2")
+        clear_btn.pack(side="left")
+        clear_btn.bind("<Button-1>", lambda e: self._clear_sources())
 
-        # Inspector Name
-        name_row = tk.Frame(details_card, bg=BRAND_SURFACE)
-        name_row.pack(fill="x")
+        # ===== INSPECTOR NAME =====
+        name_card = tk.Frame(main, bg=BG_CARD, padx=20, pady=15)
+        name_card.pack(fill="x", pady=(0, 15))
 
-        tk.Label(name_row, text="Your Name:", width=12, anchor="w",
-                font=('Segoe UI', 10), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(side="left")
+        tk.Label(name_card, text="Inspector Name",
+                font=('Segoe UI', 10), fg=TEXT_SECONDARY, bg=BG_CARD).pack(anchor="w")
 
         self.inspector_var = tk.StringVar()
-        self.inspector_entry = ttk.Entry(name_row, textvariable=self.inspector_var,
-                                        font=('Segoe UI', 10), width=50)
-        self.inspector_entry.pack(side="left", fill="x", expand=True)
+        name_entry = tk.Entry(name_card, textvariable=self.inspector_var,
+                             font=('Segoe UI', 11),
+                             bg=BG_DARK, fg=TEXT_PRIMARY,
+                             insertbackground=TEXT_PRIMARY,
+                             relief="flat", bd=0)
+        name_entry.pack(fill="x", pady=(5, 0), ipady=8)
 
-        # --- Action Buttons (moved up for visibility) ---
-        action_row = tk.Frame(content, bg=BRAND_BG)
-        action_row.pack(fill="x", pady=(0, 15))
+        # ===== PROGRESS =====
+        progress_frame = tk.Frame(main, bg=BG_DARK)
+        progress_frame.pack(fill="x", pady=(0, 10))
 
-        self.generate_btn = ttk.Button(action_row, text="Generate Reports",
-                                       command=self._generate_reports,
-                                       style='Primary.TButton')
-        self.generate_btn.pack(side="left")
-
-        ttk.Button(action_row, text="Open Reports Folder", command=self._open_output,
-                  style='Secondary.TButton').pack(side="right")
-
-        # --- Progress Section ---
-        progress_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
-        progress_card.pack(fill="both", expand=True, pady=(0, 15))
-
-        progress_header = tk.Frame(progress_card, bg=BRAND_SURFACE)
-        progress_header.pack(fill="x", pady=(0, 10))
-
-        tk.Label(progress_header, text="Progress",
-                font=('Segoe UI', 12, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE).pack(side="left")
-
-        self.status_label = tk.Label(progress_header, text="Ready",
-                                    font=('Segoe UI', 10), fg=BRAND_SUCCESS, bg=BRAND_SURFACE)
-        self.status_label.pack(side="right")
-
-        # Progress bar
         self.progress_var = tk.DoubleVar(value=0)
-        self.progress_bar = ttk.Progressbar(progress_card, variable=self.progress_var,
-                                           maximum=100, mode='determinate')
-        self.progress_bar.pack(fill="x", pady=(0, 10))
+        self.progress_bar = ttk.Progressbar(progress_frame,
+                                           variable=self.progress_var,
+                                           maximum=100, mode='determinate',
+                                           length=360)
+        self.progress_bar.pack(fill="x")
 
-        # Log output with scroll
-        log_frame = tk.Frame(progress_card, bg=BRAND_SURFACE)
-        log_frame.pack(fill="both", expand=True)
+        # Style the progress bar
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure("TProgressbar",
+                       background=ACCENT,
+                       troughcolor=BG_CARD,
+                       borderwidth=0,
+                       lightcolor=ACCENT,
+                       darkcolor=ACCENT)
 
-        self.log_text = tk.Text(log_frame, height=5, font=('Consolas', 9),
-                               bg=BRAND_BG, fg=BRAND_TEXT,
-                               borderwidth=0, highlightthickness=1,
-                               highlightcolor=BRAND_BORDER,
-                               highlightbackground=BRAND_BORDER,
-                               state='disabled')
-        self.log_text.pack(side="left", fill="both", expand=True)
+        # ===== LOG (minimal) =====
+        self.log_label = tk.Label(main, text="",
+                                 font=('Segoe UI', 9),
+                                 fg=TEXT_SECONDARY, bg=BG_DARK,
+                                 wraplength=360)
+        self.log_label.pack(fill="x")
 
-        log_scroll = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
-        log_scroll.pack(side="right", fill="y")
-        self.log_text.config(yscrollcommand=log_scroll.set)
+        # ===== FOOTER =====
+        footer = tk.Frame(main, bg=BG_DARK)
+        footer.pack(side="bottom", fill="x", pady=(15, 0))
+
+        open_folder_btn = tk.Label(footer, text="Open Reports Folder",
+                                  font=('Segoe UI', 10),
+                                  fg=TEXT_SECONDARY, bg=BG_DARK, cursor="hand2")
+        open_folder_btn.pack()
+        open_folder_btn.bind("<Button-1>", lambda e: self._open_output())
+
+    def _draw_button(self, state):
+        """Draw the big circular button"""
+        self.btn_canvas.delete("all")
+
+        color = ACCENT if state == "normal" else ACCENT_HOVER
+        if self.is_running:
+            color = TEXT_SECONDARY
+
+        # Outer glow effect
+        for i in range(3):
+            alpha_color = self._blend_colors(BG_DARK, color, 0.1 - i * 0.03)
+            self.btn_canvas.create_oval(10 - i*5, 10 - i*5,
+                                       150 + i*5, 150 + i*5,
+                                       fill=alpha_color, outline="")
+
+        # Main circle
+        self.btn_canvas.create_oval(15, 15, 145, 145, fill=color, outline="")
+
+        # Button text
+        text = "STOP" if self.is_running else "GO"
+        self.btn_canvas.create_text(80, 80, text=text,
+                                   font=('Segoe UI', 24, 'bold'),
+                                   fill=TEXT_PRIMARY)
+
+    def _blend_colors(self, color1, color2, factor):
+        """Blend two hex colors"""
+        c1 = tuple(int(color1[i:i+2], 16) for i in (1, 3, 5))
+        c2 = tuple(int(color2[i:i+2], 16) for i in (1, 3, 5))
+        blended = tuple(int(c1[i] + (c2[i] - c1[i]) * factor) for i in range(3))
+        return f"#{blended[0]:02x}{blended[1]:02x}{blended[2]:02x}"
+
+    def _on_button_click(self, event):
+        """Handle big button click"""
+        if self.is_running:
+            return  # Can't stop mid-process for now
+        self._generate_reports()
 
     def _check_api_key(self):
-        """Check if OpenAI API key is configured"""
         key = os.getenv("OPENAI_API_KEY", "").strip()
         if key:
-            self.api_status.config(text="API Key: OK", fg=BRAND_SUCCESS)
+            self.api_status.config(text="● Connected", fg=SUCCESS)
         else:
-            self.api_status.config(text="API Key: Missing", fg=BRAND_ERROR)
+            self.api_status.config(text="● No API Key", fg=ERROR)
             messagebox.showwarning("API Key Required",
-                "OpenAI API key not found.\n\n"
-                "Please add OPENAI_API_KEY to your .env file.")
+                "OpenAI API key not found.\n\nPlease add OPENAI_API_KEY to your .env file.")
 
     def _add_zip_files(self):
-        """Add ZIP files to the list"""
         files = filedialog.askopenfilenames(
-            title="Select ZIP files with photos",
-            filetypes=[("ZIP files", "*.zip"), ("All files", "*.*")]
+            title="Select ZIP files",
+            filetypes=[("ZIP files", "*.zip")]
         )
-
         for f in files:
             if f not in [s[0] for s in self.sources]:
                 self.sources.append((f, 'zip'))
-                self.file_listbox.insert(tk.END, f"[ZIP] {Path(f).name}")
-
-        self._update_source_count()
+        self._update_file_count()
 
     def _add_folder(self):
-        """Add a folder containing photos"""
-        folder = filedialog.askdirectory(
-            title="Select folder containing photos"
-        )
-
+        folder = filedialog.askdirectory(title="Select photo folder")
         if folder and folder not in [s[0] for s in self.sources]:
-            # Check if folder contains images
-            image_count = self._count_images_in_folder(folder)
-            if image_count > 0:
+            count = self._count_images(folder)
+            if count > 0:
                 self.sources.append((folder, 'folder'))
-                self.file_listbox.insert(tk.END, f"[Folder: {image_count} photos] {Path(folder).name}")
-                self._update_source_count()
+                self._update_file_count()
             else:
-                messagebox.showwarning("No Photos Found",
-                    f"No image files found in:\n{folder}\n\n"
-                    f"Supported formats: {', '.join(IMAGE_EXTENSIONS)}")
+                messagebox.showwarning("No Photos", "No image files found in folder.")
 
-    def _count_images_in_folder(self, folder_path):
-        """Count image files in a folder"""
+    def _count_images(self, folder):
         count = 0
-        folder = Path(folder_path)
         for ext in IMAGE_EXTENSIONS:
-            count += len(list(folder.rglob(f"*{ext}")))
-            count += len(list(folder.rglob(f"*{ext.upper()}")))
+            count += len(list(Path(folder).rglob(f"*{ext}")))
+            count += len(list(Path(folder).rglob(f"*{ext.upper()}")))
         return count
 
     def _clear_sources(self):
-        """Clear all sources from the list"""
         self.sources = []
-        self.file_listbox.delete(0, tk.END)
-        self._update_source_count()
+        self._update_file_count()
 
-    def _update_source_count(self):
-        """Update the source count label"""
+    def _update_file_count(self):
         count = len(self.sources)
-        self.file_count.config(text=f"{count} source{'s' if count != 1 else ''}")
-
-    def _log(self, message):
-        """Add message to log"""
-        self.log_text.config(state='normal')
-        self.log_text.insert(tk.END, message + "\n")
-        self.log_text.see(tk.END)
-        self.log_text.config(state='disabled')
-
-    def _clear_log(self):
-        """Clear the log"""
-        self.log_text.config(state='normal')
-        self.log_text.delete(1.0, tk.END)
-        self.log_text.config(state='disabled')
+        if count == 0:
+            self.file_count_label.config(text="No files selected")
+        else:
+            self.file_count_label.config(text=f"{count} source{'s' if count != 1 else ''}")
 
     def _generate_reports(self):
-        """Start report generation"""
-        if self.is_running:
-            return
-
         if not self.sources:
-            messagebox.showwarning("No Sources", "Please add ZIP files or photo folders first.")
+            messagebox.showwarning("No Files", "Add ZIP files or photo folders first.")
             return
 
         inspector = self.inspector_var.get().strip() or "Inspector"
 
-        # Start processing
         self.is_running = True
-        self.generate_btn.config(state='disabled')
-        self.status_label.config(text="Processing...", fg=BRAND_PRIMARY)
+        self._draw_button("normal")
+        self.status_label.config(text="Processing...", fg=ACCENT)
         self.progress_var.set(0)
-        self._clear_log()
+        self.log_label.config(text="")
 
-        # Run in background thread
         thread = threading.Thread(target=self._run_reports,
                                  args=(self.sources.copy(), inspector))
         thread.daemon = True
         thread.start()
 
     def _run_reports(self, sources, inspector):
-        """Run report generation in background thread"""
         total = len(sources)
-        generated_pdfs = []
+        generated = []
 
         for i, (source_path, source_type) in enumerate(sources, 1):
-            source_name = Path(source_path).name
-            self.output_queue.put(('log', f"[{i}/{total}] Processing {source_name}..."))
+            name = Path(source_path).name
+            self.output_queue.put(('log', f"Processing {name}..."))
             self.output_queue.put(('progress', (i - 1) / total * 100))
 
             try:
-                # Build command based on source type
-                # Property address is extracted from filename by run_report.py
                 if source_type == 'zip':
-                    cmd = [
-                        sys.executable, "run_report.py",
-                        "--zip", source_path,
-                        "--client", inspector
-                    ]
-                else:  # folder
-                    cmd = [
-                        sys.executable, "run_report.py",
-                        "--dir", source_path,
-                        "--client", inspector
-                    ]
+                    cmd = [sys.executable, "run_report.py", "--zip", source_path, "--client", inspector]
+                else:
+                    cmd = [sys.executable, "run_report.py", "--dir", source_path, "--client", inspector]
 
-                # Run the command and capture output
-                process = subprocess.Popen(
-                    cmd,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    cwd=str(Path(__file__).parent),
-                    encoding='utf-8',
-                    errors='replace'
-                )
+                process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                          text=True, cwd=str(Path(__file__).parent),
+                                          encoding='utf-8', errors='replace')
 
-                # Read output line by line
                 for line in iter(process.stdout.readline, ''):
                     line = line.strip()
                     if line:
-                        # Parse progress updates
                         match = PROGRESS_RE.search(line)
                         if match:
-                            current, total_images = int(match.group(1)), int(match.group(2))
-                            sub_progress = current / total_images * 100
-                            base_progress = (i - 1) / total * 100
-                            step_progress = 1 / total * 100
-                            overall = base_progress + (sub_progress / 100 * step_progress)
+                            current, total_img = int(match.group(1)), int(match.group(2))
+                            sub = current / total_img * 100
+                            overall = (i - 1) / total * 100 + (sub / total)
                             self.output_queue.put(('progress', overall))
-
-                        # Check for output directory
-                        if "OUTPUT_DIR=" in line:
-                            self.output_queue.put(('log', f"  Output: {line.split('=')[1]}"))
-                        elif "PDF saved to:" in line:
-                            pdf_path = line.split("PDF saved to:")[1].strip()
-                            generated_pdfs.append(pdf_path)
-                            self.output_queue.put(('log', f"  PDF generated!"))
-                        elif "Analyzing" in line:
-                            # Show which image is being analyzed
-                            self.output_queue.put(('log', f"  {line}"))
+                        if "PDF saved" in line:
+                            generated.append(name)
+                            self.output_queue.put(('log', f"✓ {name} complete"))
 
                 process.wait()
-
-                if process.returncode == 0:
-                    self.output_queue.put(('log', f"  Completed successfully"))
-                else:
-                    self.output_queue.put(('log', f"  Warning: Process returned code {process.returncode}"))
-
             except Exception as e:
-                self.output_queue.put(('log', f"  Error: {str(e)}"))
+                self.output_queue.put(('log', f"Error: {e}"))
 
-        # Done
         self.output_queue.put(('progress', 100))
-        self.output_queue.put(('done', generated_pdfs))
+        self.output_queue.put(('done', len(generated)))
 
     def _poll_output(self):
-        """Poll the output queue for updates"""
         try:
             while True:
                 msg_type, data = self.output_queue.get_nowait()
-
                 if msg_type == 'log':
-                    self._log(data)
+                    self.log_label.config(text=data)
                 elif msg_type == 'progress':
                     self.progress_var.set(data)
                 elif msg_type == 'done':
                     self._on_complete(data)
-
         except queue.Empty:
             pass
-
         self.after(100, self._poll_output)
 
-    def _on_complete(self, generated_pdfs):
-        """Called when processing is complete"""
+    def _on_complete(self, count):
         self.is_running = False
-        self.generate_btn.config(state='normal')
-        self.status_label.config(text="Complete!", fg=BRAND_SUCCESS)
+        self._draw_button("normal")
+        self.status_label.config(text=f"Done! {count} report{'s' if count != 1 else ''}", fg=SUCCESS)
 
-        count = len(generated_pdfs)
-        self._log(f"\n{'='*40}")
-        self._log(f"Generated {count} report{'s' if count != 1 else ''}")
-
-        if generated_pdfs:
-            # Ask to open the output folder
-            if messagebox.askyesno("Reports Complete",
-                f"Generated {count} report{'s' if count != 1 else ''}.\n\n"
-                "Open the reports folder?"):
-                self._open_output()
+        if count > 0 and messagebox.askyesno("Complete", f"Generated {count} report{'s' if count != 1 else ''}.\n\nOpen folder?"):
+            self._open_output()
 
     def _open_output(self):
-        """Open the output directory"""
         try:
             if platform.system() == 'Windows':
                 os.startfile(str(OUTPUT_DIR))

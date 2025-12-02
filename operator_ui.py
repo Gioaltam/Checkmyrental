@@ -1,5 +1,5 @@
 # operator_ui.py - CheckMyRental Inspection Report Generator
-# Clean, minimal design inspired by ExpressVPN
+# Premium, polished design with modern aesthetics
 # Uses vision.py for AI analysis and run_report.py for PDF generation
 
 import os
@@ -23,7 +23,7 @@ if platform.system() == 'Windows':
             pass
 
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import filedialog, messagebox
 
 try:
     from dotenv import load_dotenv
@@ -33,17 +33,23 @@ except Exception:
 
 # ============ BRANDING ============
 COMPANY_NAME = "CheckMyRental"
-APP_TITLE = "Report Generator"
+APP_TITLE = "Inspection Report Generator"
 
-# Colors - Clean dark theme
-BG_DARK = "#1a1a2e"          # Deep blue-black background
-BG_CARD = "#16213e"          # Card background
+# Colors - Premium dark theme with gradients feel
+BG_DARK = "#0f0f1a"          # Deep dark background
+BG_SECONDARY = "#1a1a2e"     # Secondary background
+BG_CARD = "#252542"          # Card background
+BG_CARD_HOVER = "#2d2d4a"    # Card hover
 ACCENT = "#e74c3c"           # Red accent (brand color)
-ACCENT_HOVER = "#c0392b"     # Darker red
+ACCENT_HOVER = "#ff5f4f"     # Lighter red on hover
+ACCENT_GLOW = "#ff6b5b"      # Glow effect
 TEXT_PRIMARY = "#ffffff"     # White
 TEXT_SECONDARY = "#8892b0"   # Muted blue-gray
+TEXT_MUTED = "#5a6080"       # More muted
 SUCCESS = "#00d09c"          # Green
+SUCCESS_DARK = "#00a87d"     # Darker green
 ERROR = "#ff6b6b"            # Red
+BORDER = "#3d3d5c"           # Subtle border
 
 # Output directory
 OUTPUT_DIR = Path("workspace/outputs")
@@ -57,9 +63,9 @@ class ReportGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
-        self.title(f"{COMPANY_NAME} {APP_TITLE}")
+        self.title(f"{COMPANY_NAME} — {APP_TITLE}")
         self.configure(bg=BG_DARK)
-        self.geometry("420x600")
+        self.geometry("580x680")
         self.resizable(False, False)
 
         # State
@@ -72,177 +78,189 @@ class ReportGeneratorApp(tk.Tk):
         self._poll_output()
 
     def _build_ui(self):
-        """Build clean, minimal UI"""
+        """Build premium, polished UI"""
 
         # Main container with padding
-        main = tk.Frame(self, bg=BG_DARK, padx=30, pady=25)
+        main = tk.Frame(self, bg=BG_DARK, padx=35, pady=30)
         main.pack(fill="both", expand=True)
 
         # ===== HEADER =====
         header = tk.Frame(main, bg=BG_DARK)
-        header.pack(fill="x", pady=(0, 20))
+        header.pack(fill="x", pady=(0, 8))
 
-        # Logo
-        tk.Label(header, text="✓", font=('Segoe UI', 28, 'bold'),
+        # Logo container
+        logo_frame = tk.Frame(header, bg=BG_DARK)
+        logo_frame.pack(side="left")
+
+        # Checkmark icon
+        tk.Label(logo_frame, text="✓", font=('Segoe UI', 28, 'bold'),
                 fg=ACCENT, bg=BG_DARK).pack(side="left")
 
-        tk.Label(header, text=f" {COMPANY_NAME}",
-                font=('Segoe UI', 18, 'bold'),
+        # Company name
+        tk.Label(logo_frame, text=f"  {COMPANY_NAME}",
+                font=('Segoe UI', 20, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_DARK).pack(side="left")
 
-        # API Status (small, top right)
+        # API Status badge (top right)
         self.api_status = tk.Label(header, text="",
                                   font=('Segoe UI', 9), bg=BG_DARK)
-        self.api_status.pack(side="right")
+        self.api_status.pack(side="right", padx=(10, 0))
 
-        # ===== BIG GENERATE BUTTON =====
-        btn_frame = tk.Frame(main, bg=BG_DARK)
-        btn_frame.pack(pady=20)
+        # Subtitle
+        tk.Label(main, text="Professional Property Inspection Reports",
+                font=('Segoe UI', 11),
+                fg=TEXT_MUTED, bg=BG_DARK).pack(anchor="w", pady=(0, 20))
 
-        # Create circular-ish button using Canvas
-        self.btn_canvas = tk.Canvas(btn_frame, width=160, height=160,
-                                   bg=BG_DARK, highlightthickness=0)
-        self.btn_canvas.pack()
+        # ===== FILE SELECTION CARD =====
+        card = self._create_card(main)
+        card.pack(fill="x", pady=(0, 12))
 
-        # Draw button circle
-        self._draw_button("normal")
+        # Card header
+        card_header = tk.Frame(card, bg=BG_CARD)
+        card_header.pack(fill="x", pady=(0, 12))
 
-        # Bind click events
-        self.btn_canvas.bind("<Button-1>", self._on_button_click)
-        self.btn_canvas.bind("<Enter>", lambda e: self._draw_button("hover"))
-        self.btn_canvas.bind("<Leave>", lambda e: self._draw_button("normal"))
+        tk.Label(card_header, text="Photo Sources",
+                font=('Segoe UI', 13, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_CARD).pack(side="left")
 
-        # Status text below button
-        self.status_label = tk.Label(main, text="Ready",
-                                    font=('Segoe UI', 12),
-                                    fg=SUCCESS, bg=BG_DARK)
-        self.status_label.pack(pady=(10, 20))
-
-        # ===== FILE INFO CARD =====
-        card = tk.Frame(main, bg=BG_CARD, padx=20, pady=15)
-        card.pack(fill="x", pady=(0, 15))
-
-        # Files row
-        files_row = tk.Frame(card, bg=BG_CARD)
-        files_row.pack(fill="x", pady=(0, 10))
-
-        tk.Label(files_row, text="Photos:",
-                font=('Segoe UI', 10), fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
-
-        self.file_count_label = tk.Label(files_row, text="No files selected",
-                                        font=('Segoe UI', 10, 'bold'),
-                                        fg=TEXT_PRIMARY, bg=BG_CARD)
+        self.file_count_label = tk.Label(card_header, text="No files selected",
+                                        font=('Segoe UI', 11),
+                                        fg=TEXT_SECONDARY, bg=BG_CARD)
         self.file_count_label.pack(side="right")
 
-        # Add files buttons
+        # Separator
+        tk.Frame(card, bg=BORDER, height=1).pack(fill="x", pady=(0, 12))
+
+        # Add files buttons row
         btn_row = tk.Frame(card, bg=BG_CARD)
         btn_row.pack(fill="x")
 
-        add_zip_btn = tk.Label(btn_row, text="+ ZIP",
-                              font=('Segoe UI', 10, 'bold'),
-                              fg=ACCENT, bg=BG_CARD, cursor="hand2")
-        add_zip_btn.pack(side="left")
-        add_zip_btn.bind("<Button-1>", lambda e: self._add_zip_files())
+        # ZIP button
+        zip_btn = self._create_action_button(btn_row, "+ Add ZIP Files", self._add_zip_files)
+        zip_btn.pack(side="left", padx=(0, 10))
 
-        tk.Label(btn_row, text="  |  ", fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
+        # Folder button
+        folder_btn = self._create_action_button(btn_row, "+ Add Folder", self._add_folder)
+        folder_btn.pack(side="left", padx=(0, 10))
 
-        add_folder_btn = tk.Label(btn_row, text="+ Folder",
-                                 font=('Segoe UI', 10, 'bold'),
-                                 fg=ACCENT, bg=BG_CARD, cursor="hand2")
-        add_folder_btn.pack(side="left")
-        add_folder_btn.bind("<Button-1>", lambda e: self._add_folder())
-
-        tk.Label(btn_row, text="  |  ", fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
-
+        # Clear button (muted)
         clear_btn = tk.Label(btn_row, text="Clear",
                             font=('Segoe UI', 10),
-                            fg=TEXT_SECONDARY, bg=BG_CARD, cursor="hand2")
-        clear_btn.pack(side="left")
+                            fg=TEXT_MUTED, bg=BG_CARD, cursor="hand2")
+        clear_btn.pack(side="right")
         clear_btn.bind("<Button-1>", lambda e: self._clear_sources())
+        clear_btn.bind("<Enter>", lambda e: clear_btn.config(fg=ERROR))
+        clear_btn.bind("<Leave>", lambda e: clear_btn.config(fg=TEXT_MUTED))
 
-        # ===== INSPECTOR NAME =====
-        name_card = tk.Frame(main, bg=BG_CARD, padx=20, pady=15)
-        name_card.pack(fill="x", pady=(0, 15))
+        # ===== INSPECTOR NAME CARD =====
+        name_card = self._create_card(main)
+        name_card.pack(fill="x", pady=(0, 12))
 
         tk.Label(name_card, text="Inspector Name",
-                font=('Segoe UI', 10), fg=TEXT_SECONDARY, bg=BG_CARD).pack(anchor="w")
+                font=('Segoe UI', 13, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 10))
+
+        # Entry with styled frame
+        entry_frame = tk.Frame(name_card, bg=BG_SECONDARY)
+        entry_frame.pack(fill="x")
 
         self.inspector_var = tk.StringVar()
-        name_entry = tk.Entry(name_card, textvariable=self.inspector_var,
-                             font=('Segoe UI', 11),
-                             bg=BG_DARK, fg=TEXT_PRIMARY,
+        name_entry = tk.Entry(entry_frame, textvariable=self.inspector_var,
+                             font=('Segoe UI', 12),
+                             bg=BG_SECONDARY, fg=TEXT_PRIMARY,
                              insertbackground=TEXT_PRIMARY,
                              relief="flat", bd=0)
-        name_entry.pack(fill="x", pady=(5, 0), ipady=8)
+        name_entry.pack(fill="x", ipady=12, padx=15)
 
-        # ===== PROGRESS =====
-        progress_frame = tk.Frame(main, bg=BG_DARK)
-        progress_frame.pack(fill="x", pady=(0, 10))
+        # ===== PROGRESS SECTION =====
+        progress_card = self._create_card(main)
+        progress_card.pack(fill="x", pady=(0, 12))
 
-        self.progress_var = tk.DoubleVar(value=0)
-        self.progress_bar = ttk.Progressbar(progress_frame,
-                                           variable=self.progress_var,
-                                           maximum=100, mode='determinate',
-                                           length=360)
-        self.progress_bar.pack(fill="x")
+        # Progress header
+        progress_header = tk.Frame(progress_card, bg=BG_CARD)
+        progress_header.pack(fill="x", pady=(0, 10))
 
-        # Style the progress bar
-        style = ttk.Style()
-        style.theme_use('clam')
-        style.configure("TProgressbar",
-                       background=ACCENT,
-                       troughcolor=BG_CARD,
-                       borderwidth=0,
-                       lightcolor=ACCENT,
-                       darkcolor=ACCENT)
+        tk.Label(progress_header, text="Progress",
+                font=('Segoe UI', 13, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_CARD).pack(side="left")
 
-        # ===== LOG (minimal) =====
-        self.log_label = tk.Label(main, text="",
-                                 font=('Segoe UI', 9),
-                                 fg=TEXT_SECONDARY, bg=BG_DARK,
-                                 wraplength=360)
-        self.log_label.pack(fill="x")
+        self.progress_percent = tk.Label(progress_header, text="0%",
+                                        font=('Segoe UI', 12, 'bold'),
+                                        fg=ACCENT, bg=BG_CARD)
+        self.progress_percent.pack(side="right")
+
+        # Custom progress bar frame
+        progress_bg = tk.Frame(progress_card, bg=BG_SECONDARY, height=6)
+        progress_bg.pack(fill="x", pady=(0, 10))
+        progress_bg.pack_propagate(False)
+
+        self.progress_fill = tk.Frame(progress_bg, bg=ACCENT, height=6)
+        self.progress_fill.place(x=0, y=0, relheight=1, relwidth=0)
+
+        # Status label
+        self.status_label = tk.Label(progress_card, text="Ready",
+                                    font=('Segoe UI', 11),
+                                    fg=SUCCESS, bg=BG_CARD, anchor="w")
+        self.status_label.pack(fill="x")
+
+        # Log label
+        self.log_label = tk.Label(progress_card, text="Add files to begin",
+                                 font=('Segoe UI', 10),
+                                 fg=TEXT_MUTED, bg=BG_CARD,
+                                 anchor="w")
+        self.log_label.pack(fill="x", pady=(4, 0))
+
+        # ===== GENERATE BUTTON =====
+        self.generate_btn = tk.Frame(main, bg=ACCENT, cursor="hand2")
+        self.generate_btn.pack(fill="x", pady=(15, 0), ipady=14)
+
+        self.generate_label = tk.Label(self.generate_btn, text="Generate Reports",
+                                       font=('Segoe UI', 14, 'bold'),
+                                       fg=TEXT_PRIMARY, bg=ACCENT)
+        self.generate_label.pack()
+
+        # Bind click and hover
+        for widget in [self.generate_btn, self.generate_label]:
+            widget.bind("<Button-1>", self._on_button_click)
+            widget.bind("<Enter>", lambda e: self._btn_hover(True))
+            widget.bind("<Leave>", lambda e: self._btn_hover(False))
 
         # ===== FOOTER =====
         footer = tk.Frame(main, bg=BG_DARK)
         footer.pack(side="bottom", fill="x", pady=(15, 0))
 
-        open_folder_btn = tk.Label(footer, text="Open Reports Folder",
-                                  font=('Segoe UI', 10),
-                                  fg=TEXT_SECONDARY, bg=BG_DARK, cursor="hand2")
-        open_folder_btn.pack()
-        open_folder_btn.bind("<Button-1>", lambda e: self._open_output())
+        # Open folder button
+        open_btn = tk.Label(footer, text="Open Reports Folder",
+                           font=('Segoe UI', 10),
+                           fg=TEXT_MUTED, bg=BG_DARK, cursor="hand2")
+        open_btn.pack()
+        open_btn.bind("<Button-1>", lambda e: self._open_output())
+        open_btn.bind("<Enter>", lambda e: open_btn.config(fg=TEXT_SECONDARY))
+        open_btn.bind("<Leave>", lambda e: open_btn.config(fg=TEXT_MUTED))
 
-    def _draw_button(self, state):
-        """Draw the big circular button"""
-        self.btn_canvas.delete("all")
-
-        color = ACCENT if state == "normal" else ACCENT_HOVER
+    def _btn_hover(self, entering):
+        """Handle generate button hover"""
         if self.is_running:
-            color = TEXT_SECONDARY
+            return
+        color = ACCENT_HOVER if entering else ACCENT
+        self.generate_btn.config(bg=color)
+        self.generate_label.config(bg=color)
 
-        # Outer glow effect
-        for i in range(3):
-            alpha_color = self._blend_colors(BG_DARK, color, 0.1 - i * 0.03)
-            self.btn_canvas.create_oval(10 - i*5, 10 - i*5,
-                                       150 + i*5, 150 + i*5,
-                                       fill=alpha_color, outline="")
+    def _create_card(self, parent):
+        """Create a styled card frame"""
+        card = tk.Frame(parent, bg=BG_CARD, padx=20, pady=16)
+        return card
 
-        # Main circle
-        self.btn_canvas.create_oval(15, 15, 145, 145, fill=color, outline="")
-
-        # Button text
-        text = "STOP" if self.is_running else "GO"
-        self.btn_canvas.create_text(80, 80, text=text,
-                                   font=('Segoe UI', 24, 'bold'),
-                                   fill=TEXT_PRIMARY)
-
-    def _blend_colors(self, color1, color2, factor):
-        """Blend two hex colors"""
-        c1 = tuple(int(color1[i:i+2], 16) for i in (1, 3, 5))
-        c2 = tuple(int(color2[i:i+2], 16) for i in (1, 3, 5))
-        blended = tuple(int(c1[i] + (c2[i] - c1[i]) * factor) for i in range(3))
-        return f"#{blended[0]:02x}{blended[1]:02x}{blended[2]:02x}"
+    def _create_action_button(self, parent, text, command):
+        """Create an action button"""
+        btn = tk.Label(parent, text=text,
+                      font=('Segoe UI', 10, 'bold'),
+                      fg=ACCENT, bg=BG_CARD,
+                      cursor="hand2", padx=8, pady=4)
+        btn.bind("<Button-1>", lambda e: command())
+        btn.bind("<Enter>", lambda e: btn.config(fg=ACCENT_HOVER))
+        btn.bind("<Leave>", lambda e: btn.config(fg=ACCENT))
+        return btn
 
     def _on_button_click(self, event):
         """Handle big button click"""
@@ -305,15 +323,29 @@ class ReportGeneratorApp(tk.Tk):
         inspector = self.inspector_var.get().strip() or "Inspector"
 
         self.is_running = True
-        self._draw_button("normal")
+        self._update_button_state()
         self.status_label.config(text="Processing...", fg=ACCENT)
-        self.progress_var.set(0)
-        self.log_label.config(text="")
+        self._set_progress(0)
+        self.log_label.config(text="Starting...")
 
         thread = threading.Thread(target=self._run_reports,
                                  args=(self.sources.copy(), inspector))
         thread.daemon = True
         thread.start()
+
+    def _update_button_state(self):
+        """Update generate button appearance based on running state"""
+        if self.is_running:
+            self.generate_btn.config(bg=TEXT_MUTED)
+            self.generate_label.config(text="Processing...", bg=TEXT_MUTED)
+        else:
+            self.generate_btn.config(bg=ACCENT)
+            self.generate_label.config(text="Generate Reports", bg=ACCENT)
+
+    def _set_progress(self, value):
+        """Update custom progress bar"""
+        self.progress_fill.place(x=0, y=0, relheight=1, relwidth=value / 100)
+        self.progress_percent.config(text=f"{int(value)}%")
 
     def _run_reports(self, sources, inspector):
         total = len(sources)
@@ -361,7 +393,7 @@ class ReportGeneratorApp(tk.Tk):
                 if msg_type == 'log':
                     self.log_label.config(text=data)
                 elif msg_type == 'progress':
-                    self.progress_var.set(data)
+                    self._set_progress(data)
                 elif msg_type == 'done':
                     self._on_complete(data)
         except queue.Empty:
@@ -370,11 +402,16 @@ class ReportGeneratorApp(tk.Tk):
 
     def _on_complete(self, count):
         self.is_running = False
-        self._draw_button("normal")
-        self.status_label.config(text=f"Done! {count} report{'s' if count != 1 else ''}", fg=SUCCESS)
+        self._update_button_state()
 
-        if count > 0 and messagebox.askyesno("Complete", f"Generated {count} report{'s' if count != 1 else ''}.\n\nOpen folder?"):
-            self._open_output()
+        if count > 0:
+            self.status_label.config(text=f"Done - {count} report{'s' if count != 1 else ''} generated", fg=SUCCESS)
+            self.log_label.config(text="All reports completed successfully!")
+            if messagebox.askyesno("Complete", f"Successfully generated {count} report{'s' if count != 1 else ''}.\n\nOpen reports folder?"):
+                self._open_output()
+        else:
+            self.status_label.config(text="No Reports Generated", fg=ERROR)
+            self.log_label.config(text="Check your files and try again")
 
     def _open_output(self):
         try:

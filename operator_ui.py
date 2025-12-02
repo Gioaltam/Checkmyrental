@@ -72,6 +72,7 @@ class ReportGeneratorApp(tk.Tk):
         self.configure(bg=BRAND_BG)
         self.geometry("750x800")
         self.minsize(700, 780)
+        self.resizable(False, False)  # Disable resizing/fullscreen
 
         # State
         self.sources = []  # List of (path, type) tuples - type is 'zip' or 'folder'

@@ -70,8 +70,8 @@ class ReportGeneratorApp(tk.Tk):
 
         self.title(f"{COMPANY_NAME} - {APP_TITLE}")
         self.configure(bg=BRAND_BG)
-        self.geometry("750x720")
-        self.minsize(700, 700)
+        self.geometry("750x800")
+        self.minsize(700, 780)
 
         # State
         self.sources = []  # List of (path, type) tuples - type is 'zip' or 'folder'
@@ -158,7 +158,7 @@ class ReportGeneratorApp(tk.Tk):
 
         # ===== MAIN CONTENT =====
         content = tk.Frame(self, bg=BRAND_BG)
-        content.pack(fill="both", expand=True, padx=25, pady=20)
+        content.pack(fill="both", expand=True, padx=25, pady=15)
 
         # --- File Selection Card ---
         file_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
@@ -174,7 +174,7 @@ class ReportGeneratorApp(tk.Tk):
         list_frame = tk.Frame(file_card, bg=BRAND_BG)
         list_frame.pack(fill="x", pady=(0, 10))
 
-        self.file_listbox = tk.Listbox(list_frame, height=5, font=('Segoe UI', 10),
+        self.file_listbox = tk.Listbox(list_frame, height=4, font=('Segoe UI', 10),
                                        bg=BRAND_BG, fg=BRAND_TEXT,
                                        selectbackground=BRAND_PRIMARY,
                                        borderwidth=0, highlightthickness=1,
@@ -247,7 +247,7 @@ class ReportGeneratorApp(tk.Tk):
         log_frame = tk.Frame(progress_card, bg=BRAND_SURFACE)
         log_frame.pack(fill="both", expand=True)
 
-        self.log_text = tk.Text(log_frame, height=6, font=('Consolas', 9),
+        self.log_text = tk.Text(log_frame, height=5, font=('Consolas', 9),
                                bg=BRAND_BG, fg=BRAND_TEXT,
                                borderwidth=0, highlightthickness=1,
                                highlightcolor=BRAND_BORDER,

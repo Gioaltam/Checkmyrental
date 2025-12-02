@@ -223,6 +223,18 @@ class ReportGeneratorApp(tk.Tk):
                                         font=('Segoe UI', 10), width=50)
         self.inspector_entry.pack(side="left", fill="x", expand=True)
 
+        # --- Action Buttons (moved up for visibility) ---
+        action_row = tk.Frame(content, bg=BRAND_BG)
+        action_row.pack(fill="x", pady=(0, 15))
+
+        self.generate_btn = ttk.Button(action_row, text="Generate Reports",
+                                       command=self._generate_reports,
+                                       style='Primary.TButton')
+        self.generate_btn.pack(side="left")
+
+        ttk.Button(action_row, text="Open Reports Folder", command=self._open_output,
+                  style='Secondary.TButton').pack(side="right")
+
         # --- Progress Section ---
         progress_card = tk.Frame(content, bg=BRAND_SURFACE, padx=20, pady=15)
         progress_card.pack(fill="both", expand=True, pady=(0, 15))
@@ -258,18 +270,6 @@ class ReportGeneratorApp(tk.Tk):
         log_scroll = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
         log_scroll.pack(side="right", fill="y")
         self.log_text.config(yscrollcommand=log_scroll.set)
-
-        # --- Action Buttons ---
-        action_row = tk.Frame(content, bg=BRAND_BG)
-        action_row.pack(fill="x", pady=(10, 0))
-
-        ttk.Button(action_row, text="Open Reports Folder", command=self._open_output,
-                  style='Secondary.TButton').pack(side="left")
-
-        self.generate_btn = ttk.Button(action_row, text="Generate Reports",
-                                       command=self._generate_reports,
-                                       style='Primary.TButton')
-        self.generate_btn.pack(side="right")
 
     def _check_api_key(self):
         """Check if OpenAI API key is configured"""

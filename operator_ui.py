@@ -144,14 +144,14 @@ class ReportGeneratorApp(tk.Tk):
                         font=('Segoe UI', 16, 'bold'), fg=BRAND_TEXT, bg=BRAND_SURFACE)
         title.pack(side="left")
 
+        # Right side: version and API status (pack in reverse order)
         version = tk.Label(header_content, text=APP_VERSION,
                           font=('Segoe UI', 10), fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE)
         version.pack(side="right")
 
-        # API status indicator
         self.api_status = tk.Label(header_content, text="",
                                   font=('Segoe UI', 10), bg=BRAND_SURFACE)
-        self.api_status.pack(side="right", padx=(0, 20))
+        self.api_status.pack(side="right", padx=(0, 15))
 
         # Border
         tk.Frame(self, bg=BRAND_PRIMARY, height=3).pack(fill="x")

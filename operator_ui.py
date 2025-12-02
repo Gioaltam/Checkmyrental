@@ -67,7 +67,7 @@ APP_TITLE = "Inspector Portal"
 APP_VERSION = "v2.0 Professional"
 APP_TAGLINE = "Professional Property Inspection Reports"
 
-# CheckMyRental Brand Colors (Dashboard-Matched Glass-Morphism Theme)
+# CheckMyRental Brand Colors (Modern Glass-Morphism Theme)
 BRAND_PRIMARY = "#e74c3c"  # CheckMyRental Red (rgb(231, 76, 60))
 BRAND_PRIMARY_HOVER = "#c0392b"  # Darker red for hover (rgb(192, 57, 43))
 BRAND_PRIMARY_LIGHT = "#ff6b6b"  # Lighter red for gradients
@@ -79,14 +79,14 @@ BRAND_SUCCESS_LIGHT = "#34d399"  # Light green for gradients
 BRAND_ERROR = "#dc2626"  # Error Red
 BRAND_WARNING = "#ff9500"  # Warning Orange (vibrant, pure orange)
 
-# Modern glass-morphism theme with red-tinted borders (matches dashboard exactly)
-BRAND_BG = "#0f0f0f"  # Ultra dark background (rgb(15, 15, 15) - dashboard match)
+# Modern glass-morphism theme with red-tinted borders
+BRAND_BG = "#0f0f0f"  # Ultra dark background (rgb(15, 15, 15))
 BRAND_BG_GRADIENT = "#0d1117"  # Gradient end
 BRAND_SURFACE = "#1a1a1a"  # Glass card background (rgba(255, 255, 255, 0.05) simulation)
 BRAND_SURFACE_LIGHT = "#252525"  # Elevated surface
 BRAND_SURFACE_HOVER = "#303030"  # Hover state (rgba(255, 255, 255, 0.08) simulation)
 BRAND_SURFACE_ELEVATED = "#2a2a2a"  # More elevated surfaces
-BRAND_TEXT = "#fafafa"  # Bright white text (rgb(250, 250, 250) - dashboard match)
+BRAND_TEXT = "#fafafa"  # Bright white text (rgb(250, 250, 250))
 BRAND_TEXT_SECONDARY = "#a0a0a0"  # Secondary text
 BRAND_TEXT_DIM = "#6e7681"  # Dimmed text
 BRAND_BORDER = "#3d1f1c"  # Red-tinted border (simulates rgba(231, 76, 60, 0.15))
@@ -122,7 +122,7 @@ ANALYSIS_CONCURRENCY = max(1, _int_env("ANALYSIS_CONCURRENCY", 3))
 # FIXED: Hardcoded to port 8000 to ensure connection works
 PORTAL_EXTERNAL_BASE_URL = "http://localhost:8000"
 
-PLACEHOLDER_OWNER = "Select owner..."
+PLACEHOLDER_OWNER = "Select property owner..."
 
 def portal_url(path: str) -> str:
     """Join base portal URL with a path; accepts '/reports/...' or 'reports/...'. """
@@ -551,7 +551,14 @@ class App(BaseTk):  # type: ignore[misc]
         self.apikey_status.bind("<Enter>", lambda e: self._show_status_tooltip(e, "apikey"))
         self.apikey_status.bind("<Leave>", lambda e: self._hide_status_tooltip())
 
-        # Right section removed - no portal button in top bar
+        # Right section: Version info
+        right_section = tk.Frame(top_content, bg=BRAND_SURFACE)
+        right_section.pack(side="right")
+
+        version_label = tk.Label(right_section, text=APP_VERSION,
+                                font=('Segoe UI', 9),
+                                fg=BRAND_TEXT_DIM, bg=BRAND_SURFACE)
+        version_label.pack(side="right")
 
         # ===== MAIN CONTENT AREA =====
         content_area = tk.Frame(self, bg=BRAND_BG)
@@ -576,8 +583,8 @@ class App(BaseTk):  # type: ignore[misc]
         left_btns = tk.Frame(actions_row, bg=BRAND_SURFACE)
         left_btns.pack(side="left")
 
-        self._create_action_button(left_btns, "Add Files", "📁", self.add_files, 'Secondary.TButton').pack(side="left", padx=(0, 8))
-        self._create_action_button(left_btns, "Clear", "🗑️", self.clear_list, 'Secondary.TButton').pack(side="left", padx=(0, 8))
+        self._create_action_button(left_btns, "Add Files (Ctrl+O)", "📁", self.add_files, 'Secondary.TButton').pack(side="left", padx=(0, 8))
+        self._create_action_button(left_btns, "Clear List", "🗑️", self.clear_list, 'Secondary.TButton').pack(side="left", padx=(0, 8))
         self._create_action_button(left_btns, "Open Reports", "📂", self.open_output, 'Secondary.TButton').pack(side="left")
 
         # Right buttons (larger)
@@ -588,7 +595,8 @@ class App(BaseTk):  # type: ignore[misc]
         self.pause_btn.pack(side="right", padx=(10, 0))
         self.pause_btn.config(state="disabled")
 
-        ttk.Button(right_btns, text="⚡ GENERATE REPORTS", command=self.start, style='Success.TButton').pack(side="right")
+        self.generate_btn = ttk.Button(right_btns, text="⚡ GENERATE REPORTS (Ctrl+G)", command=self.start, style='Success.TButton')
+        self.generate_btn.pack(side="right")
 
         # Row 2: Tabbed interface for Inspection Details and Advanced Settings
         notebook = ttk.Notebook(controls_inner, style='Modern.TNotebook')
@@ -608,7 +616,7 @@ class App(BaseTk):  # type: ignore[misc]
         owner_label_frame = tk.Frame(owner_row, bg=BRAND_SURFACE)
         owner_label_frame.pack(side="left", padx=(0, 10))
 
-        ttk.Label(owner_label_frame, text="Owner Portal:", font=('Segoe UI', 10, 'bold'),
+        ttk.Label(owner_label_frame, text="Property Owner:", font=('Segoe UI', 10, 'bold'),
                  background=BRAND_SURFACE, foreground=BRAND_TEXT).pack(side="left")
 
         # Add help icon with tooltip
@@ -616,23 +624,23 @@ class App(BaseTk):  # type: ignore[misc]
                              fg=BRAND_TEXT_DIM, font=('Segoe UI', 9), cursor="question_arrow")
         owner_help.pack(side="left")
         owner_help.bind("<Enter>", lambda e: self._show_field_tooltip(e,
-            "Owner Portal\n\n"
-            "• Select the property owner's paid account\n"
-            "• Reports will be uploaded to their portal\n"
-            "• Only paid customers appear in this list\n"
-            "• Click 🔄 to refresh the list"))
+            "Property Owner\n\n"
+            "• Select the property owner's account\n"
+            "• Reports will be saved under their name\n"
+            "• Only registered owners appear in this list\n"
+            "• Click 🔄 Refresh to update the list"))
         owner_help.bind("<Leave>", lambda e: self._hide_status_tooltip())
 
         self.owner_var = tk.StringVar()
-        self.owner_combo = ttk.Combobox(owner_row, textvariable=self.owner_var, width=35,
+        self.owner_combo = ttk.Combobox(owner_row, textvariable=self.owner_var, width=50,
                                        font=('Segoe UI', 10), state='readonly', values=(PLACEHOLDER_OWNER,))
-        self.owner_combo.pack(side="left", fill="x", expand=True)
+        self.owner_combo.pack(side="left", fill="x", expand=True, padx=(0, 10))
         self.owner_combo.current(0)
         self.owner_combo.bind('<<ComboboxSelected>>', self._on_owner_selected)
 
-        self.refresh_btn = ttk.Button(owner_row, text="🔄", width=3,
+        self.refresh_btn = ttk.Button(owner_row, text="🔄 Refresh", width=10,
                                      command=self.refresh_owners, style='Secondary.TButton')
-        self.refresh_btn.pack(side="left", padx=(5, 0))
+        self.refresh_btn.pack(side="left")
 
         self.owner_id_var = tk.StringVar()
 
@@ -660,8 +668,25 @@ class App(BaseTk):  # type: ignore[misc]
 
         self.client_name_var = tk.StringVar()
         self.client_name_entry = ttk.Entry(inspector_row, textvariable=self.client_name_var,
-                                          width=40, font=('Segoe UI', 10))
+                                          width=50, font=('Segoe UI', 10))
         self.client_name_entry.pack(side="left", fill="x", expand=True)
+
+        # Placeholder text behavior
+        self.client_name_entry.insert(0, "Enter your name...")
+        self.client_name_entry.config(foreground=BRAND_TEXT_DIM)
+
+        def on_entry_click(_event):
+            if self.client_name_entry.get() == "Enter your name...":
+                self.client_name_entry.delete(0, "end")
+                self.client_name_entry.config(foreground=BRAND_TEXT)
+
+        def on_focus_out(_event):
+            if self.client_name_entry.get() == "":
+                self.client_name_entry.insert(0, "Enter your name...")
+                self.client_name_entry.config(foreground=BRAND_TEXT_DIM)
+
+        self.client_name_entry.bind('<FocusIn>', on_entry_click)
+        self.client_name_entry.bind('<FocusOut>', on_focus_out)
 
         # Tab 2: Advanced Settings
         advanced_tab = tk.Frame(notebook, bg=BRAND_SURFACE)

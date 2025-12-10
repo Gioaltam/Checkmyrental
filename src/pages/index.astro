@@ -4,15 +4,16 @@ import Header from '../components/Header.astro';
 import HeroSection from '../components/HeroSection.astro';
 import StatsSection from '../components/StatsSection.astro';
 import GallerySection from '../components/GallerySection.astro';
-import DashboardPreview from '../components/DashboardPreview.astro';
+import PDFReportPreview from '../components/PDFReportPreview.astro';
 import ProcessSection from '../components/ProcessSection.astro';
-import PricingSection from '../components/PricingSection.astro';
 import FAQSection from '../components/FAQSection.astro';
 import CTASection from '../components/CTASection.astro';
 import LandingFooter from '../components/LandingFooter.astro';
+import LocalBusinessSchema from '../components/LocalBusinessSchema.astro';
 ---
 
 <LandingLayout>
+  <LocalBusinessSchema />
   <Header />
 
   <main id="main-content" tabindex="-1">
@@ -25,19 +26,16 @@ import LandingFooter from '../components/LandingFooter.astro';
     <!-- 3. Services: Show what's included while interest is high -->
     <GallerySection />
 
-    <!-- 4. Dashboard Demo: Show the tool after they understand the value -->
-    <DashboardPreview />
+    <!-- 4. PDF Report Preview: Show the actual product they'll receive -->
+    <PDFReportPreview />
 
-    <!-- 6. Process: Explain how it works -->
+    <!-- 5. Process: Explain how it works -->
     <ProcessSection />
 
-    <!-- 7. Pricing: Show transparent pricing and value comparison -->
-    <PricingSection />
-
-    <!-- 8. FAQ: Address common questions and remove objections -->
+    <!-- 6. FAQ: Address common questions and remove objections -->
     <FAQSection />
 
-    <!-- 9. Final CTA: Convert interested visitors -->
+    <!-- 8. Final CTA: Convert interested visitors -->
     <CTASection />
   </main>
 

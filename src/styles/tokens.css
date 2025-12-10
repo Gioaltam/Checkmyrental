@@ -2,14 +2,50 @@
   /* CheckMyRental Brand Colors */
   --brand-red: #e74c3c;
   --brand-red-light: #ff6b6b;
+  --brand-red-dark: #c0392b;
   --brand-navy: #2c3e50;
+  --brand-navy-light: #34495e;
+
+  /* Background Colors */
   --bg: #0a0a0f;
   --bg-elev: #101317;
+  --bg-glass: rgba(255, 255, 255, 0.04);
+  --bg-glass-hover: rgba(255, 255, 255, 0.06);
+
+  /* Text Colors */
   --text: #f0f0f0;
   --text-muted: #cbd5e1;
   --muted: #94a3b8;
   --white: #ffffff;
+
+  /* Common Gradients */
+  --gradient-primary: linear-gradient(135deg, var(--brand-red) 0%, var(--brand-red-dark) 100%);
+  --gradient-text: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+  --gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0.01) 100%);
+  --gradient-glow: radial-gradient(ellipse at center, rgba(100, 116, 139, 0.06) 0%, transparent 70%);
+
+  /* Borders */
+  --border-subtle: 1px solid rgba(255, 255, 255, 0.06);
+  --border-hover: 1px solid rgba(100, 116, 139, 0.15);
+
+  /* Spacing */
+  --section-padding: 8rem 3rem;
+  --section-padding-mobile: 4rem 1.5rem;
+
+  /* Sizing */
   --radius: 16px;
+  --radius-lg: 24px;
+  --touch-target: 48px;
+
+  /* Shadows */
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   --shadow-glow: 0 3px 10px rgba(231, 76, 60, 0.25);
+  --shadow-hover: 0 20px 50px rgba(0, 0, 0, 0.25);
+  --shadow-btn-hover: 0 16px 48px rgba(231, 76, 60, 0.4);
+
+  /* Animation */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
 }

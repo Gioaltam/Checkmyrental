@@ -1,6 +1,47 @@
 ---
 // FAQ Section with Accordion
+
+// FAQ data for schema
+const faqData = [
+  {
+    question: "How long does a visit take?",
+    answer: "Usually 30-45 minutes for a typical property. Smaller units might be quicker, larger homes a bit longer. We're focused and efficient — we know what to look for and document it with photos."
+  },
+  {
+    question: "Do I need to be there?",
+    answer: "No. We coordinate directly with your tenants for access. You'll get the PDF report within 24 hours with all the photos and findings. Most landlords prefer this hands-off approach."
+  },
+  {
+    question: "What if you find a problem?",
+    answer: "Everything gets documented with photos in your report. We'll note what we found and you can decide how to handle it — follow up with your tenant, call a contractor, or just keep an eye on it. We document, you decide."
+  },
+  {
+    question: "What areas do you service?",
+    answer: "We serve the Tampa Bay area including Tampa, Hillsborough County, St. Petersburg, Clearwater, Pinellas County, and surrounding areas. Contact us if you're nearby — we may be able to work something out."
+  },
+  {
+    question: "What's your cancellation policy?",
+    answer: "Cancel at least 24 hours before your scheduled visit for a full refund. No hidden fees, no contracts."
+  }
+];
+
+// Generate FAQ Schema
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqData.map(item => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.answer
+    }
+  }))
+};
 ---
+
+<!-- FAQ Schema for SEO -->
+<script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
 
 <section class="faq-section" id="faq">
   <div class="faq-header">
@@ -12,31 +53,31 @@
   <div class="faq-container">
     <div class="faq-item" data-faq>
       <button class="faq-question" aria-expanded="false">
-        <span>How long does a quarterly documentation visit take?</span>
+        <span>How long does a visit take?</span>
         <span class="faq-icon">+</span>
       </button>
       <div class="faq-answer">
-        <p>Most documentation visits take 1-2 hours depending on property size. Our documentation specialists work efficiently while being thorough, capturing 200+ photos and checking all major systems. Tenants can typically remain in the unit during the visit.</p>
+        <p>Usually 30-45 minutes for a typical property. Smaller units might be quicker, larger homes a bit longer. We're focused and efficient — we know what to look for and document it with photos.</p>
       </div>
     </div>
 
     <div class="faq-item" data-faq>
       <button class="faq-question" aria-expanded="false">
-        <span>What happens if issues are found during documentation visits?</span>
+        <span>Do I need to be there?</span>
         <span class="faq-icon">+</span>
       </button>
       <div class="faq-answer">
-        <p>All findings are documented with photos and categorized by severity (Critical, Important, or OK). You'll receive detailed recommendations in your 24-hour report. Critical issues like safety hazards are flagged immediately. You can then coordinate repairs with your preferred contractors or property manager.</p>
+        <p>No. We coordinate directly with your tenants for access. You'll get the PDF report within 24 hours with all the photos and findings. Most landlords prefer this hands-off approach.</p>
       </div>
     </div>
 
     <div class="faq-item" data-faq>
       <button class="faq-question" aria-expanded="false">
-        <span>Can I share reports with my property manager or tenants?</span>
+        <span>What if you find a problem?</span>
         <span class="faq-icon">+</span>
       </button>
       <div class="faq-answer">
-        <p>Absolutely! Your dashboard includes easy report sharing features. You can generate shareable links, download PDFs, or export specific photos. Property managers love the ability to track multiple properties from one dashboard.</p>
+        <p>Everything gets documented with photos in your report. We'll note what we found and you can decide how to handle it — follow up with your tenant, call a contractor, or just keep an eye on it. We document, you decide.</p>
       </div>
     </div>
 
@@ -46,67 +87,17 @@
         <span class="faq-icon">+</span>
       </button>
       <div class="faq-answer">
-        <p>We currently serve the Greater Seattle area including King County, Snohomish County, and Pierce County. Expanding to additional markets soon! Contact us if you're outside these areas — we may be able to accommodate special requests.</p>
+        <p>We serve the Tampa Bay area including Tampa, Hillsborough County, St. Petersburg, Clearwater, Pinellas County, and surrounding areas. Contact us if you're nearby — we may be able to work something out.</p>
       </div>
     </div>
 
     <div class="faq-item" data-faq>
       <button class="faq-question" aria-expanded="false">
-        <span>Do I need to be present during the documentation visit?</span>
+        <span>What's your cancellation policy?</span>
         <span class="faq-icon">+</span>
       </button>
       <div class="faq-answer">
-        <p>No, you don't need to be present. We coordinate directly with your tenants or property manager for access. Many landlords prefer this hands-off approach. You'll get the full report within 24 hours regardless.</p>
-      </div>
-    </div>
-
-    <div class="faq-item" data-faq>
-      <button class="faq-question" aria-expanded="false">
-        <span>What's included in the interior assessment?</span>
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-answer">
-        <p>We check walls, floors, ceilings, doors, windows, fixtures, and all rooms. This includes documenting damage, wear and tear, cleanliness, and potential safety concerns. We also test appliances like dishwashers, ovens, and disposal units. Detailed photos capture the condition of every area.</p>
-      </div>
-    </div>
-
-    <div class="faq-item" data-faq>
-      <button class="faq-question" aria-expanded="false">
-        <span>How do quarterly documentation visits differ from move-in/move-out documentation visits?</span>
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-answer">
-        <p>Quarterly documentation visits focus on ongoing maintenance and early issue detection while tenants are living there. Move-in/move-out documentation visits document property condition for security deposit purposes and tenant turnover. Quarterly documentation visits help you catch problems between turnovers — preventing small issues from becoming expensive repairs.</p>
-      </div>
-    </div>
-
-    <div class="faq-item" data-faq>
-      <button class="faq-question" aria-expanded="false">
-        <span>Can I cancel or pause my quarterly plan?</span>
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-answer">
-        <p>Yes! You can pause or cancel anytime with 30 days notice. If a property becomes vacant or you sell it, just let us know. We understand that property ownership situations change. No long-term contracts or cancellation fees.</p>
-      </div>
-    </div>
-
-    <div class="faq-item" data-faq>
-      <button class="faq-question" aria-expanded="false">
-        <span>How does the 24-hour turnaround work?</span>
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-answer">
-        <p>After your documentation visit is completed, our team processes all photos, writes observations and recommendations, and uploads everything to your dashboard within 24 business hours. You'll receive an email notification when your report is ready. Critical issues are flagged immediately by phone if needed.</p>
-      </div>
-    </div>
-
-    <div class="faq-item" data-faq>
-      <button class="faq-question" aria-expanded="false">
-        <span>Do you offer discounts for multiple properties?</span>
-        <span class="faq-icon">+</span>
-      </button>
-      <div class="faq-answer">
-        <p>Yes! Property managers and owners with multiple rentals get volume pricing. Contact us for a custom quote. We also offer scheduling flexibility to inspect multiple properties in the same area on the same day for maximum convenience.</p>
+        <p>Cancel at least 24 hours before your scheduled visit for a full refund. No hidden fees, no contracts.</p>
       </div>
     </div>
   </div>
@@ -117,54 +108,60 @@
   </div>
 </section>
 
-<script>
+<script is:inline>
   // FAQ Accordion functionality
-  function initFAQ() {
-    const faqItems = document.querySelectorAll('[data-faq]');
+  (function() {
+    function initFAQ() {
+      const faqItems = document.querySelectorAll('[data-faq]');
 
-    faqItems.forEach(item => {
-      const question = item.querySelector('.faq-question');
-      const answer = item.querySelector('.faq-answer');
+      faqItems.forEach(function(item) {
+        const question = item.querySelector('.faq-question');
+        const answer = item.querySelector('.faq-answer');
 
-      if (!question || !answer) return;
+        if (!question || !answer) return;
 
-      question.addEventListener('click', () => {
-        const isExpanded = question.getAttribute('aria-expanded') === 'true';
+        // Remove existing listeners by cloning
+        const newQuestion = question.cloneNode(true);
+        question.parentNode.replaceChild(newQuestion, question);
 
-        // Close all other FAQ items
-        faqItems.forEach(otherItem => {
-          const otherQuestion = otherItem.querySelector('.faq-question');
-          const otherAnswer = otherItem.querySelector('.faq-answer');
-          if (otherItem !== item && otherQuestion && otherAnswer) {
-            otherQuestion.setAttribute('aria-expanded', 'false');
-            otherAnswer.style.maxHeight = '0';
-            otherItem.classList.remove('active');
+        newQuestion.addEventListener('click', function() {
+          const isExpanded = newQuestion.getAttribute('aria-expanded') === 'true';
+
+          // Close all other FAQ items
+          faqItems.forEach(function(otherItem) {
+            const otherQuestion = otherItem.querySelector('.faq-question');
+            const otherAnswer = otherItem.querySelector('.faq-answer');
+            if (otherItem !== item && otherQuestion && otherAnswer) {
+              otherQuestion.setAttribute('aria-expanded', 'false');
+              otherAnswer.style.maxHeight = '0';
+              otherItem.classList.remove('active');
+            }
+          });
+
+          // Toggle current item
+          if (isExpanded) {
+            newQuestion.setAttribute('aria-expanded', 'false');
+            answer.style.maxHeight = '0';
+            item.classList.remove('active');
+          } else {
+            newQuestion.setAttribute('aria-expanded', 'true');
+            answer.style.maxHeight = answer.scrollHeight + 'px';
+            item.classList.add('active');
           }
         });
-
-        // Toggle current item
-        if (isExpanded) {
-          question.setAttribute('aria-expanded', 'false');
-          answer.style.maxHeight = '0';
-          item.classList.remove('active');
-        } else {
-          question.setAttribute('aria-expanded', 'true');
-          answer.style.maxHeight = answer.scrollHeight + 'px';
-          item.classList.add('active');
-        }
       });
-    });
-  }
+    }
 
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', () => {
-    initFAQ();
-  });
+    // Initialize immediately if DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initFAQ);
+    } else {
+      initFAQ();
+    }
 
-  // Re-initialize on Astro page transitions
-  document.addEventListener('astro:page-load', () => {
-    initFAQ();
-  });
+    // Re-initialize on Astro page transitions
+    document.addEventListener('astro:page-load', initFAQ);
+  })();
 </script>
 
 <style>
@@ -173,6 +170,7 @@
     max-width: 900px;
     margin: 0 auto;
     position: relative;
+    scroll-margin-top: 80px;
   }
 
   .faq-header {
@@ -264,6 +262,7 @@
     align-items: center;
     gap: 1.5rem;
     padding: 1.5rem 2rem;
+    min-height: 56px;
     background: transparent;
     border: none;
     text-align: left;
@@ -277,6 +276,16 @@
 
   .faq-question:hover {
     color: rgb(231, 76, 60);
+  }
+
+  .faq-question:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px rgba(231, 76, 60, 0.5);
+    border-radius: 16px;
+  }
+
+  .faq-question:focus-visible {
+    box-shadow: inset 0 0 0 2px #e74c3c;
   }
 
   body.light-mode .faq-question {
@@ -339,21 +348,33 @@
   }
 
   .faq-contact-btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 1rem 2.5rem;
+    min-height: 52px;
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
     color: white;
     text-decoration: none;
     border-radius: 12px;
     font-weight: 600;
     font-size: 1.05rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 6px 25px rgba(231, 76, 60, 0.35);
   }
 
   .faq-contact-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 35px rgba(231, 76, 60, 0.45);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 12px 40px rgba(231, 76, 60, 0.5);
+  }
+
+  .faq-contact-btn:focus {
+    outline: 2px solid #e74c3c;
+    outline-offset: 3px;
+  }
+
+  .faq-contact-btn:active {
+    transform: translateY(-2px) scale(0.98);
   }
 
   @media (max-width: 768px) {

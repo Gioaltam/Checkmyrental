@@ -6,19 +6,19 @@
   <div class="stats-container">
     <div class="stat" data-stat>
       <div class="stat-number" data-target="4" data-suffix="x/yr">0x/yr</div>
-      <div class="stat-label">Quarterly Maintenance</div>
+      <div class="stat-label">Quarterly Visits</div>
     </div>
     <div class="stat" data-stat>
       <div class="stat-number" data-target="24" data-suffix="h">0h</div>
-      <div class="stat-label">Report Turnaround</div>
+      <div class="stat-label">Report Delivery</div>
     </div>
     <div class="stat" data-stat>
-      <div class="stat-number" data-target="200" data-suffix="+">0+</div>
-      <div class="stat-label">Photos Per Visit</div>
+      <div class="stat-number static">AI</div>
+      <div class="stat-label">Powered Analysis</div>
     </div>
     <div class="stat" data-stat>
-      <div class="stat-number" data-target="100" data-suffix="%">0%</div>
-      <div class="stat-label">Property Coverage</div>
+      <div class="stat-number static">Local</div>
+      <div class="stat-label">Florida Based</div>
     </div>
   </div>
 </section>
@@ -31,7 +31,7 @@
 
     function animateCounter(element: Element) {
       const numberEl = element.querySelector('.stat-number') as HTMLElement;
-      if (!numberEl) return;
+      if (!numberEl || numberEl.classList.contains('static')) return;
 
       const target = parseInt(numberEl.dataset.target || '0');
       const suffix = numberEl.dataset.suffix || '';

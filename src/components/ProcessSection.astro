@@ -13,7 +13,7 @@
     <div class="process-step">
       <div class="step-number">2</div>
       <h3 class="step-title">We Document Everything</h3>
-      <p class="step-description">Our systematic photography captures 80-120 images of all visible areas and conditions.</p>
+      <p class="step-description">Our systematic photography captures all visible areas and conditions. Each photo is analyzed by our custom-built AI agent, trained specifically for damage assessment and property inspections using advanced AI vision models.</p>
     </div>
     <div class="process-step">
       <div class="step-number">3</div>
@@ -32,6 +32,7 @@
     max-width: 1400px;
     margin: 0 auto;
     position: relative;
+    scroll-margin-top: -100px;
   }
 
   .process-section::before {
@@ -81,27 +82,131 @@
     margin-bottom: 3rem;
   }
 
+  /*
+   * CSS Custom Properties for line positioning
+   * Grid: 3 columns with 3rem gap = each card is (100% - 6rem) / 3 wide
+   * First card center: half card width = (100% - 6rem) / 6
+   * Last card center: 100% - half card width = 100% - (100% - 6rem) / 6
+   */
+  .process-steps {
+    --card-width: calc((100% - 6rem) / 3);
+    --first-center: calc(var(--card-width) / 2);
+    --last-center: calc(100% - var(--card-width) / 2);
+  }
+
+  /* Connecting lines between steps */
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    /* Position at center of step-number: padding-top (2.5rem = 40px) + half of number height (35px) = 75px */
+    top: 75px;
+    /* Line starts after first number (center + half number width 35px) to before last number */
+    left: calc(var(--first-center) + 45px);
+    right: calc(var(--first-center) + 45px);
+    height: 3px;
+    background: linear-gradient(90deg,
+      rgba(100, 116, 139, 0.2) 0%,
+      rgba(231, 76, 60, 0.3) 50%,
+      rgba(100, 116, 139, 0.2) 100%);
+    z-index: 0;
+    border-radius: 2px;
+  }
+
+  /* Animated dot traveling along the connecting line */
+  .process-steps::after {
+    content: '';
+    position: absolute;
+    top: 69px;
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.8),
+                0 0 30px rgba(231, 76, 60, 0.4);
+    animation: dotMove 4s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  @keyframes dotMove {
+    0% {
+      /* Start just after first step number (center + half number width + small gap) */
+      left: calc((100% - 6rem) / 6 + 45px - 6px);
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    5% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      /* Center between cards (middle of the line) */
+      left: calc(50% - 6px);
+      transform: scale(1.2);
+      box-shadow: 0 0 20px rgba(231, 76, 60, 1),
+                  0 0 40px rgba(231, 76, 60, 0.6);
+    }
+    95% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      /* End just before last step number */
+      left: calc(100% - (100% - 6rem) / 6 - 45px - 6px);
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
   .process-step {
     text-align: center;
     padding: 2.5rem;
+    padding-top: 2.5rem;
     background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.04) 0%,
       rgba(255, 255, 255, 0.02) 50%,
       rgba(255, 255, 255, 0.01) 100%);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 24px;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      background 0.3s ease,
+      border-color 0.3s ease,
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Subtle gradient overlay on hover */
+  .process-step::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(231, 76, 60, 0.08) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+  }
+
+  .process-step:hover::before {
+    opacity: 1;
   }
 
   .process-step:hover {
-    transform: translateY(-8px);
+    transform: translateY(-10px) scale(1.02);
     background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.06) 0%,
       rgba(255, 255, 255, 0.03) 50%,
       rgba(255, 255, 255, 0.02) 100%);
-    border-color: rgba(100, 116, 139, 0.15);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    border-color: rgba(231, 76, 60, 0.2);
+    box-shadow:
+      0 25px 50px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(231, 76, 60, 0.1);
+  }
+
+  .process-step:active {
+    transform: translateY(-6px) scale(1.01);
+    transition-duration: 0.15s;
   }
 
   body.light-mode .process-step {
@@ -111,31 +216,48 @@
 
   body.light-mode .process-step:hover {
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 15px 35px rgba(0, 0, 0, 0.1),
+      0 0 0 1px rgba(231, 76, 60, 0.15);
   }
 
   .step-number {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 70px;
     height: 70px;
-    line-height: 70px;
     border-radius: 20px;
     background: linear-gradient(135deg, #475569 0%, #334155 100%);
     color: white;
     font-size: 1.8rem;
     font-weight: 700;
     margin-bottom: 2rem;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow:
+      0 8px 20px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition:
+      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 0.3s ease,
+      background 0.3s ease;
+    position: relative;
+    z-index: 2;
   }
 
   .process-step:hover .step-number {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    transform: scale(1.15) rotate(5deg);
+    box-shadow:
+      0 15px 40px rgba(0, 0, 0, 0.3),
+      0 0 30px rgba(231, 76, 60, 0.2);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
   }
 
   body.light-mode .step-number {
     background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+  }
+
+  body.light-mode .process-step:hover .step-number {
+    background: linear-gradient(135deg, #c0392b, #e74c3c);
   }
 
   .step-title {
@@ -186,6 +308,13 @@
     }
   }
 
+  @media (max-width: 1024px) {
+    .process-steps::before,
+    .process-steps::after {
+      display: none;
+    }
+  }
+
   @media (max-width: 768px) {
     .process-section {
       padding: 4rem 1.5rem;
@@ -203,7 +332,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .process-section::before {
+    .process-section::before,
+    .process-steps::after {
       animation: none;
     }
   }

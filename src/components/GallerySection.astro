@@ -7,10 +7,10 @@ const mainService = {
   href: "#quarterly",
   badges: ["Best Value", "Most Popular"],
   title: "Quarterly Property Documentation",
-  price: 99.90,
-  priceFormatted: "$99.90",
+  price: 100,
+  priceFormatted: "$100",
   priceNote: "per visit",
-  description: "Our flagship service: interior condition documentation, plumbing & HVAC systems, kitchen appliances (dishwasher, oven, etc.). Complete property documentation every 3 months with PDF report downloads.",
+  description: "We check what matters: air filters, appliance interiors, leaks, water damage, and any visible issues. Photos delivered in a PDF report within 24 hours.",
   cta: "Add to Cart",
   type: "subscription"
 };
@@ -20,44 +20,39 @@ const includedServices = [
   {
     id: "interior",
     href: "#interior",
-    title: "Interior Damage Assessment",
-    description: "Walls, floors, ceilings, doors, windows, and fixtures. Complete interior condition documentation included in your quarterly plan.",
-    cta: "View checklist"
-  },
-  {
-    id: "exterior",
-    href: "#exterior",
-    title: "Exterior Damage Assessment",
-    description: "Siding, foundation, walkways, driveways, and yard conditions. Full exterior property evaluation included in your quarterly plan.",
-    cta: "View details"
+    title: "Visible Damage Check",
+    description: "We look for broken windows, damaged walls, ceiling stains, and any visible issues that need your attention. Problems are photographed and documented."
   },
   {
     id: "hvac",
     href: "#hvac",
-    title: "HVAC System Documentation",
-    description: "Heating & cooling system checks, filter assessment, thermostat testing, and airflow documentation included in your quarterly plan.",
-    cta: "View checklist"
+    title: "Air Filter Inspection",
+    description: "We check if air filters are being changed regularly. Dirty filters are photographed so you can follow up with tenants about proper maintenance."
   },
   {
     id: "plumbing",
     href: "#plumbing",
-    title: "Plumbing System Documentation",
-    description: "Pipes, fixtures, water pressure testing, leak detection, and complete water system assessment included in your quarterly plan.",
-    cta: "View details"
+    title: "Leak & Water Damage Check",
+    description: "We look under sinks, around toilets, and near water heaters for leaks or water damage. Early detection helps prevent costly repairs."
   },
   {
     id: "appliances",
     href: "#appliances",
-    title: "Appliance Assessments",
-    description: "Oven, dishwasher, refrigerator, and other major appliance functionality checks included in your quarterly plan.",
-    cta: "View checklist"
+    title: "Appliance Interior Photos",
+    description: "We photograph inside the oven, dishwasher, refrigerator, and other appliances to verify tenants are maintaining them properly."
   },
   {
-    id: "dashboard",
-    href: "#dashboard",
-    title: "Owner Dashboard Access",
-    description: "24/7 access to your personalized owner portal with all documentation reports, photo records, and property history included in your quarterly plan.",
-    cta: "View demo"
+    id: "exterior",
+    href: "#exterior",
+    title: "Exterior Walk-Around",
+    description: "Quick exterior check for obvious issues like damaged siding, broken fixtures, or yard concerns that may need attention."
+  },
+  {
+    id: "report",
+    href: "#report",
+    title: "24-Hour PDF Reports",
+    description: "All photos and findings delivered in an organized PDF report within 24 hours. Easy to review and share with tenants if needed.",
+    cta: "View sample"
   }
 ];
 
@@ -75,7 +70,7 @@ const includedServices = [
     {includedServices.map(service => (
       <a class="photo-item" href={service.href} data-service={service.id} aria-label={`Learn more about ${service.title}`}>
         <!-- Animated icon backgrounds -->
-        <div class="animated-bg">
+        <div class="animated-bg" role="img" aria-label={`${service.title} icon`}>
           {service.id === 'interior' && (
             <div class="icon-interior">
               <div class="room-walls"></div>
@@ -144,20 +139,15 @@ const includedServices = [
             </div>
           )}
 
-          {service.id === 'dashboard' && (
-            <div class="icon-dashboard">
-              <div class="monitor-stand"></div>
-              <div class="monitor-screen"></div>
-              <div class="screen-content">
-                <div class="dashboard-bar bar-1"></div>
-                <div class="dashboard-bar bar-2"></div>
-                <div class="dashboard-bar bar-3"></div>
-                <div class="dashboard-chart"></div>
-              </div>
-              <div class="notification-dot"></div>
-              <div class="data-point" style="animation-delay: 0s;"></div>
-              <div class="data-point" style="animation-delay: 0.4s;"></div>
-              <div class="data-point" style="animation-delay: 0.8s;"></div>
+          {service.id === 'report' && (
+            <div class="icon-report">
+              <div class="report-page"></div>
+              <div class="report-header"></div>
+              <div class="report-line line-1"></div>
+              <div class="report-line line-2"></div>
+              <div class="report-line line-3"></div>
+              <div class="report-photo"></div>
+              <div class="report-checkmark"></div>
             </div>
           )}
         </div>
@@ -165,7 +155,7 @@ const includedServices = [
         <div class="photo-label">
           <h3>{service.title}</h3>
           <p>{service.description}</p>
-          <span class="card-cta">{service.cta}</span>
+          {service.cta && <span class="card-cta">{service.cta}</span>}
         </div>
       </a>
     ))}
@@ -178,6 +168,7 @@ const includedServices = [
     padding: 8rem 3rem;
     max-width: 1400px;
     margin: 0 auto;
+    scroll-margin-top: -100px;
   }
 
   .gallery-head {
@@ -369,7 +360,9 @@ const includedServices = [
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    height: 450px;
+    min-height: 450px;
+    display: flex;
+    flex-direction: column;
     background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   }
 
@@ -388,10 +381,8 @@ const includedServices = [
 
   .animated-bg {
     width: 100%;
-    height: 60%;
-    position: absolute;
-    top: 0;
-    left: 0;
+    flex: 1;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -402,6 +393,7 @@ const includedServices = [
     );
     pointer-events: none;
     z-index: 1;
+    min-height: 270px;
   }
 
   body.light-mode .animated-bg {
@@ -447,10 +439,7 @@ const includedServices = [
   }
 
   .photo-label {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     padding: 2rem;
     background: linear-gradient(
       to top,
@@ -461,6 +450,7 @@ const includedServices = [
     color: white;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10;
+    flex-shrink: 0;
   }
 
   body.light-mode .photo-label {
@@ -2120,239 +2110,135 @@ const includedServices = [
     }
   }
 
-  /* ====== Owner Dashboard Access Animation ====== */
-  .icon-dashboard {
+  /* ====== 24-Hour PDF Reports Animation ====== */
+  .icon-report {
     position: relative;
     width: 220px;
     height: 200px;
   }
 
-  .monitor-screen {
+  .report-page {
     position: absolute;
-    width: 160px;
-    height: 110px;
-    top: 30px;
-    left: 30px;
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    border-radius: 12px;
-    border: 4px solid #334155;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    width: 120px;
+    height: 160px;
+    top: 20px;
+    left: 50px;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                -4px 4px 0 rgba(100, 116, 139, 0.2);
   }
 
-  body.light-mode .monitor-screen {
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    border-color: #cbd5e1;
+  body.light-mode .report-page {
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15),
+                -4px 4px 0 rgba(100, 116, 139, 0.1);
   }
 
-  .monitor-stand {
-    position: absolute;
-    width: 60px;
-    height: 30px;
-    bottom: 20px;
-    left: 80px;
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    border-radius: 0 0 8px 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  }
-
-  body.light-mode .monitor-stand {
-    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
-  }
-
-  .monitor-stand::before {
-    content: '';
+  .report-header {
     position: absolute;
     width: 80px;
-    height: 8px;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
-    border-radius: 4px;
-  }
-
-  body.light-mode .monitor-stand::before {
-    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-  }
-
-  .screen-content {
-    position: absolute;
-    width: 140px;
-    height: 90px;
-    top: 40px;
-    left: 40px;
-    padding: 10px;
-  }
-
-  .dashboard-bar {
-    position: absolute;
-    height: 4px;
-    background: linear-gradient(90deg,
-      rgba(100, 116, 139, 0.4),
-      rgba(100, 116, 139, 0.6)
-    );
+    height: 12px;
+    top: 35px;
+    left: 70px;
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
     border-radius: 2px;
-    animation: barLoad 3s ease-in-out infinite;
   }
 
-  body.light-mode .dashboard-bar {
-    background: linear-gradient(90deg,
-      rgba(100, 116, 139, 0.5),
-      rgba(100, 116, 139, 0.7)
-    );
+  .report-line {
+    position: absolute;
+    height: 6px;
+    left: 70px;
+    background: rgba(100, 116, 139, 0.3);
+    border-radius: 3px;
+    animation: lineReveal 2s ease-out infinite;
   }
 
-  .dashboard-bar.bar-1 {
-    top: 15px;
-    left: 10px;
-    width: 50px;
-    animation-delay: 0s;
+  .report-line.line-1 {
+    width: 90px;
+    top: 60px;
+    animation-delay: 0.2s;
   }
 
-  .dashboard-bar.bar-2 {
-    top: 30px;
-    left: 10px;
+  .report-line.line-2 {
     width: 70px;
+    top: 75px;
     animation-delay: 0.4s;
   }
 
-  .dashboard-bar.bar-3 {
-    top: 45px;
-    left: 10px;
-    width: 60px;
-    animation-delay: 0.8s;
+  .report-line.line-3 {
+    width: 80px;
+    top: 90px;
+    animation-delay: 0.6s;
   }
 
-  @keyframes barLoad {
+  @keyframes lineReveal {
     0% {
       width: 0;
-      opacity: 0.3;
-    }
-    50% {
-      opacity: 1;
-      background: linear-gradient(90deg,
-        rgba(100, 181, 246, 0.6),
-        rgba(66, 165, 245, 0.8)
-      );
-    }
-    100% {
-      opacity: 0.6;
-    }
-  }
-
-  .dashboard-chart {
-    position: absolute;
-    bottom: 15px;
-    right: 15px;
-    width: 50px;
-    height: 40px;
-    border-left: 2px solid rgba(100, 116, 139, 0.4);
-    border-bottom: 2px solid rgba(100, 116, 139, 0.4);
-  }
-
-  .dashboard-chart::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 5px;
-    width: 0;
-    height: 0;
-    border-left: 20px solid transparent;
-    border-right: 20px solid transparent;
-    border-bottom: 30px solid rgba(100, 181, 246, 0.3);
-    animation: chartGrow 3s ease-in-out infinite;
-  }
-
-  @keyframes chartGrow {
-    0% {
-      border-bottom-width: 0;
       opacity: 0;
     }
     50% {
-      border-bottom-width: 30px;
       opacity: 1;
-      border-bottom-color: rgba(100, 181, 246, 0.5);
     }
     100% {
       opacity: 0.6;
     }
   }
 
-  .notification-dot {
+  .report-photo {
+    position: absolute;
+    width: 50px;
+    height: 40px;
+    top: 115px;
+    left: 70px;
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    border-radius: 4px;
+    border: 2px solid rgba(100, 116, 139, 0.3);
+  }
+
+  .report-photo::before {
+    content: '';
     position: absolute;
     width: 12px;
     height: 12px;
-    top: 25px;
-    right: 25px;
-    background: radial-gradient(circle at 30% 30%, #e74c3c, #c0392b);
+    top: 5px;
+    right: 5px;
+    background: rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    animation: notificationPulse 2s ease-in-out infinite;
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
   }
 
-  @keyframes notificationPulse {
+  .report-checkmark {
+    position: absolute;
+    width: 36px;
+    height: 36px;
+    bottom: 35px;
+    right: 45px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border-radius: 50%;
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+    animation: checkPop 2s ease-in-out infinite;
+  }
+
+  .report-checkmark::before {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  @keyframes checkPop {
     0%, 100% {
       transform: scale(1);
-      opacity: 0.7;
-      box-shadow: 0 0 10px rgba(231, 76, 60, 0.4);
-    }
-    50% {
-      transform: scale(1.4);
-      opacity: 1;
-      box-shadow: 0 0 25px rgba(231, 76, 60, 0.9);
-    }
-  }
-
-  .data-point {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: radial-gradient(circle at 30% 30%,
-      rgba(100, 181, 246, 0.9),
-      rgba(66, 165, 245, 0.6)
-    );
-    border-radius: 50%;
-    opacity: 0;
-    animation: dataFloat 2.5s ease-in-out infinite;
-    box-shadow: 0 0 10px rgba(100, 181, 246, 0.5);
-  }
-
-  .data-point:nth-child(7) {
-    top: 45px;
-    left: 180px;
-  }
-
-  .data-point:nth-child(8) {
-    top: 70px;
-    left: 185px;
-  }
-
-  .data-point:nth-child(9) {
-    top: 95px;
-    left: 180px;
-  }
-
-  @keyframes dataFloat {
-    0% {
-      opacity: 0;
-      transform: translateX(0) scale(0.5);
-    }
-    20% {
-      opacity: 1;
-      transform: translateX(-10px) scale(1);
-    }
-    50% {
       opacity: 0.8;
-      transform: translateX(-25px) scale(1.2);
     }
-    80% {
-      opacity: 0.4;
-      transform: translateX(-40px) scale(0.8);
-    }
-    100% {
-      opacity: 0;
-      transform: translateX(-50px) scale(0.3);
+    50% {
+      transform: scale(1.1);
+      opacity: 1;
+      box-shadow: 0 6px 25px rgba(34, 197, 94, 0.6);
     }
   }
 
@@ -2415,7 +2301,7 @@ const includedServices = [
     .icon-roof,
     .icon-plumbing,
     .icon-appliances,
-    .icon-dashboard {
+    .icon-report {
       transform: scale(0.85);
     }
   }
@@ -2444,10 +2330,8 @@ const includedServices = [
     .oven-window,
     .heat-wave,
     .temp-indicator,
-    .dashboard-bar,
-    .dashboard-chart,
-    .notification-dot,
-    .data-point {
+    .report-line,
+    .report-checkmark {
       animation: none;
     }
   }

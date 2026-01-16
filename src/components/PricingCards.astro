@@ -59,6 +59,8 @@ const quarterlyPlan = {
       >
         Get Started
       </a>
+
+      <p class="volume-discount-note">Managing 6+ properties? Contact us for custom pricing.</p>
     </div>
   </div>
 
@@ -310,6 +312,18 @@ const quarterlyPlan = {
 
   .add-to-cart-btn:active {
     transform: translateY(-1px) scale(0.98);
+  }
+
+  .volume-discount-note {
+    text-align: center;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 1.25rem;
+    font-style: italic;
+  }
+
+  body.light-mode .volume-discount-note {
+    color: #666666;
   }
 
   /* Add-On Services Styles */

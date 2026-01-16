@@ -1,1 +1,0 @@
-# Path utilities for the inspection agent backend

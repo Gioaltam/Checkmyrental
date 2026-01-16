@@ -189,7 +189,7 @@ def describe_image(image_path: Path) -> str:
                     {"type": "image_url", "image_url": {"url": _data_url_from_bytes(img_bytes, mime)}},
                 ]},
             ],
-            max_tokens=500,
+            max_completion_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "8000")),
         )
         out = (resp.choices[0].message.content or "").strip()
 
@@ -205,7 +205,7 @@ def describe_image(image_path: Path) -> str:
                         {"type": "image_url", "image_url": {"url": _data_url_from_bytes(img_bytes, mime)}},
                     ]},
                 ],
-                max_tokens=500,
+                max_completion_tokens=int(os.getenv("OPENAI_MAX_TOKENS", "8000")),
             )
             out2 = (resp2.choices[0].message.content or "").strip()
             if out2:

@@ -122,9 +122,9 @@ Guidelines:
 - Highlight trends and priorities
 - Keep it concise - owners want quick understanding"""
 
-        # Call OpenAI API with GPT-4o-mini for cost efficiency
+        # Call OpenAI API with GPT-5
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Fast and cost-effective
+            model="gpt-5",  # GPT-5 vision model
             messages=[
                 {"role": "system", "content": "You are a property management AI assistant that provides clear, actionable insights."},
                 {"role": "user", "content": prompt}
@@ -265,9 +265,9 @@ Create 3-5 insight cards covering:
 
 Be specific, quantitative when possible, and focus on insights the owner can ACT on immediately."""
 
-        # Call OpenAI with GPT-4o for better intelligence
+        # Call OpenAI with GPT-5 for better intelligence
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Fast and cost-effective
+            model="gpt-5",  # GPT-5 vision model
             messages=[
                 {
                     "role": "system",

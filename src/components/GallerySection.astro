@@ -51,8 +51,7 @@ const includedServices = [
     id: "report",
     href: "#report",
     title: "24-Hour PDF Reports",
-    description: "All photos and findings delivered in an organized PDF report within 24 hours. Easy to review and share with tenants if needed.",
-    cta: "View sample"
+    description: "All photos and findings delivered in an organized PDF report within 24 hours. Easy to review and share with tenants if needed."
   }
 ];
 
@@ -68,7 +67,7 @@ const includedServices = [
 
   <div class="photo-grid">
     {includedServices.map(service => (
-      <a class="photo-item" href={service.href} data-service={service.id} aria-label={`Learn more about ${service.title}`}>
+      <a class="photo-item" href={service.href} data-service={service.id} aria-label={`Learn more about ${service.title}`} target={service.external ? "_blank" : undefined} rel={service.external ? "noopener noreferrer" : undefined}>
         <!-- Animated icon backgrounds -->
         <div class="animated-bg" role="img" aria-label={`${service.title} icon`}>
           {service.id === 'interior' && (
@@ -2242,14 +2241,29 @@ const includedServices = [
     }
   }
 
+  /* Tablet breakpoint */
+  @media (max-width: 1024px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+  }
+
   @media (max-width: 768px) {
     .gallery-section {
-      padding: 4rem 1.5rem;
+      padding: 4rem 1rem;
+    }
+
+    .gallery-head h2 {
+      font-size: clamp(1.75rem, 6vw, 2.5rem);
+    }
+
+    .gallery-head p {
+      font-size: 1rem;
     }
 
     .included-header {
       margin-top: 0;
-      margin-bottom: 3rem;
+      margin-bottom: 2.5rem;
     }
 
     .addon-header {
@@ -2266,7 +2280,7 @@ const includedServices = [
     }
 
     .service-card.featured .photo-label {
-      padding: 2rem;
+      padding: 1.5rem;
     }
 
     .photo-label.featured-label {
@@ -2283,11 +2297,28 @@ const includedServices = [
 
     .photo-grid {
       grid-template-columns: 1fr;
-      gap: 1.5rem;
+      gap: 1.25rem;
     }
 
     .photo-item {
-      height: 400px;
+      min-height: 380px;
+    }
+
+    .animated-bg {
+      min-height: 220px;
+    }
+
+    .photo-label {
+      padding: 1.5rem;
+    }
+
+    .photo-label h3 {
+      font-size: 1.2rem;
+    }
+
+    .photo-label p {
+      font-size: 0.9rem;
+      line-height: 1.5;
     }
 
     /* Scale down animations for mobile */
@@ -2302,7 +2333,48 @@ const includedServices = [
     .icon-plumbing,
     .icon-appliances,
     .icon-report {
-      transform: scale(0.85);
+      transform: scale(0.75);
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 360px) {
+    .gallery-section {
+      padding: 3rem 0.75rem;
+    }
+
+    .gallery-head h2 {
+      font-size: 1.5rem;
+    }
+
+    .photo-item {
+      min-height: 350px;
+    }
+
+    .animated-bg {
+      min-height: 200px;
+    }
+
+    .photo-label {
+      padding: 1.25rem;
+    }
+
+    .photo-label h3 {
+      font-size: 1.1rem;
+    }
+
+    .icon-interior,
+    .icon-exterior,
+    .icon-move-in,
+    .icon-move-out,
+    .icon-buyers,
+    .icon-quarterly,
+    .icon-hvac,
+    .icon-roof,
+    .icon-plumbing,
+    .icon-appliances,
+    .icon-report {
+      transform: scale(0.65);
     }
   }
 

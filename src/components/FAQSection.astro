@@ -102,10 +102,6 @@ const faqSchema = {
     </div>
   </div>
 
-  <div class="faq-cta">
-    <p>Still have questions?</p>
-    <a href="#contact" class="faq-contact-btn">Contact Us</a>
-  </div>
 </section>
 
 <script is:inline>
@@ -379,21 +375,84 @@ const faqSchema = {
 
   @media (max-width: 768px) {
     .faq-section {
-      padding: 4rem 1.5rem;
+      padding: 4rem 1rem;
     }
 
-    .faq-question {
-      padding: 1.25rem 1.5rem;
+    .faq-header {
+      margin-bottom: 2.5rem;
+    }
+
+    .faq-header h2 {
+      font-size: clamp(1.75rem, 6vw, 2.5rem);
+    }
+
+    .section-subtitle {
       font-size: 1rem;
     }
 
-    .faq-answer p {
-      padding: 0 1.5rem 1.25rem 1.5rem;
+    .faq-container {
+      margin-bottom: 3rem;
+    }
+
+    .faq-item {
+      border-radius: 12px;
+      margin-bottom: 0.75rem;
+    }
+
+    .faq-question {
+      padding: 1rem 1.25rem;
       font-size: 0.95rem;
+      gap: 1rem;
+    }
+
+    .faq-icon {
+      font-size: 1.25rem;
+    }
+
+    .faq-answer p {
+      padding: 0 1.25rem 1.25rem 1.25rem;
+      font-size: 0.9rem;
+      line-height: 1.7;
     }
 
     .faq-cta {
-      padding: 2rem;
+      padding: 2rem 1.5rem;
+      border-radius: 16px;
+    }
+
+    .faq-cta p {
+      font-size: 1.1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .faq-contact-btn {
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 360px) {
+    .faq-section {
+      padding: 3rem 0.75rem;
+    }
+
+    .faq-header h2 {
+      font-size: 1.5rem;
+    }
+
+    .faq-question {
+      padding: 0.9rem 1rem;
+      font-size: 0.9rem;
+    }
+
+    .faq-answer p {
+      padding: 0 1rem 1rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .faq-cta {
+      padding: 1.5rem 1.25rem;
     }
   }
 </style>

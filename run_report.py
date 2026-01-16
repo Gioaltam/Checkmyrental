@@ -26,6 +26,12 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List, Tuple
 from PIL import Image
+# Enable HEIC/HEIF support (Apple's image format)
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass  # HEIC support not available
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -198,7 +204,7 @@ def extract_zip(zip_path: Path) -> Path:
 
 def collect_images(photos_dir: Path) -> List[Path]:
     """Collect all image files from directory"""
-    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif'}
     images = []
     
     for file_path in photos_dir.rglob('*'):
@@ -217,8 +223,8 @@ def analyze_images(images: List[Path]) -> Dict[str, str]:
     results = {}
     total = len(images)
     
-    # Get concurrency setting from environment
-    max_workers = int(os.getenv('ANALYSIS_CONCURRENCY', '3'))
+    # Get concurrency setting from environment (default 8 for fast batch processing)
+    max_workers = int(os.getenv('ANALYSIS_CONCURRENCY', '8'))
     
     print(f"Starting analysis of {total} images (concurrency={max_workers})...")
     
@@ -255,593 +261,14 @@ def analyze_images(images: List[Path]) -> Dict[str, str]:
     
     return results
 
-# ============== Report Generation Functions ==============
-
-def parse_analysis(text: str) -> Dict[str, Any]:
-    """Parse vision analysis text into structured sections"""
-    sections = {
-        "location": "",
-        "observations": [],
-        "potential_issues": [],
-        "recommendations": []
-    }
-    
-    current_section = None
-    lines = text.strip().split('\n')
-    
-    for line in lines:
-        line = line.strip()
-        
-        # Check for section headers (support both old and new formats)
-        if line.lower().startswith("location:"):
-            current_section = "location"
-            sections[current_section] = line.split(":", 1)[1].strip() if ":" in line else ""
-        elif line.lower().startswith("what i see:") or line.lower().startswith("observations:"):
-            current_section = "observations"
-        elif line.lower().startswith("issues to address:") or line.lower().startswith("potential issues:"):
-            current_section = "potential_issues"
-        elif line.lower().startswith("recommended action:") or line.lower().startswith("recommendations:"):
-            current_section = "recommendations"
-        elif line.startswith("- ") and current_section in ["observations", "potential_issues", "recommendations"]:
-            sections[current_section].append(line[2:].strip())
-        elif line and current_section == "location":
-            sections[current_section] += " " + line
-        elif line and current_section in ["observations", "potential_issues", "recommendations"]:
-            # Handle "No repairs needed" or similar messages
-            if "no repairs needed" in line.lower() or "no issues" in line.lower():
-                if current_section == "potential_issues" and not sections[current_section]:
-                    sections[current_section] = []  # Keep empty for no issues
-            else:
-                sections[current_section].append(line)
-    
-    return sections
-
-def categorize_issue(sections: Dict[str, Any]) -> str:
-    """Categorize issue severity based on analysis content"""
-    critical_keywords = ["structural", "foundation", "roof leak", "electrical hazard", 
-                        "gas leak", "black mold", "asbestos", "immediate safety", "dangerous", "urgent"]
-    important_keywords = ["needs repair", "should replace", "significant damage", "water damage", 
-                         "major crack", "active leak", "extensive", "failing"]
-    
-    # Combine text for analysis - focus on actual issues reported
-    issues = sections.get("potential_issues", [])
-    
-    # If no issues reported, it's informational
-    if not issues or all("no repairs" in str(i).lower() or "no issues" in str(i).lower() for i in issues):
-        return "informational"
-    
-    text = " ".join(issues) + " " + " ".join(sections.get("recommendations", []))
-    text_lower = text.lower()
-    
-    # Check for critical issues
-    for keyword in critical_keywords:
-        if keyword in text_lower:
-            return "critical"
-    
-    # Check for important issues
-    for keyword in important_keywords:
-        if keyword in text_lower:
-            return "important"
-    
-    return "minor"
-
-def save_report_json(report_data: Dict[str, Any], output_dir: Path) -> Path:
-    """Save report data as JSON for template consumption"""
-    json_path = output_dir / "report.json"
-    
-    # Enhanced JSON structure with metadata
-    enhanced_data = {
-        **report_data,
-        'generated_at': datetime.now().isoformat(),
-        'version': '2.0',
-        'categories': categorize_photos(report_data['items']),
-        'statistics': calculate_statistics(report_data['items'])
-    }
-    
-    json_path.write_text(json.dumps(enhanced_data, indent=2), encoding='utf-8')
-    return json_path
-
-def categorize_photos(items: List[Dict]) -> Dict[str, List[int]]:
-    """Categorize photos by location and severity"""
-    categories = {
-        'by_location': {},
-        'by_severity': {'critical': [], 'important': [], 'minor': [], 'informational': []},
-        'by_type': {}
-    }
-    
-    for i, item in enumerate(items):
-        # By severity - handle all possible values including 'informational'
-        severity = item.get('severity', 'minor')
-        if severity in categories['by_severity']:
-            categories['by_severity'][severity].append(i)
-        
-        # By location
-        location = item.get('location', 'General').split(':')[0].strip()
-        if location not in categories['by_location']:
-            categories['by_location'][location] = []
-        categories['by_location'][location].append(i)
-        
-        # By issue type (extracted from observations)
-        for obs in item.get('observations', []):
-            if 'water' in obs.lower() or 'leak' in obs.lower():
-                categories['by_type'].setdefault('Water/Moisture', []).append(i)
-            if 'electrical' in obs.lower():
-                categories['by_type'].setdefault('Electrical', []).append(i)
-            if 'structural' in obs.lower():
-                categories['by_type'].setdefault('Structural', []).append(i)
-    
-    return categories
-
-def calculate_statistics(items: List[Dict]) -> Dict:
-    """Calculate report statistics"""
-    return {
-        'total_photos': len(items),
-        'critical_count': sum(1 for item in items if item.get('severity') == 'critical'),
-        'important_count': sum(1 for item in items if item.get('severity') == 'important'),
-        'minor_count': sum(1 for item in items if item.get('severity') == 'minor'),
-        'informational_count': sum(1 for item in items if item.get('severity') == 'informational'),
-        'has_issues': sum(1 for item in items if item.get('potential_issues')),
-        'needs_action': sum(1 for item in items if item.get('recommendations'))
-    }
-
-def generate_html_report(report_data: Dict[str, Any], output_dir: Path) -> Path:
-    """Generate HTML report with all photos and analysis"""
-    html_path = output_dir / "index.html"
-    
-    # Count issues by severity
-    critical_count = sum(1 for item in report_data['items'] if item.get('severity') == 'critical')
-    important_count = sum(1 for item in report_data['items'] if item.get('severity') == 'important')
-    minor_count = sum(1 for item in report_data['items'] if item.get('severity') == 'minor')
-    informational_count = sum(1 for item in report_data['items'] if item.get('severity') == 'informational')
-    
-    html_content = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspection Report - {report_data['property_address']}</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.6;
-            color: #2c3e50;
-            background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 1200px;
-            margin: 0 auto;
-        }}
-        .header {{
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(44, 62, 80, 0.1);
-            padding: 40px;
-            border-radius: 16px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-        }}
-        .header::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 6px;
-            background: linear-gradient(90deg, #e74c3c 0%, #2c3e50 100%);
-        }}
-        .logo-section {{
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
-        }}
-        .logo-icon {{
-            position: relative;
-            width: 45px;
-            height: 45px;
-            flex-shrink: 0;
-        }}
-        .logo-house {{
-            width: 35px;
-            height: 35px;
-            background: #2c3e50;
-            transform: rotate(45deg);
-            position: absolute;
-            top: 5px;
-            left: 5px;
-        }}
-        .logo-window {{
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 2px;
-        }}
-        .logo-window span {{
-            background: white;
-            display: block;
-        }}
-        .logo-check {{
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 20px;
-            height: 20px;
-            background: #e74c3c;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .logo-check::after {{
-            content: '';
-            width: 8px;
-            height: 4px;
-            border: 2px solid white;
-            border-top: none;
-            border-right: none;
-            transform: rotate(-45deg);
-            margin-bottom: 2px;
-        }}
-        .logo-text {{
-            font-size: 28px;
-            font-weight: 700;
-            color: #2c3e50;
-        }}
-        .header h1 {{
-            font-size: 2.2em;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }}
-        .header-info {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }}
-        .header-info-item {{
-            display: flex;
-            flex-direction: column;
-        }}
-        .header-info-label {{
-            font-size: 12px;
-            text-transform: uppercase;
-            color: #7f8c8d;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }}
-        .header-info-value {{
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-        }}
-        .summary {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }}
-        .summary-card {{
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid rgba(44, 62, 80, 0.1);
-        }}
-        .summary-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-        }}
-        .summary-card .number {{
-            font-size: 3em;
-            font-weight: 700;
-            margin-bottom: 5px;
-        }}
-        .summary-card .label {{
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #7f8c8d;
-        }}
-        .critical {{ 
-            color: #e74c3c;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }}
-        .important {{ 
-            color: #f39c12;
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }}
-        .minor {{ 
-            color: #27ae60;
-            background: linear-gradient(135deg, #27ae60, #229954);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }}
-        .item {{
-            background: rgba(255, 255, 255, 0.98);
-            margin-bottom: 30px;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            border: 1px solid rgba(44, 62, 80, 0.1);
-            transition: transform 0.3s ease;
-        }}
-        .item:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(0,0,0,0.2);
-        }}
-        .item-header {{
-            padding: 25px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-bottom: 3px solid #2c3e50;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .item-header h3 {{
-            margin: 0;
-            color: #2c3e50;
-            font-size: 1.3em;
-            font-weight: 600;
-        }}
-        .severity-badge {{
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 24px;
-            font-size: 0.85em;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }}
-        .severity-critical {{
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-        }}
-        .severity-important {{
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-        }}
-        .severity-minor {{
-            background: linear-gradient(135deg, #27ae60, #229954);
-            color: white;
-        }}
-        .severity-informational {{
-            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
-            color: white;
-        }}
-        .item-image {{
-            width: 100%;
-            max-height: 600px;
-            object-fit: contain;
-            background: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-        }}
-        .item-content {{
-            padding: 30px;
-            background: white;
-        }}
-        .section {{
-            margin-bottom: 25px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #2c3e50;
-        }}
-        .section h4 {{
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.2em;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }}
-        .section ul {{
-            margin: 0;
-            padding-left: 0;
-            list-style: none;
-        }}
-        .section li {{
-            margin-bottom: 10px;
-            padding-left: 25px;
-            position: relative;
-            line-height: 1.8;
-            color: #495057;
-        }}
-        .section li::before {{
-            content: '▸';
-            position: absolute;
-            left: 0;
-            color: #e74c3c;
-            font-weight: bold;
-        }}
-        .footer {{
-            margin-top: 50px;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.98);
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(44, 62, 80, 0.1);
-        }}
-        .footer-logo {{
-            font-size: 24px;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }}
-        .footer-text {{
-            color: #7f8c8d;
-            font-size: 14px;
-        }}
-        @media print {{
-            body {{ background: white; }}
-            .item {{ page-break-inside: avoid; box-shadow: none; }}
-            .summary-card {{ box-shadow: none; }}
-            .header {{ box-shadow: none; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <div class="logo-house">
-                        <div class="logo-window">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </div>
-                    <div class="logo-check"></div>
-                </div>
-                <div class="logo-text">CheckMyRental</div>
-            </div>
-            <h1>Property Inspection Report</h1>
-            <div class="header-info">
-                <div class="header-info-item">
-                    <div class="header-info-label">Property Address</div>
-                    <div class="header-info-value">{report_data['property_address']}</div>
-                </div>
-                <div class="header-info-item">
-                    <div class="header-info-label">Client</div>
-                    <div class="header-info-value">{report_data['client_name']}</div>
-                </div>
-                <div class="header-info-item">
-                    <div class="header-info-label">Inspection Date</div>
-                    <div class="header-info-value">{report_data['inspection_date']}</div>
-                </div>
-                <div class="header-info-item">
-                    <div class="header-info-label">Report ID</div>
-                    <div class="header-info-value">{report_data['report_id'][:8]}...</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="summary">
-            <div class="summary-card">
-                <div class="number">{len(report_data['items'])}</div>
-                <div class="label">Total Photos</div>
-            </div>
-            <div class="summary-card">
-                <div class="number critical">{critical_count}</div>
-                <div class="label">Critical Issues</div>
-            </div>
-            <div class="summary-card">
-                <div class="number important">{important_count}</div>
-                <div class="label">Important Issues</div>
-            </div>
-            <div class="summary-card">
-                <div class="number minor">{minor_count}</div>
-                <div class="label">Minor Issues</div>
-            </div>
-        </div>
-"""
-    
-    # Add each photo and analysis
-    for i, item in enumerate(report_data['items'], 1):
-        severity_class = f"severity-{item['severity']}"
-        
-        # Use the image URL that's already set in report_data (photos are already copied)
-        img_url = item.get('image_url', f"photos/photo_{i:03d}.jpg")
-        
-        html_content += f"""
-    <div class="item">
-        <div class="item-header">
-            <h3>Photo {i}: {item['location'] or 'General Area'}</h3>
-            <span class="severity-badge {severity_class}">{item['severity']}</span>
-        </div>
-        <img src="{img_url}" alt="Photo {i}" class="item-image">
-        <div class="item-content">
-"""
-        
-        if item['observations']:
-            html_content += """
-            <div class="section">
-                <h4>Observations</h4>
-                <ul>
-"""
-            for obs in item['observations']:
-                html_content += f"                    <li>{obs}</li>\n"
-            html_content += """                </ul>
-            </div>
-"""
-        
-        if item['potential_issues']:
-            html_content += """
-            <div class="section">
-                <h4>Potential Issues</h4>
-                <ul>
-"""
-            for issue in item['potential_issues']:
-                html_content += f"                    <li>{issue}</li>\n"
-            html_content += """                </ul>
-            </div>
-"""
-        
-        if item['recommendations']:
-            html_content += """
-            <div class="section">
-                <h4>Recommendations</h4>
-                <ul>
-"""
-            for rec in item['recommendations']:
-                html_content += f"                    <li>{rec}</li>\n"
-            html_content += """                </ul>
-            </div>
-"""
-        
-        html_content += """        </div>
-    </div>
-"""
-    
-    html_content += """
-        <div class="footer">
-            <div class="footer-logo">CheckMyRental</div>
-            <div class="footer-text">Professional Property Inspection Services</div>
-            <div class="footer-text" style="margin-top: 10px;">© 2025 Altam CO LLC. All rights reserved.</div>
-        </div>
-    </div>
-</body>
-</html>
-"""
-    
-    html_path.write_text(html_content, encoding='utf-8')
-    return html_path
+# ============== PDF Report Generation ==============
 
 def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "") -> None:
     """Generate executive-quality PDF report with sophisticated design"""
-    from PIL import Image as PILImage, ImageOps, ImageDraw, ImageFilter
-    from reportlab.lib.colors import HexColor, Color
-    from reportlab.pdfgen.canvas import Canvas
-    from reportlab.lib.units import inch
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.platypus import Paragraph
-    from reportlab.lib.styles import ParagraphStyle
-    
-    c = Canvas(str(out_pdf), pagesize=letter)
+    from PIL import Image as PILImage, ImageOps
+    from reportlab.lib.colors import HexColor
+
+    c = canvas.Canvas(str(out_pdf), pagesize=letter)
     width, height = letter
     
     # Executive color palette - sophisticated and professional
@@ -1027,18 +454,19 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
                 # Convert to RGB if necessary (after rotation)
                 if pil_img.mode in ('RGBA', 'P'):
                     pil_img = pil_img.convert('RGB')
-                
-                # Resize if too large (max 1200px on longest side for print)
+
+                # Compress images for email-friendly PDF size (max 720px, 50% quality)
+                # This keeps reports under 5MB for easy email delivery
                 max_dim = max(pil_img.size)
-                if max_dim > 1200:
-                    scale = 1200 / max_dim
+                if max_dim > 720:
+                    scale = 720 / max_dim
                     new_size = (int(pil_img.width * scale), int(pil_img.height * scale))
                     pil_img = pil_img.resize(new_size, PILImage.Resampling.LANCZOS)
-                
-                # Save to temporary compressed JPEG with corrected orientation
+
+                # Save to temporary JPEG with higher compression for smaller file size
                 import tempfile
                 with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
-                    pil_img.save(tmp.name, 'JPEG', quality=85, optimize=True)
+                    pil_img.save(tmp.name, 'JPEG', quality=50, optimize=True)
                     compressed_path = tmp.name
             
             # EXECUTIVE PAGE HEADER - Minimal and sophisticated
@@ -1078,9 +506,9 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             img = ImageReader(compressed_path)
             img_width, img_height = img.getSize()
             
-            # Calculate scaling to fit on page with room for text
-            max_width = width - 120  # More margin for executive look
-            max_height = 380  # Leave room for analysis text
+            # Calculate scaling to fit on page - LARGER images for impact
+            max_width = width - 80  # Less margin = bigger image
+            max_height = 480  # Much more room for the photo
             scale = min(max_width / img_width, max_height / img_height, 1.0)
             
             draw_width = img_width * scale
@@ -1106,12 +534,12 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             # Clean up temp file
             os.unlink(compressed_path)
             
-            # Add analysis text below image
+            # Add analysis text below image with improved styling
             if vision_results:
                 # Try to find the analysis with different path formats
                 analysis = None
                 img_path_str = str(img_path)
-                
+
                 # Check exact match first
                 if img_path_str in vision_results:
                     analysis = vision_results[img_path_str]
@@ -1121,68 +549,234 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
                         if Path(key).name == img_path.name:
                             analysis = value
                             break
-                
+
+                # Calculate text box position with more spacing from image
+                text_box_top = y - 35  # More gap between image and text
+                text_margin = 45  # Left/right margins
+
+                # Check if there are no issues/repairs needed - skip description if so
+                no_issues_phrases = ['no repairs needed', 'no issues', 'no damage', 'good condition',
+                                     'no action needed', 'no repairs necessary', 'nothing to report']
+                has_issues = True
                 if analysis:
-                    # Starting Y position for text
-                    text_y = y - 20
+                    analysis_lower = analysis.lower()
+                    # Check if "no repairs needed" or similar appears AND there's no actual issues listed
+                    if any(phrase in analysis_lower for phrase in no_issues_phrases):
+                        # Also check there are no bullet points with actual issues
+                        issue_lines = [l for l in analysis.split('\n') if l.strip().startswith('-')
+                                      and not any(phrase in l.lower() for phrase in no_issues_phrases)]
+                        if not issue_lines:
+                            has_issues = False
+
+                if not analysis:
+                    # No analysis found - just skip, no need for a note
+                    pass
+                elif not has_issues:
+                    # No issues found - add a simple "No issues" badge instead of full description
+                    c.setFillColor(HexColor('#10b981'))  # Green color
+                    badge_width = 100
+                    badge_x = (width - badge_width) / 2
+                    c.roundRect(badge_x, text_box_top - 10, badge_width, 25, 12, fill=1, stroke=0)
+                    c.setFillColor(HexColor('#ffffff'))
+                    c.setFont("Helvetica-Bold", 10)
+                    c.drawCentredString(width / 2, text_box_top - 2, "NO ISSUES")
                 else:
-                    # No analysis found - add a note
-                    c.setFont("Helvetica-Oblique", 9)
-                    c.setFillColor(text_secondary)
-                    c.drawString(50, y - 20, "Analysis pending for this image")
-                    analysis = None
-                
-                if analysis:
-                    # Write analysis as simple text
-                    c.setFont("Helvetica", 10)
+                    # Draw a subtle background box for the analysis
+                    box_height = text_box_top - 50  # Height of remaining space
+                    c.setFillColor(HexColor('#f8f9fa'))
+                    c.roundRect(text_margin - 10, 45, width - (2 * text_margin) + 20, text_box_top - 40, 6, fill=1, stroke=0)
+
+                    # Add a left accent bar
+                    c.setFillColor(accent_color)
+                    c.rect(text_margin - 10, 45, 4, text_box_top - 40, fill=1, stroke=0)
+
+                    # Starting Y position for text (inside the box with padding)
+                    text_y = text_box_top - 15
+
+                    # Write analysis with improved typography
                     lines = analysis.split('\n')
                     for line in lines:
-                        if text_y < 60:  # Start new page if running out of room
-                            c.setFont("Helvetica", 8)
+                        if text_y < 65:  # Start new page if running out of room
+                            c.setFont("Helvetica", 9)
+                            c.setFillColor(text_secondary)
                             c.drawString(width - 100, 30, f"Page {c.getPageNumber()}")
                             c.showPage()
-                            c.setFont("Helvetica-Bold", 12)
-                            c.drawString(50, height - 40, f"Photo {i} (continued)")
-                            text_y = height - 60
-                            c.setFont("Helvetica", 10)
-                        
-                        # Handle section headers with color coding (updated for new format)
+                            # Draw header on continued page
+                            c.setFillColor(primary_color)
+                            c.setFont("Helvetica-Bold", 14)
+                            c.drawString(text_margin, height - 50, f"Photo {i} Analysis (continued)")
+                            c.setStrokeColor(accent_color)
+                            c.setLineWidth(2)
+                            c.line(text_margin, height - 55, width - text_margin, height - 55)
+                            text_y = height - 80
+
+                        # Handle section headers with color coding (skip What I See/Observations)
                         line_stripped = line.strip()
-                        if line_stripped.endswith(':') and any(header in line_stripped for header in 
-                            ['Location:', 'What I See:', 'Issues to Address:', 'Recommended Action:', 
-                             'Observations:', 'Potential Issues:', 'Recommendations:']):
-                            if 'Issues' in line_stripped:
+                        # Skip "What I See" and "Observations" sections entirely
+                        if any(skip in line_stripped for skip in ['What I See:', 'Observations:']):
+                            continue
+
+                        # Check if line contains a section header (with or without content after it)
+                        section_headers = ['Location:', 'Issues to Address:', 'Recommended Action:',
+                                         'Potential Issues:', 'Recommendations:']
+                        found_header = None
+                        header_content = None
+                        for header in section_headers:
+                            if header in line_stripped:
+                                found_header = header
+                                # Check if there's content after the header on the same line
+                                parts = line_stripped.split(header, 1)
+                                if len(parts) > 1 and parts[1].strip():
+                                    header_content = parts[1].strip()
+                                break
+
+                        if found_header:
+                            # Add extra space before new sections (except first)
+                            if text_y < text_box_top - 20:
+                                text_y -= 8
+                            if 'Issues' in found_header:
                                 c.setFillColor(accent_color)
                             else:
                                 c.setFillColor(primary_color)
-                            c.setFont("Helvetica-Bold", 11)
-                            c.drawString(50, text_y, line_stripped)
-                            c.setFillColor(HexColor('#333333'))
-                            c.setFont("Helvetica", 10)
-                            text_y -= 15
+                            c.setFont("Helvetica-Bold", 12)
+                            c.drawString(text_margin, text_y, found_header.upper())
+                            text_y -= 20
+
+                            # If there's content on the same line as the header, render it as a bullet with priority
+                            if header_content:
+                                # Check for priority tags in header content too
+                                hc_priority_color = accent_color
+                                hc_priority_label = None
+                                hc_text = header_content
+                                if '[IMMEDIATE]' in hc_text:
+                                    hc_priority_color = HexColor('#dc2626')
+                                    hc_priority_label = 'IMMEDIATE'
+                                    hc_text = hc_text.replace('[IMMEDIATE]', '').strip()
+                                elif '[SOON]' in hc_text:
+                                    hc_priority_color = HexColor('#f59e0b')
+                                    hc_priority_label = 'SOON'
+                                    hc_text = hc_text.replace('[SOON]', '').strip()
+                                elif '[COSMETIC]' in hc_text:
+                                    hc_priority_color = HexColor('#6b7280')
+                                    hc_priority_label = 'COSMETIC'
+                                    hc_text = hc_text.replace('[COSMETIC]', '').strip()
+
+                                c.setFillColor(hc_priority_color)
+                                c.circle(text_margin + 5, text_y + 3, 3, fill=1, stroke=0)
+
+                                hc_text_start = text_margin + 15
+                                if hc_priority_label:
+                                    c.setFont("Helvetica-Bold", 8)
+                                    c.drawString(hc_text_start, text_y + 1, hc_priority_label)
+                                    hc_label_width = c.stringWidth(hc_priority_label, "Helvetica-Bold", 8)
+                                    hc_text_start = hc_text_start + hc_label_width + 8
+
+                                c.setFillColor(HexColor('#374151'))
+                                c.setFont("Helvetica", 11)
+                                # Wrap long lines
+                                hc_max_chars = 60 if hc_priority_label else 70
+                                if len(hc_text) > hc_max_chars:
+                                    words = hc_text.split()
+                                    current_line = ""
+                                    first_line = True
+                                    for word in words:
+                                        test_line = current_line + " " + word if current_line else word
+                                        line_limit = hc_max_chars if first_line else 70
+                                        if len(test_line) > line_limit:
+                                            c.drawString(hc_text_start if first_line else text_margin + 15, text_y, current_line)
+                                            text_y -= 18
+                                            current_line = word
+                                            first_line = False
+                                        else:
+                                            current_line = test_line
+                                    if current_line:
+                                        c.drawString(hc_text_start if first_line else text_margin + 15, text_y, current_line)
+                                        text_y -= 18
+                                else:
+                                    c.drawString(hc_text_start, text_y, hc_text)
+                                    text_y -= 18
+                            c.setFillColor(HexColor('#374151'))
+                            c.setFont("Helvetica", 11)
+
                         elif line.strip().startswith('-'):
-                            # Wrap long lines
+                            # Bullet points with better formatting and priority color-coding
+                            text = line.strip()[1:].strip()  # Remove the dash
+
+                            # Check for priority tags and set colors accordingly
+                            priority_color = accent_color  # Default
+                            priority_label = None
+                            if '[IMMEDIATE]' in text:
+                                priority_color = HexColor('#dc2626')  # Red for urgent
+                                priority_label = 'IMMEDIATE'
+                                text = text.replace('[IMMEDIATE]', '').strip()
+                            elif '[SOON]' in text:
+                                priority_color = HexColor('#f59e0b')  # Orange/amber for soon
+                                priority_label = 'SOON'
+                                text = text.replace('[SOON]', '').strip()
+                            elif '[COSMETIC]' in text:
+                                priority_color = HexColor('#6b7280')  # Gray for cosmetic
+                                priority_label = 'COSMETIC'
+                                text = text.replace('[COSMETIC]', '').strip()
+
+                            # Draw colored bullet dot
+                            c.setFillColor(priority_color)
+                            c.circle(text_margin + 5, text_y + 3, 3, fill=1, stroke=0)  # Slightly larger dot
+
+                            # Draw priority label if present
+                            text_start = text_margin + 15
+                            if priority_label:
+                                c.setFont("Helvetica-Bold", 8)
+                                c.drawString(text_start, text_y + 1, priority_label)
+                                label_width = c.stringWidth(priority_label, "Helvetica-Bold", 8)
+                                text_start = text_start + label_width + 8
+
+                            c.setFillColor(HexColor('#374151'))
+                            c.setFont("Helvetica", 11)
+                            # Wrap long lines (adjust for priority label width)
+                            max_chars = 60 if priority_label else 70
+                            if len(text) > max_chars:
+                                words = text.split()
+                                current_line = ""
+                                first_line = True
+                                for word in words:
+                                    test_line = current_line + " " + word if current_line else word
+                                    line_limit = max_chars if first_line else 70
+                                    if len(test_line) > line_limit:
+                                        c.drawString(text_start if first_line else text_margin + 15, text_y, current_line)
+                                        text_y -= 18
+                                        current_line = word
+                                        first_line = False
+                                    else:
+                                        current_line = test_line
+                                if current_line:
+                                    c.drawString(text_start if first_line else text_margin + 15, text_y, current_line)
+                                    text_y -= 18
+                            else:
+                                c.drawString(text_start, text_y, text)
+                                text_y -= 18
+                        elif line.strip():
+                            # Regular text - still style it nicely
+                            c.setFillColor(HexColor('#374151'))
+                            c.setFont("Helvetica", 11)
                             text = line.strip()
-                            if len(text) > 90:
+                            # Wrap long lines
+                            if len(text) > 75:
                                 words = text.split()
                                 current_line = ""
                                 for word in words:
                                     test_line = current_line + " " + word if current_line else word
-                                    if len(test_line) > 90:
-                                        c.drawString(60, text_y, current_line)
-                                        text_y -= 12
+                                    if len(test_line) > 75:
+                                        c.drawString(text_margin, text_y, current_line)
+                                        text_y -= 18
                                         current_line = word
                                     else:
                                         current_line = test_line
                                 if current_line:
-                                    c.drawString(60, text_y, current_line)
-                                    text_y -= 12
+                                    c.drawString(text_margin, text_y, current_line)
+                                    text_y -= 18
                             else:
-                                c.drawString(60, text_y, text)
-                                text_y -= 12
-                        elif line.strip():
-                            c.drawString(50, text_y, line.strip())
-                            text_y -= 12
+                                c.drawString(text_margin, text_y, text)
+                                text_y -= 18
             
             # Page number
             c.setFont("Helvetica", 8)
@@ -1191,33 +785,29 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             c.showPage()
             
         except Exception as e:
-            print(f"Error adding {img_path.name} to PDF: {e}")
+            print(f"ERROR adding {img_path.name} to PDF: {e}")
+            import traceback
+            traceback.print_exc()
             continue
     
     c.save()
-    print(f"PDF saved to: {out_pdf}")
+    print(f"PDF generated: {out_pdf}")
 
 def build_reports(source_path: Path, client_name: str, property_address: str, gallery_name: str = None) -> Dict[str, Any]:
     """
     Main function to build inspection reports from source (ZIP or directory)
-    Returns artifacts dictionary with paths to generated files
+    Returns artifacts dictionary with path to generated PDF
     """
     try:
         print(f"\n{'='*60}")
         print(f"Building report for: {property_address}")
         print(f"Client: {client_name}")
-        if gallery_name:
-            # Clean gallery name for console output - remove emojis
-            safe_gallery = ''.join(c if ord(c) < 128 else '' for c in str(gallery_name))
-            if safe_gallery.strip():
-                print(f"Gallery: {safe_gallery.strip()}")
         print(f"{'='*60}\n")
-    except UnicodeEncodeError as e:
-        # Fallback for any encoding issues
+    except UnicodeEncodeError:
         print("\n" + "="*60)
         print("Building report...")
         print("="*60 + "\n")
-    
+
     # Extract if ZIP, otherwise use as directory
     if source_path.suffix.lower() == '.zip':
         photos_dir = extract_zip(source_path)
@@ -1225,164 +815,46 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
     else:
         photos_dir = source_path
         cleanup_needed = False
-    
+
     try:
         # Collect and analyze images
         images = collect_images(photos_dir)
         if not images:
             raise ValueError(f"No images found in {photos_dir}")
-        
+
         print(f"Found {len(images)} images to process")
-        
+
         # Analyze images with vision AI
         vision_results = analyze_images(images)
-        
-        # Generate report ID and create descriptive directory name
+
+        # Generate report ID
         report_id = secrets.token_hex(16)
-        
-        # Create descriptive directory name from ZIP filename or property address
-        if source_path.suffix.lower() == '.zip':
-            # Use ZIP filename (without extension) as base
-            dir_name = source_path.stem
-        else:
-            # Use sanitized property address for directories
-            dir_name = property_address.replace(' ', '_').replace(',', '').replace('.', '')
-            dir_name = ''.join(c if c.isalnum() or c in '_-' else '_' for c in dir_name)
-        
-        # Add timestamp to ensure uniqueness
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        full_dir_name = f"{dir_name}_{timestamp}"
-        
         print(f"\nREPORT_ID={report_id}")
-        print(f"OUTPUT_DIR={full_dir_name}")
-        
-        # Create output directory with descriptive name and organized subfolders
-        # If gallery name is provided, organize under gallery folder
-        if gallery_name:
-            # Sanitize gallery name for filesystem - remove emojis and special chars
-            # First remove any emoji/unicode characters
-            clean_gallery = ''.join(c for c in gallery_name if ord(c) < 128)
-            # Then sanitize for filesystem
-            safe_gallery = ''.join(c if c.isalnum() or c in '_- ' else '_' for c in clean_gallery).strip()
-            # Remove any duplicate underscores and clean up
-            safe_gallery = '_'.join(part for part in safe_gallery.split('_') if part)
-            report_dir = OUTPUTS_DIR / safe_gallery / full_dir_name
-        else:
-            report_dir = OUTPUTS_DIR / full_dir_name
-        
-        # Create organized subfolder structure
-        web_dir = ensure_dir(report_dir / 'web')
-        # Remove redundant photos_dir - we'll only use web/photos
-        analysis_dir = ensure_dir(report_dir / 'analysis')
-        pdf_dir = ensure_dir(report_dir / 'pdf')
-        
-        # Prepare report data
-        report_data = {
-            'report_id': report_id,
-            'client_name': client_name,
-            'property_address': property_address,
-            'inspection_date': datetime.now().strftime('%Y-%m-%d'),
-            'items': []
-        }
-        
-        # Copy photos ONLY to web/photos folder (single location)
-        web_photos_dir = ensure_dir(web_dir / 'photos')
-        for i, img_path in enumerate(images, 1):
-            # Copy to web/photos for both web serving and archival
-            web_photo_path = web_photos_dir / f"photo_{i:03d}{img_path.suffix}"
-            shutil.copy2(img_path, web_photo_path)
-        
-        # Save individual analysis files
-        for i, img_path in enumerate(images, 1):
-            analysis_text = vision_results.get(str(img_path), "")
-            if analysis_text:
-                analysis_file = analysis_dir / f"{i:03d}_{img_path.stem}_analysis.txt"
-                analysis_file.write_text(analysis_text, encoding='utf-8')
-        
-        # Process each image and analysis for report
-        for i, img_path in enumerate(images, 1):
-            analysis_text = vision_results.get(str(img_path), "")
-            sections = parse_analysis(analysis_text)
-            severity = categorize_issue(sections)
-            
-            # Create relative path for web access
-            web_image_path = f"photos/photo_{i:03d}{img_path.suffix}"
-            
-            report_data['items'].append({
-                'image_path': str(img_path),
-                'image_url': web_image_path,  # Relative URL for web access
-                'image_filename': img_path.name,
-                'location': sections['location'],
-                'observations': sections['observations'],
-                'potential_issues': sections['potential_issues'],
-                'recommendations': sections['recommendations'],
-                'severity': severity
-            })
-        
-        # Save enhanced JSON report data
-        json_path = save_report_json(report_data, web_dir)
-        print(f"JSON data saved: {json_path}")
-        
-        # Copy gallery template to web folder (portal uses this to display reports)
-        template_src = Path('static/gallery-template.html')
-        if template_src.exists():
-            html_path = web_dir / 'index.html'
-            shutil.copy2(template_src, html_path)
-            print(f"Gallery template copied for portal display: {html_path}")
-        else:
-            # Template is required for portal display
-            print(f"Warning: Gallery template not found at {template_src}")
-            html_path = web_dir / 'index.html'
-        
-        # Generate PDF report in pdf subfolder
-        pdf_filename = f"{property_address.replace(' ', '_').replace(',', '')}_inspection.pdf"
-        pdf_path = pdf_dir / pdf_filename
+
+        # Create PDF filename from property address
+        safe_address = property_address.replace(' ', '_').replace(',', '').replace('.', '')
+        safe_address = ''.join(c if c.isalnum() or c in '_-' else '_' for c in safe_address)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        pdf_filename = f"{safe_address}_{timestamp}.pdf"
+        pdf_path = OUTPUTS_DIR / pdf_filename
+
+        # Generate PDF report directly in outputs folder
         try:
             generate_pdf(property_address, images, pdf_path, vision_results, client_name)
-            print(f"PDF report: {pdf_path}")
+            print(f"\nPDF report saved: {pdf_path}")
         except Exception as e:
             print(f"ERROR generating PDF: {e}")
             import traceback
             traceback.print_exc()
-            print(f"Failed to generate PDF at: {pdf_path}")
-        
-        # Also save a copy of JSON in main directory for reference
-        main_json_path = report_dir / 'report_data.json'
-        main_json_path.write_text(json.dumps(report_data, indent=2), encoding='utf-8')
-        
-        # Create summary file
-        summary_path = report_dir / 'summary.txt'
-        summary_content = f"""Property Inspection Report
-========================
-Property: {property_address}
-Client: {client_name}
-Date: {datetime.now().strftime('%B %d, %Y')}
-Report ID: {report_id}
+            raise
 
-Total Photos: {len(images)}
-Issues Found: {sum(1 for item in report_data['items'] if item['potential_issues'])}
-
-Output Directory Structure:
-- /web/photos/ - Inspection photos for portal display
-- /web/report.json - Structured report data for portal
-- /web/index.html - Gallery template for portal viewer
-- /analysis/ - Individual AI analysis text files  
-- /pdf/ - PDF report for download/printing
-- report_data.json - Backup of structured data
-- summary.txt - This summary file
-"""
-        summary_path.write_text(summary_content, encoding='utf-8')
-        
         return {
             'report_id': report_id,
-            'web_dir': str(web_dir),
             'pdf_path': str(pdf_path),
-            'html_path': str(html_path) if 'html_path' in locals() else str(web_dir / 'index.html'),
-            'json_path': str(json_path) if 'json_path' in locals() else str(web_dir / 'report.json'),
             'client_name': client_name,
             'property_address': property_address
         }
-        
+
     finally:
         # Clean up temporary extraction directory
         if cleanup_needed and photos_dir.exists():
@@ -1391,127 +863,20 @@ Output Directory Structure:
             except Exception as e:
                 print(f"Warning: Could not clean up temp directory: {e}")
 
-def upload_to_backend(artifacts: Dict[str, Any], owner_id: str, property_address: str):
-    """
-    Upload report data to FastAPI backend for dashboard display
-    """
-    import requests
-
-    try:
-        # Prepare report data for API
-        report_data = {
-            "report_id": artifacts['report_id'],
-            "owner_id": owner_id,
-            "property_address": property_address,
-            "date": datetime.now().isoformat(),
-            "inspector": "CheckMyRental Inspector",
-            "status": "completed",
-            "web_dir": artifacts['web_dir'],
-            "pdf_path": artifacts['pdf_path']
-        }
-
-        # Read the JSON report to get issue counts
-        json_path = Path(artifacts['web_dir']) / 'report.json'
-        if json_path.exists():
-            with open(json_path, 'r', encoding='utf-8') as f:
-                report_json = json.load(f)
-
-                # Count issues by severity
-                critical_count = 0
-                important_count = 0
-
-                for item in report_json.get('items', []):
-                    severity = item.get('severity', '').lower()
-                    if severity == 'critical':
-                        critical_count += 1
-                    elif severity == 'important':
-                        important_count += 1
-
-                report_data['critical_issues'] = critical_count
-                report_data['important_issues'] = important_count
-
-        # Send to backend API
-        api_url = "http://localhost:8000/api/reports/save"
-        response = requests.post(api_url, json=report_data, timeout=10)
-
-        if response.status_code == 200:
-            print(f"✅ Report uploaded to owner dashboard: {owner_id}")
-        else:
-            print(f"⚠️ Failed to upload report to dashboard: {response.status_code}")
-            print(f"   Response: {response.text}")
-
-    except Exception as e:
-        print(f"⚠️ Error uploading to backend: {e}")
-        # Don't fail the whole process if upload fails
-        pass
-
-def register_with_portal(artifacts: Dict[str, Any], client_name: str, client_email: str,
-                        property_address: str, owner_id: str = None, ttl_hours: int = 720) -> Dict[str, Any]:
-    """
-    Register report with portal and create access token
-    """
-    db_init()
-    conn = db_connect()
-
-    try:
-        # Create or get client and property
-        # If owner_id is provided, use it as the client name for owner-specific galleries
-        effective_client_name = owner_id if owner_id else client_name
-        client_id = db_upsert_client(conn, effective_client_name, client_email)
-        property_id = db_upsert_property(conn, client_id, property_address)
-
-        # Insert report
-        report_id = db_insert_report(
-            conn,
-            artifacts['report_id'],
-            property_id,
-            artifacts['web_dir'],
-            artifacts['pdf_path']
-        )
-
-        # Create view token
-        token = db_create_token(conn, kind='view', ttl_hours=ttl_hours, report_id=report_id)
-
-        # Build share URL
-        share_url = f"{PORTAL_EXTERNAL_BASE_URL}/r/{token}"
-
-        # Upload report to FastAPI backend if owner_id is provided
-        if owner_id:
-            upload_to_backend(artifacts, owner_id, property_address)
-
-        print(f"\n{'='*60}")
-        print(f"Report registered successfully!")
-        print(f"Share URL: {share_url}")
-        print(f"Token expires: {(datetime.utcnow() + timedelta(hours=ttl_hours)).strftime('%Y-%m-%d %H:%M UTC')}")
-        print(f"{'='*60}\n")
-
-        return {
-            'report_id': report_id,
-            'token': token,
-            'share_url': share_url,
-            'expires_at': (datetime.utcnow() + timedelta(hours=ttl_hours)).isoformat() + 'Z'
-        }
-    finally:
-        conn.close()
-
 # ============== CLI Interface ==============
 
 def main():
     """Command-line interface for running reports"""
     import argparse
-    
+
     parser = argparse.ArgumentParser(description='Generate inspection report from photos')
     parser.add_argument('--zip', type=str, help='Path to ZIP file containing photos')
     parser.add_argument('--dir', type=str, help='Path to directory containing photos')
-    parser.add_argument('--client', type=str, default='Property Owner', help='Client name')
-    parser.add_argument('--email', type=str, default='', help='Client email')
+    parser.add_argument('--client', type=str, default='Property Owner', help='Client/Inspector name')
     parser.add_argument('--property', type=str, default='Property Address', help='Property address')
-    parser.add_argument('--owner-id', type=str, default=None, help='Owner ID for routing to specific dashboard')
-    parser.add_argument('--gallery', type=str, default=None, help='Gallery name for organizing reports')
-    parser.add_argument('--register', action='store_true', help='Register with portal and generate share link')
-    
+
     args = parser.parse_args()
-    
+
     # Determine source
     if args.zip:
         source = Path(args.zip)
@@ -1532,25 +897,17 @@ def main():
     property_address = args.property
     if property_address == 'Property Address' or not property_address:
         # Use the source filename (without extension) as the property address
-        # Replace underscores and dashes with spaces for readability
-        filename = source.stem  # filename without extension
+        filename = source.stem
         property_address = filename.replace('_', ' ').replace('-', ' ')
-        # Clean up multiple spaces
         property_address = ' '.join(property_address.split())
         print(f"Using filename as property address: {property_address}")
 
     try:
-        # Generate reports
-        gallery = getattr(args, 'gallery', None)
-        artifacts = build_reports(source, args.client, property_address, gallery)
-        
-        # Register with portal if requested
-        if args.register:
-            owner_id = getattr(args, 'owner_id', None)
-            register_with_portal(artifacts, args.client, args.email, property_address, owner_id)
-        
+        # Generate PDF report only
+        artifacts = build_reports(source, args.client, property_address)
         print("\nReport generation complete!")
-        
+        print(f"PDF saved to: {artifacts['pdf_path']}")
+
     except Exception as e:
         print(f"\nError: {e}")
         import traceback

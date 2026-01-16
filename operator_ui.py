@@ -23,11 +23,13 @@ if platform.system() == 'Windows':
             pass
 
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 
 try:
     from dotenv import load_dotenv
-    load_dotenv(override=True)
+    # Load .env from the same directory as this script
+    env_path = Path(__file__).parent / '.env'
+    load_dotenv(env_path, override=True)
 except Exception:
     pass
 
@@ -59,14 +61,16 @@ PROGRESS_RE = re.compile(r"\[(\d+)\s*/\s*(\d+)\]")
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif'}
 
 
+
 class ReportGeneratorApp(tk.Tk):
     def __init__(self):
         super().__init__()
 
         self.title(f"{COMPANY_NAME} — {APP_TITLE}")
         self.configure(bg=BG_DARK)
-        self.geometry("580x680")
-        self.resizable(False, False)
+        self.geometry("600x720")
+        self.minsize(600, 720)
+        self.resizable(True, True)
 
         # State
         self.sources = []
@@ -101,6 +105,15 @@ class ReportGeneratorApp(tk.Tk):
                 font=('Segoe UI', 20, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_DARK).pack(side="left")
 
+        # Open folder button (top right)
+        open_btn = tk.Label(header, text="📂 Open Reports",
+                           font=('Segoe UI', 10),
+                           fg=TEXT_MUTED, bg=BG_DARK, cursor="hand2")
+        open_btn.pack(side="right", padx=(10, 0))
+        open_btn.bind("<Button-1>", lambda e: self._open_output())
+        open_btn.bind("<Enter>", lambda e: open_btn.config(fg=TEXT_SECONDARY))
+        open_btn.bind("<Leave>", lambda e: open_btn.config(fg=TEXT_MUTED))
+
         # API Status badge (top right)
         self.api_status = tk.Label(header, text="",
                                   font=('Segoe UI', 9), bg=BG_DARK)
@@ -109,7 +122,7 @@ class ReportGeneratorApp(tk.Tk):
         # Subtitle
         tk.Label(main, text="Professional Property Inspection Reports",
                 font=('Segoe UI', 11),
-                fg=TEXT_MUTED, bg=BG_DARK).pack(anchor="w", pady=(0, 20))
+                fg=TEXT_MUTED, bg=BG_DARK).pack(anchor="w", pady=(0, 12))
 
         # ===== FILE SELECTION CARD =====
         card = self._create_card(main)
@@ -135,10 +148,6 @@ class ReportGeneratorApp(tk.Tk):
         btn_row = tk.Frame(card, bg=BG_CARD)
         btn_row.pack(fill="x")
 
-        # ZIP button
-        zip_btn = self._create_action_button(btn_row, "+ Add ZIP Files", self._add_zip_files)
-        zip_btn.pack(side="left", padx=(0, 10))
-
         # Folder button
         folder_btn = self._create_action_button(btn_row, "+ Add Folder", self._add_folder)
         folder_btn.pack(side="left", padx=(0, 10))
@@ -152,25 +161,76 @@ class ReportGeneratorApp(tk.Tk):
         clear_btn.bind("<Enter>", lambda e: clear_btn.config(fg=ERROR))
         clear_btn.bind("<Leave>", lambda e: clear_btn.config(fg=TEXT_MUTED))
 
-        # ===== INSPECTOR NAME CARD =====
+        # File preview list (shows uploaded file names) with scrollable area
+        self.file_preview_frame = tk.Frame(card, bg=BG_CARD)
+        self.file_preview_frame.pack(fill="x", pady=(12, 0))
+        self.file_preview_frame.pack_forget()  # Hidden initially
+
+        # Canvas for scrolling
+        self.preview_canvas = tk.Canvas(self.file_preview_frame, bg=BG_SECONDARY,
+                                        highlightthickness=0, height=120)
+        self.preview_canvas.pack(side="left", fill="both", expand=True)
+
+        # Scrollbar
+        self.preview_scrollbar = tk.Scrollbar(self.file_preview_frame, orient="vertical",
+                                              command=self.preview_canvas.yview)
+        self.preview_scrollbar.pack(side="right", fill="y")
+        self.preview_canvas.configure(yscrollcommand=self.preview_scrollbar.set)
+
+        # Inner frame for content
+        self.file_preview_list = tk.Frame(self.preview_canvas, bg=BG_SECONDARY)
+        self.preview_canvas_window = self.preview_canvas.create_window((0, 0),
+                                                                        window=self.file_preview_list,
+                                                                        anchor="nw")
+
+        # Bind canvas resize
+        self.file_preview_list.bind("<Configure>", self._on_preview_configure)
+        self.preview_canvas.bind("<Configure>", self._on_canvas_configure)
+
+        # Bind mouse wheel for scrolling
+        self.preview_canvas.bind("<MouseWheel>", self._on_preview_mousewheel)
+        self.file_preview_list.bind("<MouseWheel>", self._on_preview_mousewheel)
+
+        # ===== CLIENT NAME CARD =====
         name_card = self._create_card(main)
         name_card.pack(fill="x", pady=(0, 12))
 
-        tk.Label(name_card, text="Inspector Name",
+        tk.Label(name_card, text="Client Name",
                 font=('Segoe UI', 13, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 10))
 
-        # Entry with styled frame
+        # Entry with styled frame - using ttk.Entry for better Mac compatibility
         entry_frame = tk.Frame(name_card, bg=BG_SECONDARY)
-        entry_frame.pack(fill="x")
+        entry_frame.pack(fill="x", padx=15, pady=12)
+
+        # Configure ttk style for the entry
+        style = ttk.Style()
+        style.configure("Dark.TEntry",
+                       fieldbackground=BG_SECONDARY,
+                       background=BG_SECONDARY,
+                       foreground=TEXT_PRIMARY,
+                       insertcolor=TEXT_PRIMARY)
 
         self.inspector_var = tk.StringVar()
-        name_entry = tk.Entry(entry_frame, textvariable=self.inspector_var,
-                             font=('Segoe UI', 12),
-                             bg=BG_SECONDARY, fg=TEXT_PRIMARY,
-                             insertbackground=TEXT_PRIMARY,
-                             relief="flat", bd=0)
-        name_entry.pack(fill="x", ipady=12, padx=15)
+        self.name_entry = ttk.Entry(entry_frame, textvariable=self.inspector_var,
+                                    font=('Segoe UI', 12),
+                                    style="Dark.TEntry")
+        self.name_entry.pack(fill="x")
+
+        # ===== GENERATE BUTTON =====
+        self.generate_btn = tk.Frame(main, bg=ACCENT, cursor="hand2")
+        self.generate_btn.pack(fill="x", pady=(12, 12), ipady=14)
+
+        self.generate_label = tk.Label(self.generate_btn, text="Generate Reports",
+                                       font=('Segoe UI', 14, 'bold'),
+                                       fg=TEXT_PRIMARY, bg=ACCENT)
+        self.generate_label.pack()
+
+        # Bind click and hover
+        for widget in [self.generate_btn, self.generate_label]:
+            widget.bind("<Button-1>", self._on_button_click)
+            widget.bind("<Enter>", lambda e: self._btn_hover(True))
+            widget.bind("<Leave>", lambda e: self._btn_hover(False))
 
         # ===== PROGRESS SECTION =====
         progress_card = self._create_card(main)
@@ -210,38 +270,10 @@ class ReportGeneratorApp(tk.Tk):
                                  anchor="w")
         self.log_label.pack(fill="x", pady=(4, 0))
 
-        # ===== GENERATE BUTTON =====
-        self.generate_btn = tk.Frame(main, bg=ACCENT, cursor="hand2")
-        self.generate_btn.pack(fill="x", pady=(15, 0), ipady=14)
-
-        self.generate_label = tk.Label(self.generate_btn, text="Generate Reports",
-                                       font=('Segoe UI', 14, 'bold'),
-                                       fg=TEXT_PRIMARY, bg=ACCENT)
-        self.generate_label.pack()
-
-        # Bind click and hover
-        for widget in [self.generate_btn, self.generate_label]:
-            widget.bind("<Button-1>", self._on_button_click)
-            widget.bind("<Enter>", lambda e: self._btn_hover(True))
-            widget.bind("<Leave>", lambda e: self._btn_hover(False))
-
-        # ===== FOOTER =====
-        footer = tk.Frame(main, bg=BG_DARK)
-        footer.pack(side="bottom", fill="x", pady=(15, 0))
-
-        # Open folder button
-        open_btn = tk.Label(footer, text="Open Reports Folder",
-                           font=('Segoe UI', 10),
-                           fg=TEXT_MUTED, bg=BG_DARK, cursor="hand2")
-        open_btn.pack()
-        open_btn.bind("<Button-1>", lambda e: self._open_output())
-        open_btn.bind("<Enter>", lambda e: open_btn.config(fg=TEXT_SECONDARY))
-        open_btn.bind("<Leave>", lambda e: open_btn.config(fg=TEXT_MUTED))
-
     def _btn_hover(self, entering):
         """Handle generate button hover"""
         if self.is_running:
-            return
+            return 
         color = ACCENT_HOVER if entering else ACCENT
         self.generate_btn.config(bg=color)
         self.generate_label.config(bg=color)
@@ -262,6 +294,18 @@ class ReportGeneratorApp(tk.Tk):
         btn.bind("<Leave>", lambda e: btn.config(fg=ACCENT))
         return btn
 
+    def _on_preview_configure(self, event):
+        """Update scroll region when preview content changes"""
+        self.preview_canvas.configure(scrollregion=self.preview_canvas.bbox("all"))
+
+    def _on_canvas_configure(self, event):
+        """Update inner frame width when canvas resizes"""
+        self.preview_canvas.itemconfig(self.preview_canvas_window, width=event.width)
+
+    def _on_preview_mousewheel(self, event):
+        """Handle mouse wheel scrolling on the preview list"""
+        self.preview_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
     def _on_button_click(self, event):
         """Handle big button click"""
         if self.is_running:
@@ -276,16 +320,6 @@ class ReportGeneratorApp(tk.Tk):
             self.api_status.config(text="● No API Key", fg=ERROR)
             messagebox.showwarning("API Key Required",
                 "OpenAI API key not found.\n\nPlease add OPENAI_API_KEY to your .env file.")
-
-    def _add_zip_files(self):
-        files = filedialog.askopenfilenames(
-            title="Select ZIP files",
-            filetypes=[("ZIP files", "*.zip")]
-        )
-        for f in files:
-            if f not in [s[0] for s in self.sources]:
-                self.sources.append((f, 'zip'))
-        self._update_file_count()
 
     def _add_folder(self):
         folder = filedialog.askdirectory(title="Select photo folder")
@@ -312,15 +346,55 @@ class ReportGeneratorApp(tk.Tk):
         count = len(self.sources)
         if count == 0:
             self.file_count_label.config(text="No files selected")
+            self.file_preview_frame.pack_forget()
         else:
             self.file_count_label.config(text=f"{count} source{'s' if count != 1 else ''}")
+            self._update_file_preview()
+
+    def _update_file_preview(self):
+        """Update the file preview list with uploaded file names"""
+        # Clear existing preview items
+        for widget in self.file_preview_list.winfo_children():
+            widget.destroy()
+
+        if not self.sources:
+            self.file_preview_frame.pack_forget()
+            return
+
+        # Show the preview frame
+        self.file_preview_frame.pack(fill="x", pady=(12, 0))
+
+        # Add each source as a preview item
+        for i, (source_path, source_type) in enumerate(self.sources):
+            item_frame = tk.Frame(self.file_preview_list, bg=BG_SECONDARY)
+            item_frame.pack(fill="x", padx=8, pady=(4 if i == 0 else 2, 4 if i == len(self.sources) - 1 else 0))
+
+            # Icon based on type
+            icon = "📁" if source_type == 'folder' else "📦"
+
+            # Get display name (shortened if too long)
+            name = Path(source_path).name
+            if len(name) > 40:
+                name = name[:37] + "..."
+
+            # Count images in source
+            if source_type == 'folder':
+                img_count = self._count_images(source_path)
+                count_text = f"  ({img_count} photos)"
+            else:
+                count_text = ""
+
+            tk.Label(item_frame, text=f"{icon}  {name}{count_text}",
+                    font=('Segoe UI', 10),
+                    fg=TEXT_SECONDARY, bg=BG_SECONDARY,
+                    anchor="w").pack(side="left", fill="x")
 
     def _generate_reports(self):
         if not self.sources:
             messagebox.showwarning("No Files", "Add ZIP files or photo folders first.")
             return
 
-        inspector = self.inspector_var.get().strip() or "Inspector"
+        inspector = self.inspector_var.get().strip() or "Property Owner"
 
         self.is_running = True
         self._update_button_state()
@@ -375,11 +449,13 @@ class ReportGeneratorApp(tk.Tk):
                             sub = current / total_img * 100
                             overall = (i - 1) / total * 100 + (sub / total)
                             self.output_queue.put(('progress', overall))
-                        if "PDF saved" in line:
+                        if "PDF saved" in line or "PDF generated" in line:
                             generated.append(name)
                             self.output_queue.put(('log', f"✓ {name} complete"))
 
-                process.wait()
+                exit_code = process.wait()
+                if exit_code != 0:
+                    self.output_queue.put(('log', f"⚠ {name} failed (exit {exit_code})"))
             except Exception as e:
                 self.output_queue.put(('log', f"Error: {e}"))
 
@@ -426,8 +502,20 @@ class ReportGeneratorApp(tk.Tk):
 
 
 def main():
-    app = ReportGeneratorApp()
-    app.mainloop()
+    try:
+        app = ReportGeneratorApp()
+        app.mainloop()
+    except Exception as e:
+        import traceback
+        error_msg = f"Error starting app:\n{traceback.format_exc()}"
+        print(error_msg)
+        # Also show in a message box if possible
+        try:
+            import tkinter.messagebox as mb
+            mb.showerror("Startup Error", str(e))
+        except:
+            pass
+        raise
 
 
 if __name__ == "__main__":

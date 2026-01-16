@@ -9,7 +9,7 @@
       <div class="stat-label">Quarterly Visits</div>
     </div>
     <div class="stat" data-stat>
-      <div class="stat-number" data-target="24" data-suffix="h">0h</div>
+      <div class="stat-number static">24h</div>
       <div class="stat-label">Report Delivery</div>
     </div>
     <div class="stat" data-stat>
@@ -25,9 +25,18 @@
 
 <script>
   // Stats Counter Animation
-  document.addEventListener('DOMContentLoaded', () => {
+  function initStatsAnimation() {
     const stats = document.querySelectorAll('[data-stat]');
     if (!stats.length) return;
+
+    // Reset stats for re-initialization (important for View Transitions)
+    stats.forEach(stat => {
+      stat.classList.remove('reveal');
+      const numberEl = stat.querySelector('.stat-number') as HTMLElement;
+      if (numberEl && !numberEl.classList.contains('static') && numberEl.dataset.target) {
+        numberEl.textContent = '0' + (numberEl.dataset.suffix || '');
+      }
+    });
 
     function animateCounter(element: Element) {
       const numberEl = element.querySelector('.stat-number') as HTMLElement;
@@ -51,6 +60,18 @@
       }, stepDuration);
     }
 
+    // Respect reduced motion preference
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      stats.forEach(stat => {
+        stat.classList.add('reveal');
+        const statNumber = stat.querySelector('.stat-number') as HTMLElement;
+        if (statNumber && statNumber.dataset.target) {
+          statNumber.textContent = statNumber.dataset.target + (statNumber.dataset.suffix || '');
+        }
+      });
+      return;
+    }
+
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -67,18 +88,13 @@
     });
 
     stats.forEach(stat => observer.observe(stat));
+  }
 
-    // Respect reduced motion preference
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      stats.forEach(stat => {
-        stat.classList.add('reveal');
-        const statNumber = stat.querySelector('.stat-number') as HTMLElement;
-        if (statNumber && statNumber.dataset.target) {
-          statNumber.textContent = statNumber.dataset.target + (statNumber.dataset.suffix || '');
-        }
-      });
-    }
-  });
+  // Initialize on initial page load
+  document.addEventListener('DOMContentLoaded', initStatsAnimation);
+
+  // Re-initialize on Astro View Transitions (client-side navigation)
+  document.addEventListener('astro:page-load', initStatsAnimation);
 </script>
 
 <style>

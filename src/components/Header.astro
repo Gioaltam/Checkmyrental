@@ -21,7 +21,14 @@
         <span class="check">Check</span><span class="my">My</span><span class="rental">Rental</span>
       </div>
     </a>
-    <nav class="main-nav" aria-label="Primary navigation">
+    <!-- Mobile hamburger button -->
+    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open menu" aria-expanded="false">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+
+    <nav class="main-nav" id="main-nav" aria-label="Primary navigation">
       <ul class="menu">
         <li><a href="#gallery">Services</a></li>
         <li><a href="#process">How It Works</a></li>
@@ -81,6 +88,33 @@
 
   // Make toggle function globally available
   window.toggleTheme = toggleTheme;
+
+  // Mobile menu toggle
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mainNav = document.getElementById('main-nav');
+
+  if (mobileMenuBtn && mainNav) {
+    mobileMenuBtn.addEventListener('click', () => {
+      const isOpen = mainNav.classList.toggle('nav-open');
+      mobileMenuBtn.classList.toggle('is-open');
+      mobileMenuBtn.setAttribute('aria-expanded', isOpen);
+      mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    });
+
+    // Close menu when clicking a link
+    mainNav.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mainNav.classList.remove('nav-open');
+        mobileMenuBtn.classList.remove('is-open');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        mobileMenuBtn.setAttribute('aria-label', 'Open menu');
+        document.body.style.overflow = '';
+      });
+    });
+  }
 </script>
 
 <style>
@@ -359,24 +393,178 @@
     }
   }
 
+  /* Mobile hamburger button */
+  .mobile-menu-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    z-index: 1100;
+  }
+
+  .hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .hamburger-line {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  .mobile-menu-btn.is-open .hamburger-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+
+  .mobile-menu-btn.is-open .hamburger-line:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+
+  .mobile-menu-btn.is-open .hamburger-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
   @media (max-width: 768px) {
-    .logo-text {
-      font-size: 1.2rem;
+    .mobile-menu-btn {
+      display: flex;
+    }
+
+    .main-nav {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 100%;
+      max-width: 320px;
+      height: 100vh;
+      background: rgba(10, 10, 15, 0.98);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      padding: 100px 2rem 2rem;
+      transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1050;
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+    }
+
+    body.light-mode .main-nav {
+      background: rgba(248, 249, 252, 0.98);
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .main-nav.nav-open {
+      right: 0;
     }
 
     .menu {
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 0.5rem;
+      align-items: stretch;
+    }
+
+    .menu li {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    body.light-mode .menu li {
+      border-bottom-color: rgba(0, 0, 0, 0.06);
+    }
+
+    .menu li:last-child {
+      border-bottom: none;
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
     }
 
     .menu a {
-      padding: 0.5rem 0.75rem;
-      font-size: 0.85rem;
+      display: block;
+      padding: 1rem 0.5rem;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    body.light-mode .menu a {
+      color: rgba(0, 0, 0, 0.85);
+    }
+
+    .menu a:hover {
+      background: transparent;
+      color: #e74c3c;
+      transform: none;
+    }
+
+    .logo-text {
+      font-size: 1.4rem;
+    }
+
+    .logo-icon {
+      width: 45px;
+      height: 45px;
+    }
+
+    .logo-house {
+      width: 34px;
+      height: 34px;
+      top: 5px;
+      left: 5px;
+    }
+
+    .logo-check {
+      width: 20px;
+      height: 20px;
+    }
+
+    .logo-check::after {
+      width: 8px;
+      height: 4px;
+      border-width: 2px;
+    }
+
+    .logo-window {
+      width: 13px;
+      height: 13px;
+      gap: 2px;
+    }
+
+    .header-content {
+      padding: 0.75rem 1rem;
     }
 
     .cta-button {
       padding: 0.6rem 1rem;
       font-size: 0.85rem;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 360px) {
+    .logo-text {
+      font-size: 1.2rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .logo-house {
+      width: 30px;
+      height: 30px;
+    }
+
+    .logo-check {
+      width: 18px;
+      height: 18px;
     }
   }
 </style>

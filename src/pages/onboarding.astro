@@ -1,0 +1,654 @@
+---
+import LandingLayout from '../layouts/LandingLayout.astro';
+import Header from '../components/Header.astro';
+import LandingFooter from '../components/LandingFooter.astro';
+---
+
+<LandingLayout
+  title="Client Onboarding | CheckMyRental"
+  description="Get started with CheckMyRental. Submit your property information to begin quarterly documentation services."
+>
+  <Header />
+
+  <main id="main-content" tabindex="-1">
+    <section class="onboarding-section">
+      <div class="onboarding-container">
+        <header class="onboarding-header">
+          <h1>Get Started</h1>
+          <p>Tell us about your properties and we'll handle the rest. Fill out the form below to begin your quarterly documentation service.</p>
+        </header>
+
+        <form
+          id="onboarding-form"
+          action="https://formspree.io/f/xanrrqqr"
+          method="POST"
+          class="onboarding-form"
+        >
+          <!-- Section 1: Client Info -->
+          <div class="form-section">
+            <h2>Your Information</h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="client-name">Full Name <span class="required">*</span></label>
+                <input type="text" id="client-name" name="client_name" required placeholder="John Smith">
+              </div>
+              <div class="form-group">
+                <label for="client-email">Email <span class="required">*</span></label>
+                <input type="email" id="client-email" name="client_email" required placeholder="john@example.com">
+              </div>
+              <div class="form-group">
+                <label for="client-phone">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="client-phone" name="client_phone" required placeholder="(555) 123-4567">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Properties -->
+          <div class="form-section">
+            <div class="section-header">
+              <h2>Properties to Document</h2>
+              <span class="property-count">1 of 10</span>
+            </div>
+
+            <div id="properties-container">
+              <!-- Property 1 (always visible) -->
+              <div class="property-card" data-property="1">
+                <div class="property-header">
+                  <span class="property-number">Property 1</span>
+                </div>
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label for="property-1-address">Property Address <span class="required">*</span></label>
+                    <input type="text" id="property-1-address" name="property_1_address" required placeholder="123 Main St, Tampa, FL 33601">
+                  </div>
+                  <div class="form-group">
+                    <label for="property-1-tenant-name">Tenant Name <span class="required">*</span></label>
+                    <input type="text" id="property-1-tenant-name" name="property_1_tenant_name" required placeholder="Jane Doe">
+                  </div>
+                  <div class="form-group">
+                    <label for="property-1-tenant-phone">Tenant Phone <span class="required">*</span></label>
+                    <input type="tel" id="property-1-tenant-phone" name="property_1_tenant_phone" required placeholder="(555) 987-6543">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="add-property-btn" class="add-property-btn">
+              <span class="plus-icon">+</span>
+              Add Another Property
+            </button>
+          </div>
+
+          <!-- Submit -->
+          <div class="form-actions">
+            <button type="submit" class="submit-btn">
+              Submit Onboarding
+              <span class="arrow">→</span>
+            </button>
+            <p class="form-note">We'll reach out within 24 hours to schedule your first documentation visit.</p>
+          </div>
+        </form>
+
+        <!-- Success Message (hidden by default) -->
+        <div id="success-message" class="success-message" hidden>
+          <div class="success-icon">✓</div>
+          <h2>Thank You!</h2>
+          <p>Your onboarding information has been submitted successfully. We'll contact you within 24 hours to schedule your first property documentation.</p>
+          <a href="/" class="back-home-btn">Back to Home</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <LandingFooter />
+</LandingLayout>
+
+<script is:inline>
+  let propertyCount = 1;
+  const maxProperties = 10;
+
+  function updatePropertyCount() {
+    const countDisplay = document.querySelector('.property-count');
+    if (countDisplay) {
+      countDisplay.textContent = propertyCount + ' of ' + maxProperties;
+    }
+
+    const addBtn = document.getElementById('add-property-btn');
+    if (addBtn) {
+      if (propertyCount >= maxProperties) {
+        addBtn.style.display = 'none';
+      } else {
+        addBtn.style.display = 'flex';
+      }
+    }
+  }
+
+  function addProperty() {
+    if (propertyCount >= maxProperties) return;
+
+    propertyCount++;
+    const container = document.getElementById('properties-container');
+    if (!container) return;
+
+    const propertyCard = document.createElement('div');
+    propertyCard.className = 'property-card';
+    propertyCard.setAttribute('data-property', propertyCount.toString());
+    propertyCard.innerHTML =
+      '<div class="property-header">' +
+        '<span class="property-number">Property ' + propertyCount + '</span>' +
+        '<button type="button" class="remove-property-btn" onclick="removeProperty(' + propertyCount + ')">' +
+          '<span class="remove-icon">×</span>' +
+        '</button>' +
+      '</div>' +
+      '<div class="form-grid">' +
+        '<div class="form-group full-width">' +
+          '<label for="property-' + propertyCount + '-address">Property Address <span class="required">*</span></label>' +
+          '<input type="text" id="property-' + propertyCount + '-address" name="property_' + propertyCount + '_address" required placeholder="123 Main St, Tampa, FL 33601">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label for="property-' + propertyCount + '-tenant-name">Tenant Name <span class="required">*</span></label>' +
+          '<input type="text" id="property-' + propertyCount + '-tenant-name" name="property_' + propertyCount + '_tenant_name" required placeholder="Jane Doe">' +
+        '</div>' +
+        '<div class="form-group">' +
+          '<label for="property-' + propertyCount + '-tenant-phone">Tenant Phone <span class="required">*</span></label>' +
+          '<input type="tel" id="property-' + propertyCount + '-tenant-phone" name="property_' + propertyCount + '_tenant_phone" required placeholder="(555) 987-6543">' +
+        '</div>' +
+      '</div>';
+
+    container.appendChild(propertyCard);
+    updatePropertyCount();
+
+    // Animate in
+    propertyCard.style.opacity = '0';
+    propertyCard.style.transform = 'translateY(20px)';
+    requestAnimationFrame(function() {
+      propertyCard.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      propertyCard.style.opacity = '1';
+      propertyCard.style.transform = 'translateY(0)';
+    });
+
+    // Focus first input of new property
+    const firstInput = propertyCard.querySelector('input');
+    if (firstInput) firstInput.focus();
+  }
+
+  // Make removeProperty available globally
+  window.removeProperty = function(propertyNum) {
+    const card = document.querySelector('[data-property="' + propertyNum + '"]');
+    if (card) {
+      card.remove();
+      propertyCount--;
+      renumberProperties();
+      updatePropertyCount();
+    }
+  };
+
+  function renumberProperties() {
+    const cards = document.querySelectorAll('.property-card');
+    cards.forEach(function(card, index) {
+      const num = index + 1;
+      card.setAttribute('data-property', num.toString());
+
+      const numberSpan = card.querySelector('.property-number');
+      if (numberSpan) numberSpan.textContent = 'Property ' + num;
+
+      const removeBtn = card.querySelector('.remove-property-btn');
+      if (removeBtn) {
+        removeBtn.setAttribute('onclick', 'removeProperty(' + num + ')');
+      }
+
+      // Update input names and IDs
+      const inputs = card.querySelectorAll('input');
+      inputs.forEach(function(input) {
+        const oldName = input.name;
+        const oldId = input.id;
+        const fieldType = oldName.split('_').slice(2).join('_');
+        input.name = 'property_' + num + '_' + fieldType;
+        input.id = 'property-' + num + '-' + fieldType.replace(/_/g, '-');
+
+        // Update label
+        const label = card.querySelector('label[for="' + oldId + '"]');
+        if (label) {
+          label.setAttribute('for', input.id);
+        }
+      });
+    });
+  }
+
+  // Handle form submission and add property button
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('onboarding-form');
+    const successMessage = document.getElementById('success-message');
+    const addBtn = document.getElementById('add-property-btn');
+
+    if (addBtn) {
+      addBtn.addEventListener('click', addProperty);
+    }
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const submitBtn = form.querySelector('.submit-btn');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = 'Submitting...';
+        submitBtn.disabled = true;
+
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: {
+            'Accept': 'application/json'
+          }
+        })
+        .then(function(response) {
+          if (response.ok) {
+            form.style.display = 'none';
+            if (successMessage) {
+              successMessage.hidden = false;
+              successMessage.scrollIntoView({ behavior: 'smooth' });
+            }
+          } else {
+            throw new Error('Form submission failed');
+          }
+        })
+        .catch(function(error) {
+          alert('There was an error submitting the form. Please try again or email us directly.');
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        });
+      });
+    }
+  });
+</script>
+
+<style>
+  .onboarding-section {
+    min-height: 100vh;
+    padding: 8rem 2rem 4rem;
+  }
+
+  .onboarding-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .onboarding-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .onboarding-header h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  body.light-mode .onboarding-header h1 {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .onboarding-header p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  body.light-mode .onboarding-header p {
+    color: #4a4a4a;
+  }
+
+  .onboarding-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .form-section {
+    background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.02) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 2rem;
+  }
+
+  body.light-mode .form-section {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .form-section h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .form-section h2 {
+    color: #1a1a1a;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .section-header h2 {
+    margin-bottom: 0;
+  }
+
+  .property-count {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+  }
+
+  body.light-mode .property-count {
+    color: #666;
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  body.light-mode .form-group label {
+    color: #333;
+  }
+
+  .required {
+    color: #e74c3c;
+  }
+
+  .form-group input {
+    padding: 0.875rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+  }
+
+  body.light-mode .form-group input {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  body.light-mode .form-group input::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.15);
+  }
+
+  /* Property Cards */
+  .property-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  body.light-mode .property-card {
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .property-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .property-number {
+    font-weight: 600;
+    color: #e74c3c;
+    font-size: 0.9rem;
+  }
+
+  .remove-property-btn {
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .remove-property-btn:hover {
+    background: rgba(231, 76, 60, 0.2);
+    border-color: #e74c3c;
+  }
+
+  .remove-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  /* Add Property Button */
+  .add-property-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1rem;
+    background: transparent;
+    border: 2px dashed rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  body.light-mode .add-property-btn {
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #666;
+  }
+
+  .add-property-btn:hover {
+    border-color: #e74c3c;
+    color: #e74c3c;
+    background: rgba(231, 76, 60, 0.05);
+  }
+
+  .plus-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    text-align: center;
+    padding-top: 1rem;
+  }
+
+  .submit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2.5rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
+  }
+
+  .submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
+  }
+
+  .submit-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .submit-btn .arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .submit-btn:hover:not(:disabled) .arrow {
+    transform: translateX(4px);
+  }
+
+  .form-note {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  body.light-mode .form-note {
+    color: #666;
+  }
+
+  /* Success Message */
+  .success-message {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg,
+      rgba(34, 197, 94, 0.1) 0%,
+      rgba(34, 197, 94, 0.05) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 16px;
+  }
+
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2.5rem;
+    color: white;
+    box-shadow: 0 8px 30px rgba(34, 197, 94, 0.3);
+  }
+
+  .success-message h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  body.light-mode .success-message h2 {
+    color: #1a1a1a;
+  }
+
+  .success-message p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+  }
+
+  body.light-mode .success-message p {
+    color: #4a4a4a;
+  }
+
+  .back-home-btn {
+    display: inline-block;
+    padding: 0.875rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  body.light-mode .back-home-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  .back-home-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  body.light-mode .back-home-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .onboarding-section {
+      padding: 6rem 1rem 3rem;
+    }
+
+    .form-section {
+      padding: 1.5rem;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-group.full-width {
+      grid-column: 1;
+    }
+
+    .property-card {
+      padding: 1rem;
+    }
+  }
+</style>

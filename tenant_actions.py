@@ -6,6 +6,7 @@ and creates a summary page for the property owner to share with their tenant.
 """
 
 import re
+from datetime import datetime
 from typing import Dict, List, Tuple
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
@@ -55,15 +56,19 @@ def parse_issues_from_vision_results(vision_results: Dict[str, str]) -> Dict[str
         action_match = re.search(r'Recommended Action:\s*\n?-?\s*(.+?)(?=\n\n|\Z)', analysis, re.IGNORECASE | re.DOTALL)
         default_action = action_match.group(1).strip() if action_match else ""
 
-        # Pattern: "- [OWNER/TENANT] [IMMEDIATE/SOON] description"
-        # Handle various formats the AI might use
+        # Pattern: "- [OWNER/TENANT] [FIX NOW/FIX SOON] description"
+        # Handle various formats the AI might use, including legacy IMMEDIATE/SOON
         issue_patterns = [
-            # Full format: [TENANT] [SOON] description
+            # New format: [TENANT] [FIX NOW] or [FIX SOON] description
+            re.compile(r'-\s*\[(TENANT|OWNER)\]\s*\[(FIX NOW|FIX SOON)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
+            # Alternative: [FIX NOW] [TENANT] description
+            re.compile(r'-\s*\[(FIX NOW|FIX SOON)\]\s*\[(TENANT|OWNER)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
+            # Legacy format: [TENANT] [IMMEDIATE/SOON] description
             re.compile(r'-\s*\[(TENANT|OWNER)\]\s*\[(IMMEDIATE|SOON)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
-            # Alternative: [SOON] [TENANT] description
+            # Legacy alternative: [IMMEDIATE/SOON] [TENANT] description
             re.compile(r'-\s*\[(IMMEDIATE|SOON)\]\s*\[(TENANT|OWNER)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
             # Legacy format without responsibility (assume OWNER)
-            re.compile(r'-\s*\[(IMMEDIATE|SOON)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
+            re.compile(r'-\s*\[(IMMEDIATE|SOON|FIX NOW|FIX SOON)\]\s*(.+?)(?=\n|$)', re.IGNORECASE),
         ]
 
         for pattern in issue_patterns:
@@ -87,6 +92,12 @@ def parse_issues_from_vision_results(vision_results: Dict[str, str]) -> Dict[str
                     responsibility = 'OWNER'
                 else:
                     continue
+
+                # Normalize priority to new simpler format
+                if priority in ('IMMEDIATE', 'FIX NOW'):
+                    priority = 'FIX NOW'
+                else:
+                    priority = 'FIX SOON'
 
                 issue = {
                     'description': description,
@@ -132,41 +143,41 @@ def wrap_text(text: str, max_width: float, font_name: str, font_size: int, c: ca
 def get_tenant_action_suggestion(description: str) -> str:
     """
     Generate a suggested action for common tenant issues.
-    Returns a helpful suggestion based on keywords in the description.
+    Returns a helpful suggestion using simple language.
     """
     desc_lower = description.lower()
 
-    # AC/HVAC filter
-    if 'filter' in desc_lower and ('dirty' in desc_lower or 'clogged' in desc_lower or 'replace' in desc_lower):
-        return "Please replace the AC filter with a new one (available at hardware stores)"
+    # Air filter
+    if 'filter' in desc_lower and ('dirty' in desc_lower or 'clogged' in desc_lower or 'replace' in desc_lower or 'air' in desc_lower):
+        return "Buy a new air filter at any hardware store (like Home Depot) and put it in"
 
-    # Smoke detector
-    if 'smoke detector' in desc_lower or 'smoke alarm' in desc_lower:
+    # Smoke alarm
+    if 'smoke' in desc_lower and ('detector' in desc_lower or 'alarm' in desc_lower):
         if 'battery' in desc_lower or 'beep' in desc_lower:
-            return "Please replace the smoke detector battery"
-        return "Please check/test the smoke detector"
+            return "Put a new battery in the smoke alarm to stop the beeping"
+        return "Press the test button on the smoke alarm to make sure it works"
 
-    # CO detector
-    if 'carbon monoxide' in desc_lower or 'co detector' in desc_lower:
-        return "Please replace the CO detector battery or check the unit"
+    # Carbon monoxide alarm
+    if 'carbon monoxide' in desc_lower or 'co detector' in desc_lower or 'co alarm' in desc_lower:
+        return "Put a new battery in the carbon monoxide alarm"
 
-    # Drain issues
+    # Slow or clogged drain
     if 'drain' in desc_lower and ('clog' in desc_lower or 'slow' in desc_lower):
-        return "Please clear the drain using a plunger or drain cleaner"
+        return "Pour drain cleaner down the drain, or use a plunger to clear it"
 
     # Light bulbs
-    if 'light' in desc_lower and ('bulb' in desc_lower or 'burned' in desc_lower or 'out' in desc_lower):
-        return "Please replace the burned out light bulb"
+    if 'light' in desc_lower and ('bulb' in desc_lower or 'burned' in desc_lower or 'out' in desc_lower or 'not working' in desc_lower):
+        return "Buy a new light bulb and replace the old one"
 
-    # Toilet running
-    if 'toilet' in desc_lower and ('running' in desc_lower or 'flapper' in desc_lower):
-        return "Please check the toilet flapper and adjust/replace if needed"
+    # Toilet keeps running
+    if 'toilet' in desc_lower and ('running' in desc_lower or 'flapper' in desc_lower or 'keeps' in desc_lower or 'rubber' in desc_lower):
+        return "The rubber piece inside the toilet tank needs to be replaced (cheap part at hardware store)"
 
     # General cleaning
-    if 'clean' in desc_lower:
+    if 'clean' in desc_lower or 'dirty' in desc_lower:
         return "Please clean this area"
 
-    return "Please address this issue"
+    return "Please take care of this"
 
 
 # ============================================================================
@@ -188,10 +199,12 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
     bg_accent = HexColor('#ecf0f1')
     gold_accent = HexColor('#d4af37')
 
-    # Priority colors
+    # Priority colors (supports both old and new format)
     priority_colors = {
-        'IMMEDIATE': HexColor('#dc2626'),
-        'SOON': HexColor('#f59e0b'),
+        'FIX NOW': HexColor('#dc2626'),
+        'FIX SOON': HexColor('#f59e0b'),
+        'IMMEDIATE': HexColor('#dc2626'),  # Legacy support
+        'SOON': HexColor('#f59e0b'),        # Legacy support
     }
 
     # Section colors
@@ -221,16 +234,16 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
     c.setFillColor(accent_color)
     c.circle(42, height - 22, 3, fill=1, stroke=0)
 
-    # Page title
+    # Page title - simple language
     c.setFont("Helvetica", 12)
     c.setFillColor(text_secondary)
-    title_text = "INSPECTION SUMMARY"
+    title_text = "WHAT NEEDS TO BE FIXED"
     title_width = c.stringWidth(title_text, "Helvetica", 12)
     c.drawString((width - title_width) / 2, height - 70, title_text)
 
     c.setFont("Helvetica-Bold", 26)
     c.setFillColor(text_primary)
-    stat_text = "ACTION ITEMS"
+    stat_text = "TO-DO LIST"
     stat_width = c.stringWidth(stat_text, "Helvetica-Bold", 26)
     c.drawString((width - stat_width) / 2, height - 98, stat_text)
 
@@ -247,16 +260,16 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
 
     # === TENANT ACTIONS SECTION ===
     if tenant_issues:
-        # Section header
+        # Section header - simple language
         c.setFillColor(tenant_color)
         c.roundRect(card_margin, current_y - 5, width - 2*card_margin, 28, 4, fill=1, stroke=0)
 
         c.setFont("Helvetica-Bold", 12)
         c.setFillColor(HexColor('#ffffff'))
-        c.drawString(card_margin + 12, current_y + 5, f"TENANT ACTION ITEMS ({len(tenant_issues)})")
+        c.drawString(card_margin + 12, current_y + 5, f"ASK YOUR TENANT TO DO THESE ({len(tenant_issues)})")
 
         c.setFont("Helvetica", 9)
-        c.drawRightString(width - card_margin - 12, current_y + 5, "Items to discuss with your tenant")
+        c.drawRightString(width - card_margin - 12, current_y + 5, "Your tenant can fix these themselves")
 
         current_y -= 40
 
@@ -327,10 +340,10 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
 
         c.setFont("Helvetica-Bold", 12)
         c.setFillColor(HexColor('#ffffff'))
-        c.drawString(card_margin + 12, current_y + 5, f"OWNER REPAIRS NEEDED ({len(owner_issues)})")
+        c.drawString(card_margin + 12, current_y + 5, f"YOU NEED TO FIX THESE ({len(owner_issues)})")
 
         c.setFont("Helvetica", 9)
-        c.drawRightString(width - card_margin - 12, current_y + 5, "Items requiring professional repair")
+        c.drawRightString(width - card_margin - 12, current_y + 5, "Hire someone to do these repairs")
 
         current_y -= 40
 
@@ -385,15 +398,17 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
     if not tenant_issues and not owner_issues:
         c.setFont("Helvetica", 14)
         c.setFillColor(text_secondary)
-        c.drawCentredString(width / 2, height / 2, "No action items identified in this inspection.")
+        c.drawCentredString(width / 2, height / 2, "Good news! Nothing needs to be fixed right now.")
 
     # === FOOTER NOTE ===
     c.setFont("Helvetica", 7)
     c.setFillColor(text_light)
-    c.drawString(card_margin, 50, "This summary is provided to help facilitate communication between property owner and tenant.")
-    c.drawString(card_margin, 40, "Tenant action items are suggestions based on typical lease responsibilities. Please refer to your lease agreement.")
+    c.drawString(card_margin, 50, "This list helps you talk to your tenant about what needs to be done.")
+    c.drawString(card_margin, 40, "Check your lease to see what your tenant should pay for vs. what you should pay for.")
 
-    # Page number
+    # Page number and timestamp
     c.setFont("Helvetica", 8)
+    c.setFillColor(text_light)
+    c.drawString(card_margin, 25, datetime.now().strftime('%Y-%m-%d'))
     c.setFillColor(text_secondary)
     c.drawCentredString(width / 2, 25, f"Page {c.getPageNumber()}")

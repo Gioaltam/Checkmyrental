@@ -301,71 +301,147 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     gold_accent = HexColor('#d4af37')        # Executive gold
     
     # EXECUTIVE COVER PAGE DESIGN
-    
+
     # Subtle gradient background effect using overlapping rectangles
     c.setFillColor(HexColor('#ffffff'))
     c.rect(0, 0, width, height, fill=1, stroke=0)
-    
+
     # Top section with subtle gray background
     c.setFillColor(bg_accent)
     c.rect(0, height - 180, width, 180, fill=1, stroke=0)
-    
+
+    # Subtle diagonal lines pattern in header (very faint)
+    c.saveState()
+    c.setStrokeColor(HexColor('#dcdcdc'))
+    c.setLineWidth(0.5)
+    for i in range(-5, 25):
+        c.line(i * 35, height - 180, i * 35 + 180, height)
+    c.restoreState()
+
     # Thin accent line at top
     c.setFillColor(accent_color)
     c.rect(0, height - 3, width, 3, fill=1, stroke=0)
-    
+
+    # Corner accents - top left
+    c.setFillColor(gold_accent)
+    c.rect(20, height - 25, 30, 2, fill=1, stroke=0)
+    c.rect(20, height - 25, 2, 20, fill=1, stroke=0)
+
+    # Corner accents - top right
+    c.rect(width - 50, height - 25, 30, 2, fill=1, stroke=0)
+    c.rect(width - 22, height - 25, 2, 20, fill=1, stroke=0)
+
     # Logo symbol only (centered at top) - larger and more prominent
     logo_x = width / 2 - 30
     logo_y = height - 120
-    
+
     # Draw sophisticated logo mark
-    # Outer circle for elegance
+    # Shadow behind outer circle for depth
+    c.setFillColor(HexColor('#d0d0d0'))
+    c.circle(logo_x + 32, logo_y + 28, 36, fill=1, stroke=0)
+
+    # Gold outer ring for elegance
+    c.setStrokeColor(gold_accent)
+    c.setLineWidth(1.5)
+    c.circle(logo_x + 30, logo_y + 30, 38, fill=0, stroke=1)
+
+    # Main outer circle
     c.setStrokeColor(primary_color)
     c.setLineWidth(2)
     c.circle(logo_x + 30, logo_y + 30, 35, fill=0, stroke=1)
-    
+
     # House shape (rotated square) - refined design
     c.saveState()
     c.translate(logo_x + 30, logo_y + 30)
     c.rotate(45)
     c.setFillColor(primary_color)
     c.rect(-18, -18, 36, 36, fill=1, stroke=0)
-    c.restoreState()
-    
-    # Window grid - more sophisticated
+
+    # Window grid - drawn in rotated coordinate system (like SVG logo)
     c.setFillColor(HexColor('#ffffff'))
     window_size = 7
-    c.rect(logo_x + 23, logo_y + 23, window_size, window_size, fill=1)
-    c.rect(logo_x + 31, logo_y + 23, window_size, window_size, fill=1)
-    c.rect(logo_x + 23, logo_y + 31, window_size, window_size, fill=1)
-    c.rect(logo_x + 31, logo_y + 31, window_size, window_size, fill=1)
-    
-    # Checkmark badge - positioned elegantly
+    gap = 1.5
+    # 2x2 grid centered at origin
+    c.rect(-window_size - gap/2, -window_size - gap/2, window_size, window_size, fill=1)  # top-left
+    c.rect(gap/2, -window_size - gap/2, window_size, window_size, fill=1)  # top-right
+    c.rect(-window_size - gap/2, gap/2, window_size, window_size, fill=1)  # bottom-left
+    c.rect(gap/2, gap/2, window_size, window_size, fill=1)  # bottom-right
+    c.restoreState()
+
+    # Checkmark badge shadow
+    c.setFillColor(HexColor('#c0392b'))
+    c.circle(logo_x + 47, logo_y + 13, 12, fill=1, stroke=0)
+
+    # Checkmark badge
     c.setFillColor(accent_color)
-    c.circle(logo_x + 45, logo_y + 15, 10, fill=1, stroke=0)
-    c.setStrokeColor(HexColor('#ffffff'))
-    c.setLineWidth(3)
-    c.line(logo_x + 40, logo_y + 15, logo_x + 43, logo_y + 12)
-    c.line(logo_x + 43, logo_y + 12, logo_x + 50, logo_y + 19)
-    
-    # MAIN TITLE - Centered and elegant
-    c.setFont("Helvetica", 14)
+    c.circle(logo_x + 45, logo_y + 15, 12, fill=1, stroke=0)
+
+    # Checkmark - drawn as a filled polygon shape (not stroked lines)
+    # This avoids line clipping issues entirely
+    cx, cy = logo_x + 45, logo_y + 15  # badge center
+    # Draw checkmark as a thick path using a polygon
+    from reportlab.graphics.shapes import Polygon
+    from reportlab.graphics import renderPDF
+    from reportlab.graphics.shapes import Drawing, Polygon as PolygonShape
+
+    # Create checkmark path points (outline of the check shape)
+    # Thickness of 3 pixels, small checkmark centered in badge
+    t = 1.5  # half-thickness
+    # Outer points of checkmark shape
+    p = c.beginPath()
+    # Start at left point top
+    p.moveTo(cx - 6, cy + 2 + t)
+    # Go to middle point (bottom of V) - outer edge
+    p.lineTo(cx - 2, cy - 2 + t)
+    # Go to right point top - outer edge
+    p.lineTo(cx + 6, cy + 5 + t)
+    # Right point bottom
+    p.lineTo(cx + 6, cy + 5 - t)
+    # Back to middle point - inner edge
+    p.lineTo(cx - 2, cy - 2 - t)
+    # Left point bottom
+    p.lineTo(cx - 6, cy + 2 - t)
+    p.close()
+
+    c.setFillColor(HexColor('#ffffff'))
+    c.drawPath(p, fill=1, stroke=0)
+
+    # MAIN TITLE - Centered and elegant with letter-spacing
+    c.setFont("Helvetica", 12)
     c.setFillColor(text_secondary)
-    title_text = "PROPERTY INSPECTION"
-    title_width = c.stringWidth(title_text, "Helvetica", 14)
+    title_text = "P R O P E R T Y   I N S P E C T I O N"
+    title_width = c.stringWidth(title_text, "Helvetica", 12)
     c.drawString((width - title_width) / 2, height - 200, title_text)
-    
-    c.setFont("Helvetica-Bold", 32)
-    c.setFillColor(text_primary)
+
+    # Larger main title with subtle shadow effect
+    c.setFont("Helvetica-Bold", 38)
+    c.setFillColor(HexColor('#e0e0e0'))  # Shadow
     report_text = "REPORT"
-    report_width = c.stringWidth(report_text, "Helvetica-Bold", 32)
+    report_width = c.stringWidth(report_text, "Helvetica-Bold", 38)
+    c.drawString((width - report_width) / 2 + 1, height - 236, report_text)
+    c.setFillColor(text_primary)  # Main text
     c.drawString((width - report_width) / 2, height - 235, report_text)
-    
-    # Decorative line under title
+
+    # Decorative line under title with diamond endpoints
     line_width = 100
     c.setStrokeColor(gold_accent)
-    c.setLineWidth(2)
-    c.line((width - line_width) / 2, height - 250, (width + line_width) / 2, height - 250)
+    c.setLineWidth(1.5)
+    c.line((width - line_width) / 2, height - 255, (width + line_width) / 2, height - 255)
+
+    # Left diamond
+    c.setFillColor(gold_accent)
+    c.saveState()
+    c.translate((width - line_width) / 2, height - 255)
+    c.rotate(45)
+    c.rect(-3, -3, 6, 6, fill=1, stroke=0)
+    c.restoreState()
+
+    # Right diamond
+    c.saveState()
+    c.translate((width + line_width) / 2, height - 255)
+    c.rotate(45)
+    c.rect(-3, -3, 6, 6, fill=1, stroke=0)
+    c.restoreState()
     
     # Property Information Card - elevated design
     card_y = height - 480
@@ -385,27 +461,40 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     # Property Address Section
     info_x = card_margin + 30
     info_y = card_y + card_height - 40
-    
+
+    # Location pin icon
+    c.setFillColor(accent_color)
+    c.circle(info_x - 15, info_y + 4, 4, fill=1, stroke=0)
+    c.setFillColor(HexColor('#ffffff'))
+    c.circle(info_x - 15, info_y + 5, 1.5, fill=1, stroke=0)
+
     c.setFont("Helvetica", 10)
     c.setFillColor(text_light)
     c.drawString(info_x, info_y, "PROPERTY ADDRESS")
-    
+
     c.setFont("Helvetica-Bold", 18)
     c.setFillColor(text_primary)
     c.drawString(info_x, info_y - 25, address[:50])  # Truncate if too long
     if len(address) > 50:
         c.setFont("Helvetica-Bold", 16)
         c.drawString(info_x, info_y - 45, address[50:100])
-    
+
     # Vertical separator
     c.setStrokeColor(HexColor('#e0e0e0'))
     c.setLineWidth(1)
     separator_x = width / 2
     c.line(separator_x, card_y + 20, separator_x, card_y + card_height - 20)
-    
+
     # Right side information
     right_x = separator_x + 30
-    
+
+    # Calendar icon for date
+    c.setStrokeColor(accent_color)
+    c.setLineWidth(1)
+    c.rect(right_x - 18, info_y, 10, 10, fill=0, stroke=1)
+    c.setFillColor(accent_color)
+    c.rect(right_x - 18, info_y + 8, 10, 3, fill=1, stroke=0)
+
     # Date
     c.setFont("Helvetica", 10)
     c.setFillColor(text_light)
@@ -413,9 +502,14 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     c.setFont("Helvetica-Bold", 14)
     c.setFillColor(text_primary)
     c.drawString(right_x, info_y - 22, datetime.now().strftime('%B %d, %Y'))
-    
+
     # Client name if provided
     if client_name:
+        # Person icon
+        c.setFillColor(accent_color)
+        c.circle(right_x - 13, info_y - 43, 4, fill=1, stroke=0)
+        c.ellipse(right_x - 20, info_y - 58, right_x - 6, info_y - 50, fill=1, stroke=0)
+
         c.setFont("Helvetica", 10)
         c.setFillColor(text_light)
         c.drawString(right_x, info_y - 50, "PREPARED FOR")
@@ -427,22 +521,57 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     stats_y = card_y - 60
     c.setFillColor(bg_accent)
     c.roundRect(card_margin, stats_y, width - (2 * card_margin), 45, 8, fill=1, stroke=0)
-    
+
+    # Camera icon for photo count
+    cam_x = card_margin + 25
+    cam_y = stats_y + 15
+    c.setFillColor(text_secondary)
+    c.roundRect(cam_x, cam_y, 14, 10, 2, fill=1, stroke=0)
+    c.circle(cam_x + 7, cam_y + 5, 3, fill=0, stroke=1)
+    c.setStrokeColor(text_secondary)
+    c.setLineWidth(1)
+
     # Photo count with icon
     c.setFont("Helvetica", 11)
     c.setFillColor(text_secondary)
     stats_text = f"This report contains {len(images)} detailed inspection photographs with professional analysis"
     stats_width = c.stringWidth(stats_text, "Helvetica", 11)
-    c.drawString((width - stats_width) / 2, stats_y + 18, stats_text)
-    
+    c.drawString((width - stats_width) / 2 + 10, stats_y + 18, stats_text)
+
+    # Bottom corner accents
+    c.setFillColor(gold_accent)
+    c.rect(20, 55, 30, 2, fill=1, stroke=0)
+    c.rect(20, 55, 2, 20, fill=1, stroke=0)
+    c.rect(width - 50, 55, 30, 2, fill=1, stroke=0)
+    c.rect(width - 22, 55, 2, 20, fill=1, stroke=0)
+
     # Professional footer - minimal and elegant
     c.setFont("Helvetica", 8)
     c.setFillColor(text_light)
     c.drawString(card_margin, 40, "Confidential Property Inspection Report")
-    c.drawRightString(width - card_margin, 40, f"Generated {datetime.now().strftime('%Y-%m-%d')}")
+    c.drawRightString(width - card_margin, 40, datetime.now().strftime('%Y-%m-%d'))
     
     c.showPage()
-    
+
+    # === ACTION ITEMS PAGE (2nd page, after cover) ===
+    if ACTION_ITEMS_AVAILABLE and vision_results:
+        try:
+            # Parse issues from vision results (separates tenant vs owner)
+            issues = parse_issues_from_vision_results(vision_results)
+            tenant_count = len(issues.get('tenant', []))
+            owner_count = len(issues.get('owner', []))
+
+            if tenant_count > 0 or owner_count > 0:
+                generate_action_items_page(c, issues, width, height)
+                c.showPage()
+                print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items)")
+            else:
+                print("No action items found - skipping action items page")
+        except Exception as e:
+            print(f"Warning: Could not generate action items page: {e}")
+            import traceback
+            traceback.print_exc()
+
     # Add each image with analysis
     for i, img_path in enumerate(images, 1):
         try:
@@ -521,286 +650,304 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             c.setFont("Helvetica", 8)
             c.drawRightString(width - 35, height - 22, address[:45])
             
-            # Add compressed image
+            # Get image dimensions
             img = ImageReader(compressed_path)
             img_width, img_height = img.getSize()
-            
-            # Calculate scaling to fit on page - LARGER images for impact
-            max_width = width - 80  # Less margin = bigger image
-            max_height = 480  # Much more room for the photo
-            scale = min(max_width / img_width, max_height / img_height, 1.0)
-            
-            draw_width = img_width * scale
-            draw_height = img_height * scale
-            
-            # Center image horizontally
-            x = (width - draw_width) / 2
-            y = height - draw_height - 50
-            
-            # Image frame with shadow effect
-            c.setFillColor(HexColor('#e0e0e0'))
-            c.rect(x - 2, y - 2, draw_width + 4, draw_height + 4, fill=1, stroke=0)
-            
-            # White border around image
-            c.setFillColor(HexColor('#ffffff'))
-            c.setStrokeColor(HexColor('#d0d0d0'))
-            c.setLineWidth(1)
-            c.rect(x - 5, y - 5, draw_width + 10, draw_height + 10, fill=1, stroke=1)
-            
-            # Draw image
-            c.drawImage(img, x, y, draw_width, draw_height, preserveAspectRatio=True)
-            
-            # Clean up temp file
-            os.unlink(compressed_path)
-            
-            # Add analysis text below image with improved styling
-            if vision_results:
-                # Try to find the analysis with different path formats
-                analysis = None
-                img_path_str = str(img_path)
 
-                # Check exact match first
+            # Layout constants
+            left_margin = 30
+            right_margin = 30
+            column_gap = 20
+            header_height = 50  # Space for top header
+            footer_height = 50  # Space for bottom footer
+
+            # Get analysis text FIRST to determine layout
+            analysis = None
+            if vision_results:
+                img_path_str = str(img_path)
                 if img_path_str in vision_results:
                     analysis = vision_results[img_path_str]
                 else:
-                    # Try matching by filename
                     for key, value in vision_results.items():
                         if Path(key).name == img_path.name:
                             analysis = value
                             break
 
-                # Calculate text box position with more spacing from image
-                text_box_top = y - 35  # More gap between image and text
-                text_margin = 45  # Left/right margins
+            # Check if there are no issues
+            no_issues_phrases = ['no repairs needed', 'no issues', 'no damage', 'good condition',
+                                 'no action needed', 'no repairs necessary', 'nothing to report']
+            has_issues = True
+            if analysis:
+                analysis_lower = analysis.lower()
+                if any(phrase in analysis_lower for phrase in no_issues_phrases):
+                    issue_lines = [l for l in analysis.split('\n') if l.strip().startswith('-')
+                                  and not any(phrase in l.lower() for phrase in no_issues_phrases)]
+                    if not issue_lines:
+                        has_issues = False
 
-                # Check if there are no issues/repairs needed - skip description if so
-                no_issues_phrases = ['no repairs needed', 'no issues', 'no damage', 'good condition',
-                                     'no action needed', 'no repairs necessary', 'nothing to report']
-                has_issues = True
-                if analysis:
-                    analysis_lower = analysis.lower()
-                    # Check if "no repairs needed" or similar appears AND there's no actual issues listed
-                    if any(phrase in analysis_lower for phrase in no_issues_phrases):
-                        # Also check there are no bullet points with actual issues
-                        issue_lines = [l for l in analysis.split('\n') if l.strip().startswith('-')
-                                      and not any(phrase in l.lower() for phrase in no_issues_phrases)]
-                        if not issue_lines:
-                            has_issues = False
+            if not analysis or not has_issues:
+                # === NO ISSUES LAYOUT ===
+                # Photo at top (centered, full width available), "NO ISSUES" badge at bottom
 
-                if not analysis:
-                    # No analysis found - just skip, no need for a note
-                    pass
-                elif not has_issues:
-                    # No issues found - add a simple "No issues" badge instead of full description
-                    c.setFillColor(HexColor('#10b981'))  # Green color
-                    badge_width = 100
-                    badge_x = (width - badge_width) / 2
-                    c.roundRect(badge_x, text_box_top - 10, badge_width, 25, 12, fill=1, stroke=0)
-                    c.setFillColor(HexColor('#ffffff'))
-                    c.setFont("Helvetica-Bold", 10)
-                    c.drawCentredString(width / 2, text_box_top - 2, "NO ISSUES")
-                else:
-                    # Draw a subtle background box for the analysis
-                    box_height = text_box_top - 50  # Height of remaining space
-                    c.setFillColor(HexColor('#f8f9fa'))
-                    c.roundRect(text_margin - 10, 45, width - (2 * text_margin) + 20, text_box_top - 40, 6, fill=1, stroke=0)
+                # Calculate photo sizing for full-width layout
+                usable_width = width - left_margin - right_margin
+                photo_max_height = height - header_height - footer_height - 100  # Leave room for badge
 
-                    # Add a left accent bar
-                    c.setFillColor(accent_color)
-                    c.rect(text_margin - 10, 45, 4, text_box_top - 40, fill=1, stroke=0)
+                scale = min(usable_width / img_width, photo_max_height / img_height, 1.0)
+                draw_width = img_width * scale
+                draw_height = img_height * scale
 
-                    # Starting Y position for text (inside the box with padding)
-                    text_y = text_box_top - 15
+                # Center photo horizontally, position at top
+                photo_x = (width - draw_width) / 2
+                photo_y = height - header_height - 20 - draw_height
 
-                    # Write analysis with improved typography
-                    lines = analysis.split('\n')
-                    for line in lines:
-                        if text_y < 65:  # Start new page if running out of room
-                            c.setFont("Helvetica", 9)
-                            c.setFillColor(text_secondary)
-                            c.drawString(width - 100, 30, f"Page {c.getPageNumber()}")
-                            c.showPage()
-                            # Draw header on continued page
+                # Image frame with shadow effect
+                c.setFillColor(HexColor('#e0e0e0'))
+                c.rect(photo_x - 2, photo_y - 2, draw_width + 4, draw_height + 4, fill=1, stroke=0)
+
+                # White border around image
+                c.setFillColor(HexColor('#ffffff'))
+                c.setStrokeColor(HexColor('#d0d0d0'))
+                c.setLineWidth(1)
+                c.rect(photo_x - 5, photo_y - 5, draw_width + 10, draw_height + 10, fill=1, stroke=1)
+
+                # Draw image
+                c.drawImage(img, photo_x, photo_y, draw_width, draw_height, preserveAspectRatio=True)
+
+                # Clean up temp file
+                os.unlink(compressed_path)
+
+                # "NO ISSUES" badge centered below the photo
+                badge_y = photo_y - 50
+                badge_width = 140
+                badge_x = (width - badge_width) / 2
+                c.setFillColor(HexColor('#10b981'))
+                c.roundRect(badge_x, badge_y, badge_width, 35, 14, fill=1, stroke=0)
+                c.setFillColor(HexColor('#ffffff'))
+                c.setFont("Helvetica-Bold", 14)
+                c.drawCentredString(width / 2, badge_y + 12, "NO ISSUES")
+
+            else:
+                # === SIDE-BY-SIDE LAYOUT (for photos WITH issues) ===
+                # Left side: Photo (55% of width)
+                # Right side: Analysis text (45% of width)
+
+                # Calculate column widths
+                usable_width = width - left_margin - right_margin - column_gap
+                photo_col_width = usable_width * 0.55
+                text_col_width = usable_width * 0.45
+
+                # Photo column boundaries
+                photo_x = left_margin
+                photo_max_height = height - header_height - footer_height - 20
+
+                # Calculate photo scaling to fit in left column
+                scale = min(photo_col_width / img_width, photo_max_height / img_height, 1.0)
+                draw_width = img_width * scale
+                draw_height = img_height * scale
+
+                # Align photo top with text start position
+                text_start_y = height - header_height - 20
+                photo_y = text_start_y - draw_height  # photo_y is bottom edge, so subtract height
+
+                # Image frame with shadow effect
+                c.setFillColor(HexColor('#e0e0e0'))
+                c.rect(photo_x - 2, photo_y - 2, draw_width + 4, draw_height + 4, fill=1, stroke=0)
+
+                # White border around image
+                c.setFillColor(HexColor('#ffffff'))
+                c.setStrokeColor(HexColor('#d0d0d0'))
+                c.setLineWidth(1)
+                c.rect(photo_x - 5, photo_y - 5, draw_width + 10, draw_height + 10, fill=1, stroke=1)
+
+                # Draw image
+                c.drawImage(img, photo_x, photo_y, draw_width, draw_height, preserveAspectRatio=True)
+
+                # Clean up temp file
+                os.unlink(compressed_path)
+
+                # === TEXT COLUMN (right side) ===
+                text_col_x = left_margin + photo_col_width + column_gap
+                text_col_right = text_col_x + text_col_width
+                text_y = height - header_height - 20  # Start below header
+                text_bottom = footer_height + 10  # Don't go below footer
+                # Draw subtle background for text area
+                c.setFillColor(HexColor('#f8f9fa'))
+                c.roundRect(text_col_x - 5, text_bottom, text_col_width + 10, text_y - text_bottom + 10, 6, fill=1, stroke=0)
+
+                # Left accent bar for text area
+                c.setFillColor(accent_color)
+                c.rect(text_col_x - 5, text_bottom, 3, text_y - text_bottom + 10, fill=1, stroke=0)
+
+                # Calculate max characters per line based on column width (approx 6pt per char at 10pt font)
+                max_chars_per_line = int(text_col_width / 6)
+
+                # Write analysis text
+                lines = analysis.split('\n')
+                for line in lines:
+                    if text_y < text_bottom:
+                        # Need continuation page - create new page with full-width text
+                        c.setFont("Helvetica", 8)
+                        c.setFillColor(text_light)
+                        c.drawString(card_margin, 30, datetime.now().strftime('%Y-%m-%d'))
+                        c.setFillColor(text_secondary)
+                        c.drawString(width - 100, 30, f"Page {c.getPageNumber()}")
+                        c.showPage()
+
+                        # Header on continued page
+                        c.setFillColor(primary_color)
+                        c.setFont("Helvetica-Bold", 14)
+                        c.drawString(45, height - 50, f"Photo {i} Analysis (continued)")
+                        c.setStrokeColor(accent_color)
+                        c.setLineWidth(2)
+                        c.line(45, height - 55, width - 45, height - 55)
+
+                        # On continuation page, use full width for text
+                        text_col_x = 45
+                        text_col_width = width - 90
+                        max_chars_per_line = int(text_col_width / 6)
+                        text_y = height - 80
+                        text_bottom = 50
+
+                    line_stripped = line.strip()
+
+                    # Skip certain sections
+                    if any(skip in line_stripped for skip in ['What I See:', 'Observations:']):
+                        continue
+
+                    # Section headers
+                    section_headers = ['Location:', 'Issues to Address:', 'Recommended Action:',
+                                     'Potential Issues:', 'Recommendations:', 'What To Do:']
+                    found_header = None
+                    header_content = None
+                    for header in section_headers:
+                        if header in line_stripped:
+                            found_header = header
+                            parts = line_stripped.split(header, 1)
+                            if len(parts) > 1 and parts[1].strip():
+                                header_content = parts[1].strip()
+                            break
+
+                    if found_header:
+                        if text_y < height - header_height - 30:
+                            text_y -= 6
+                        if 'Issues' in found_header:
+                            c.setFillColor(accent_color)
+                        else:
                             c.setFillColor(primary_color)
-                            c.setFont("Helvetica-Bold", 14)
-                            c.drawString(text_margin, height - 50, f"Photo {i} Analysis (continued)")
-                            c.setStrokeColor(accent_color)
-                            c.setLineWidth(2)
-                            c.line(text_margin, height - 55, width - text_margin, height - 55)
-                            text_y = height - 80
+                        c.setFont("Helvetica-Bold", 10)
+                        c.drawString(text_col_x, text_y, found_header.upper())
+                        text_y -= 16
 
-                        # Handle section headers with color coding (skip What I See/Observations)
-                        line_stripped = line.strip()
-                        # Skip "What I See" and "Observations" sections entirely
-                        if any(skip in line_stripped for skip in ['What I See:', 'Observations:']):
-                            continue
-
-                        # Check if line contains a section header (with or without content after it)
-                        section_headers = ['Location:', 'Issues to Address:', 'Recommended Action:',
-                                         'Potential Issues:', 'Recommendations:']
-                        found_header = None
-                        header_content = None
-                        for header in section_headers:
-                            if header in line_stripped:
-                                found_header = header
-                                # Check if there's content after the header on the same line
-                                parts = line_stripped.split(header, 1)
-                                if len(parts) > 1 and parts[1].strip():
-                                    header_content = parts[1].strip()
-                                break
-
-                        if found_header:
-                            # Add extra space before new sections (except first)
-                            if text_y < text_box_top - 20:
-                                text_y -= 8
-                            if 'Issues' in found_header:
-                                c.setFillColor(accent_color)
+                        if header_content:
+                            c.setFillColor(HexColor('#374151'))
+                            c.setFont("Helvetica", 9)
+                            # Wrap header content
+                            if len(header_content) > max_chars_per_line:
+                                words = header_content.split()
+                                current_line = ""
+                                for word in words:
+                                    test_line = current_line + " " + word if current_line else word
+                                    if len(test_line) > max_chars_per_line:
+                                        c.drawString(text_col_x + 10, text_y, current_line)
+                                        text_y -= 14
+                                        current_line = word
+                                    else:
+                                        current_line = test_line
+                                if current_line:
+                                    c.drawString(text_col_x + 10, text_y, current_line)
+                                    text_y -= 14
                             else:
-                                c.setFillColor(primary_color)
-                            c.setFont("Helvetica-Bold", 12)
-                            c.drawString(text_margin, text_y, found_header.upper())
-                            text_y -= 20
+                                c.drawString(text_col_x + 10, text_y, header_content)
+                                text_y -= 14
 
-                            # If there's content on the same line as the header, render it as a bullet with priority
-                            if header_content:
-                                # Check for priority tags in header content too
-                                hc_priority_color = accent_color
-                                hc_priority_label = None
-                                hc_text = header_content
-                                if '[IMMEDIATE]' in hc_text:
-                                    hc_priority_color = HexColor('#dc2626')
-                                    hc_priority_label = 'IMMEDIATE'
-                                    hc_text = hc_text.replace('[IMMEDIATE]', '').strip()
-                                elif '[SOON]' in hc_text:
-                                    hc_priority_color = HexColor('#f59e0b')
-                                    hc_priority_label = 'SOON'
-                                    hc_text = hc_text.replace('[SOON]', '').strip()
-                                elif '[COSMETIC]' in hc_text:
-                                    hc_priority_color = HexColor('#6b7280')
-                                    hc_priority_label = 'COSMETIC'
-                                    hc_text = hc_text.replace('[COSMETIC]', '').strip()
+                    elif line.strip().startswith('-'):
+                        text = line.strip()[1:].strip()
 
-                                c.setFillColor(hc_priority_color)
-                                c.circle(text_margin + 5, text_y + 3, 3, fill=1, stroke=0)
+                        # Check for priority/responsibility tags
+                        priority_color = accent_color
+                        priority_label = None
 
-                                hc_text_start = text_margin + 15
-                                if hc_priority_label:
-                                    c.setFont("Helvetica-Bold", 8)
-                                    c.drawString(hc_text_start, text_y + 1, hc_priority_label)
-                                    hc_label_width = c.stringWidth(hc_priority_label, "Helvetica-Bold", 8)
-                                    hc_text_start = hc_text_start + hc_label_width + 8
+                        # Handle new format tags
+                        for tag, color, label in [
+                            ('[FIX NOW]', HexColor('#dc2626'), 'FIX NOW'),
+                            ('[FIX SOON]', HexColor('#f59e0b'), 'FIX SOON'),
+                            ('[IMMEDIATE]', HexColor('#dc2626'), 'URGENT'),
+                            ('[SOON]', HexColor('#f59e0b'), 'SOON'),
+                            ('[OWNER]', HexColor('#10b981'), 'OWNER'),
+                            ('[TENANT]', HexColor('#3b82f6'), 'TENANT'),
+                        ]:
+                            if tag in text:
+                                if 'FIX' in tag or 'IMMEDIATE' in tag or 'SOON' == tag:
+                                    priority_color = color
+                                    priority_label = label
+                                text = text.replace(tag, '').strip()
 
-                                c.setFillColor(HexColor('#374151'))
-                                c.setFont("Helvetica", 11)
-                                # Wrap long lines
-                                hc_max_chars = 60 if hc_priority_label else 70
-                                if len(hc_text) > hc_max_chars:
-                                    words = hc_text.split()
-                                    current_line = ""
-                                    first_line = True
-                                    for word in words:
-                                        test_line = current_line + " " + word if current_line else word
-                                        line_limit = hc_max_chars if first_line else 70
-                                        if len(test_line) > line_limit:
-                                            c.drawString(hc_text_start if first_line else text_margin + 15, text_y, current_line)
-                                            text_y -= 18
-                                            current_line = word
-                                            first_line = False
-                                        else:
-                                            current_line = test_line
-                                    if current_line:
-                                        c.drawString(hc_text_start if first_line else text_margin + 15, text_y, current_line)
-                                        text_y -= 18
+                        # Draw bullet
+                        c.setFillColor(priority_color)
+                        c.circle(text_col_x + 4, text_y + 2, 2.5, fill=1, stroke=0)
+
+                        text_start_x = text_col_x + 12
+                        if priority_label:
+                            c.setFont("Helvetica-Bold", 7)
+                            c.drawString(text_start_x, text_y, priority_label)
+                            label_w = c.stringWidth(priority_label, "Helvetica-Bold", 7)
+                            text_start_x += label_w + 4
+
+                        c.setFillColor(HexColor('#374151'))
+                        c.setFont("Helvetica", 9)
+
+                        # Wrap bullet text
+                        adjusted_max = max_chars_per_line - 5
+                        if len(text) > adjusted_max:
+                            words = text.split()
+                            current_line = ""
+                            first_line = True
+                            for word in words:
+                                test_line = current_line + " " + word if current_line else word
+                                if len(test_line) > adjusted_max:
+                                    c.drawString(text_start_x if first_line else text_col_x + 12, text_y, current_line)
+                                    text_y -= 14
+                                    current_line = word
+                                    first_line = False
                                 else:
-                                    c.drawString(hc_text_start, text_y, hc_text)
-                                    text_y -= 18
-                            c.setFillColor(HexColor('#374151'))
-                            c.setFont("Helvetica", 11)
+                                    current_line = test_line
+                            if current_line:
+                                c.drawString(text_start_x if first_line else text_col_x + 12, text_y, current_line)
+                                text_y -= 14
+                        else:
+                            c.drawString(text_start_x, text_y, text)
+                            text_y -= 14
 
-                        elif line.strip().startswith('-'):
-                            # Bullet points with better formatting and priority color-coding
-                            text = line.strip()[1:].strip()  # Remove the dash
+                    elif line.strip():
+                        c.setFillColor(HexColor('#374151'))
+                        c.setFont("Helvetica", 9)
+                        text = line.strip()
 
-                            # Check for priority tags and set colors accordingly
-                            priority_color = accent_color  # Default
-                            priority_label = None
-                            if '[IMMEDIATE]' in text:
-                                priority_color = HexColor('#dc2626')  # Red for urgent
-                                priority_label = 'IMMEDIATE'
-                                text = text.replace('[IMMEDIATE]', '').strip()
-                            elif '[SOON]' in text:
-                                priority_color = HexColor('#f59e0b')  # Orange/amber for soon
-                                priority_label = 'SOON'
-                                text = text.replace('[SOON]', '').strip()
-                            elif '[COSMETIC]' in text:
-                                priority_color = HexColor('#6b7280')  # Gray for cosmetic
-                                priority_label = 'COSMETIC'
-                                text = text.replace('[COSMETIC]', '').strip()
-
-                            # Draw colored bullet dot
-                            c.setFillColor(priority_color)
-                            c.circle(text_margin + 5, text_y + 3, 3, fill=1, stroke=0)  # Slightly larger dot
-
-                            # Draw priority label if present
-                            text_start = text_margin + 15
-                            if priority_label:
-                                c.setFont("Helvetica-Bold", 8)
-                                c.drawString(text_start, text_y + 1, priority_label)
-                                label_width = c.stringWidth(priority_label, "Helvetica-Bold", 8)
-                                text_start = text_start + label_width + 8
-
-                            c.setFillColor(HexColor('#374151'))
-                            c.setFont("Helvetica", 11)
-                            # Wrap long lines (adjust for priority label width)
-                            max_chars = 60 if priority_label else 70
-                            if len(text) > max_chars:
-                                words = text.split()
-                                current_line = ""
-                                first_line = True
-                                for word in words:
-                                    test_line = current_line + " " + word if current_line else word
-                                    line_limit = max_chars if first_line else 70
-                                    if len(test_line) > line_limit:
-                                        c.drawString(text_start if first_line else text_margin + 15, text_y, current_line)
-                                        text_y -= 18
-                                        current_line = word
-                                        first_line = False
-                                    else:
-                                        current_line = test_line
-                                if current_line:
-                                    c.drawString(text_start if first_line else text_margin + 15, text_y, current_line)
-                                    text_y -= 18
-                            else:
-                                c.drawString(text_start, text_y, text)
-                                text_y -= 18
-                        elif line.strip():
-                            # Regular text - still style it nicely
-                            c.setFillColor(HexColor('#374151'))
-                            c.setFont("Helvetica", 11)
-                            text = line.strip()
-                            # Wrap long lines
-                            if len(text) > 75:
-                                words = text.split()
-                                current_line = ""
-                                for word in words:
-                                    test_line = current_line + " " + word if current_line else word
-                                    if len(test_line) > 75:
-                                        c.drawString(text_margin, text_y, current_line)
-                                        text_y -= 18
-                                        current_line = word
-                                    else:
-                                        current_line = test_line
-                                if current_line:
-                                    c.drawString(text_margin, text_y, current_line)
-                                    text_y -= 18
-                            else:
-                                c.drawString(text_margin, text_y, text)
-                                text_y -= 18
+                        if len(text) > max_chars_per_line:
+                            words = text.split()
+                            current_line = ""
+                            for word in words:
+                                test_line = current_line + " " + word if current_line else word
+                                if len(test_line) > max_chars_per_line:
+                                    c.drawString(text_col_x, text_y, current_line)
+                                    text_y -= 14
+                                    current_line = word
+                                else:
+                                    current_line = test_line
+                            if current_line:
+                                c.drawString(text_col_x, text_y, current_line)
+                                text_y -= 14
+                        else:
+                            c.drawString(text_col_x, text_y, text)
+                            text_y -= 14
             
-            # Page number
+            # Page number and timestamp
             c.setFont("Helvetica", 8)
+            c.setFillColor(text_light)
+            c.drawString(card_margin, 30, datetime.now().strftime('%Y-%m-%d'))
             c.drawString(width / 2 - 20, 30, f"Page {c.getPageNumber()}")
-            
+
             c.showPage()
             
         except Exception as e:
@@ -808,25 +955,6 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             import traceback
             traceback.print_exc()
             continue
-
-    # === ACTION ITEMS PAGE ===
-    if ACTION_ITEMS_AVAILABLE and vision_results:
-        try:
-            # Parse issues from vision results (separates tenant vs owner)
-            issues = parse_issues_from_vision_results(vision_results)
-            tenant_count = len(issues.get('tenant', []))
-            owner_count = len(issues.get('owner', []))
-
-            if tenant_count > 0 or owner_count > 0:
-                generate_action_items_page(c, issues, width, height)
-                c.showPage()
-                print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items)")
-            else:
-                print("No action items found - skipping action items page")
-        except Exception as e:
-            print(f"Warning: Could not generate action items page: {e}")
-            import traceback
-            traceback.print_exc()
 
     c.save()
     print(f"PDF generated: {out_pdf}")

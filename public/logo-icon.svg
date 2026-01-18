@@ -1,0 +1,39 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="256" fill="#000000"/>
+
+  <!-- Navy blue rotated square (house) - perfectly centered -->
+  <rect
+    x="116"
+    y="116"
+    width="280"
+    height="280"
+    fill="#2c3e50"
+    transform="rotate(45 256 256)"
+  />
+
+  <!-- White window panes (4 squares in a 2x2 grid) - centered -->
+  <g transform="translate(256, 256) rotate(45)">
+    <!-- Top-left pane -->
+    <rect x="-56" y="-56" width="46" height="46" fill="white"/>
+    <!-- Top-right pane -->
+    <rect x="10" y="-56" width="46" height="46" fill="white"/>
+    <!-- Bottom-left pane -->
+    <rect x="-56" y="10" width="46" height="46" fill="white"/>
+    <!-- Bottom-right pane -->
+    <rect x="10" y="10" width="46" height="46" fill="white"/>
+  </g>
+
+  <!-- Red circle (checkmark badge) - bottom right -->
+  <circle cx="358" cy="358" r="85" fill="#e74c3c"/>
+
+  <!-- White checkmark - centered in badge -->
+  <path
+    d="M 315 358 L 345 388 L 405 328"
+    stroke="white"
+    stroke-width="18"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+</svg>

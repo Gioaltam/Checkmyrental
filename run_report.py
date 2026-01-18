@@ -45,6 +45,17 @@ except ImportError:
     def describe_image(path):
         return "Image analysis not available"
 
+# Import tenant action items module
+try:
+    from tenant_actions import (
+        parse_issues_from_vision_results,
+        generate_action_items_page
+    )
+    ACTION_ITEMS_AVAILABLE = True
+except ImportError:
+    ACTION_ITEMS_AVAILABLE = False
+    print("Warning: tenant_actions.py not found, action items page will be skipped")
+
 # Directory Configuration
 WORKSPACE = Path(os.environ.get('WORKSPACE_DIR', './workspace'))
 OUTPUTS_DIR = WORKSPACE / 'outputs'
@@ -264,7 +275,15 @@ def analyze_images(images: List[Path]) -> Dict[str, str]:
 # ============== PDF Report Generation ==============
 
 def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "") -> None:
-    """Generate executive-quality PDF report with sophisticated design"""
+    """Generate executive-quality PDF report with sophisticated design
+
+    Args:
+        address: Property address
+        images: List of image paths
+        out_pdf: Output PDF path
+        vision_results: Vision analysis results
+        client_name: Client name for report
+    """
     from PIL import Image as PILImage, ImageOps
     from reportlab.lib.colors import HexColor
 
@@ -789,7 +808,26 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             import traceback
             traceback.print_exc()
             continue
-    
+
+    # === ACTION ITEMS PAGE ===
+    if ACTION_ITEMS_AVAILABLE and vision_results:
+        try:
+            # Parse issues from vision results (separates tenant vs owner)
+            issues = parse_issues_from_vision_results(vision_results)
+            tenant_count = len(issues.get('tenant', []))
+            owner_count = len(issues.get('owner', []))
+
+            if tenant_count > 0 or owner_count > 0:
+                generate_action_items_page(c, issues, width, height)
+                c.showPage()
+                print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items)")
+            else:
+                print("No action items found - skipping action items page")
+        except Exception as e:
+            print(f"Warning: Could not generate action items page: {e}")
+            import traceback
+            traceback.print_exc()
+
     c.save()
     print(f"PDF generated: {out_pdf}")
 
@@ -797,6 +835,12 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
     """
     Main function to build inspection reports from source (ZIP or directory)
     Returns artifacts dictionary with path to generated PDF
+
+    Args:
+        source_path: Path to ZIP file or directory containing photos
+        client_name: Client/inspector name
+        property_address: Property address
+        gallery_name: Optional gallery name
     """
     try:
         print(f"\n{'='*60}")

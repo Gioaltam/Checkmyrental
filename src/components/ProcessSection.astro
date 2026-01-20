@@ -4,6 +4,20 @@
 
 <section class="process-section" id="process">
   <h2 class="process-title">How It Works</h2>
+  <!-- Pipeline connector above cards -->
+  <div class="pipeline-connector" aria-hidden="true">
+    <div class="pipeline-track">
+      <div class="pipeline-line"></div>
+      <div class="pipeline-glow"></div>
+      <div class="pipeline-dot"></div>
+    </div>
+    <div class="pipeline-chevrons">
+      <span class="chevron">‹</span>
+      <span class="chevron">‹</span>
+      <span class="chevron">‹</span>
+    </div>
+  </div>
+
   <div class="process-steps">
     <!-- Step 1: Submit Property Details -->
     <div class="process-step">
@@ -101,7 +115,7 @@
     </div>
 
     <!-- Step 4: Report Delivered Same Day -->
-    <div class="process-step">
+    <div class="process-step final-step">
       <div class="step-icon">
         <svg class="icon-report" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
           <!-- Background document (shadow) -->
@@ -187,71 +201,6 @@
     margin-bottom: 3rem;
   }
 
-  /* CSS Custom Properties for line positioning */
-  .process-steps {
-    --card-width: calc((100% - 6rem) / 4);
-    --first-center: calc(var(--card-width) / 2);
-    --last-center: calc(100% - var(--card-width) / 2);
-  }
-
-  /* Connecting lines between steps */
-  .process-steps::before {
-    content: '';
-    position: absolute;
-    top: 75px;
-    left: calc(var(--first-center) + 50px);
-    right: calc(var(--first-center) + 50px);
-    height: 3px;
-    background: linear-gradient(90deg,
-      rgba(100, 116, 139, 0.2) 0%,
-      rgba(231, 76, 60, 0.3) 50%,
-      rgba(100, 116, 139, 0.2) 100%);
-    z-index: 0;
-    border-radius: 2px;
-  }
-
-  /* Animated dot traveling along the connecting line */
-  .process-steps::after {
-    content: '';
-    position: absolute;
-    top: 69px;
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #e74c3c 100%);
-    border-radius: 50%;
-    box-shadow: 0 0 15px rgba(231, 76, 60, 0.8),
-                0 0 30px rgba(231, 76, 60, 0.4);
-    animation: dotMove 4s ease-in-out infinite;
-    z-index: 0;
-  }
-
-  @keyframes dotMove {
-    0% {
-      left: calc((100% - 6rem) / 8 + 50px - 6px);
-      opacity: 0;
-      transform: scale(0.6);
-    }
-    5% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    50% {
-      left: calc(50% - 6px);
-      transform: scale(1.2);
-      box-shadow: 0 0 20px rgba(231, 76, 60, 1),
-                  0 0 40px rgba(231, 76, 60, 0.6);
-    }
-    95% {
-      opacity: 1;
-      transform: scale(1);
-    }
-    100% {
-      left: calc(100% - (100% - 6rem) / 8 - 50px - 6px);
-      opacity: 0;
-      transform: scale(0.6);
-    }
-  }
-
   .process-step {
     text-align: center;
     padding: 2rem;
@@ -269,7 +218,7 @@
       box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
   }
 
   /* Subtle gradient overlay on hover */
@@ -370,7 +319,13 @@
      ICON ANIMATIONS
      ============================================ */
 
-  /* Form Icon - Checkmarks appearing */
+  /* ============================================
+     STEP 1: Form Icon - Checkmarks appearing
+     ============================================ */
+  .icon-form {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  }
+
   .icon-form .check {
     opacity: 0;
     stroke-dasharray: 20;
@@ -378,13 +333,13 @@
   }
 
   .icon-form .check-1 {
-    animation: checkDraw 0.4s ease-out 0.5s forwards;
+    animation: checkDraw 0.5s ease-out 0.3s forwards, checkGlow 4s ease-in-out 2.5s infinite;
   }
   .icon-form .check-2 {
-    animation: checkDraw 0.4s ease-out 1.2s forwards;
+    animation: checkDraw 0.5s ease-out 0.8s forwards, checkGlow 4s ease-in-out 3s infinite;
   }
   .icon-form .check-3 {
-    animation: checkDraw 0.4s ease-out 1.9s forwards;
+    animation: checkDraw 0.5s ease-out 1.3s forwards, checkGlow 4s ease-in-out 3.5s infinite;
   }
 
   @keyframes checkDraw {
@@ -398,90 +353,147 @@
     }
   }
 
-  /* Payment Icon - Shield pulse */
+  @keyframes checkGlow {
+    0%, 100% { stroke: #10b981; }
+    50% { stroke: #34d399; }
+  }
+
+  .process-step:hover .icon-form .check {
+    stroke: #34d399;
+    filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+  }
+
+  /* ============================================
+     STEP 2: Payment Icon - Card & Shield
+     ============================================ */
+  .icon-payment {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  }
+
   .icon-payment .shield-group {
     transform-origin: 68px 35px;
-    animation: shieldPulse 2s ease-in-out infinite;
+    animation: shieldPulse 3s ease-in-out infinite;
+  }
+
+  .icon-payment .shield {
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
   }
 
   @keyframes shieldPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    50% { transform: scale(1.08); }
   }
 
   .icon-payment .card {
-    animation: cardFloat 3s ease-in-out infinite;
+    animation: cardTap 3s ease-in-out infinite;
   }
 
-  @keyframes cardFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-2px); }
+  @keyframes cardTap {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    15% { transform: translateY(2px) rotate(-0.5deg); }
+    30% { transform: translateY(0) rotate(0deg); }
   }
 
-  /* Schedule Icon - Phone rings pulse */
+  .process-step:hover .icon-payment .shield {
+    filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.6));
+  }
+
+  /* ============================================
+     STEP 3: Schedule Icon - Calendar & Phone
+     ============================================ */
+  .icon-schedule {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  }
+
   .icon-schedule .ring {
     opacity: 0;
-    transform-origin: center;
+    transform-origin: 65px 49px;
   }
 
   .icon-schedule .ring-1 {
-    animation: ringPulse 2s ease-out infinite;
+    animation: ringPulse 2.5s ease-out infinite;
   }
 
   .icon-schedule .ring-2 {
-    animation: ringPulse 2s ease-out 0.4s infinite;
+    animation: ringPulse 2.5s ease-out 0.5s infinite;
   }
 
   @keyframes ringPulse {
     0% {
-      opacity: 0.6;
-      transform: scale(0.8);
+      opacity: 0.7;
+      transform: scale(0.7);
     }
     100% {
       opacity: 0;
-      transform: scale(1.3);
+      transform: scale(1.4);
     }
   }
 
   .icon-schedule .selected-date {
-    animation: datePulse 1.5s ease-in-out infinite;
+    animation: datePulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.5));
   }
 
   @keyframes datePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
+    0%, 100% {
+      transform: scale(1);
+      filter: drop-shadow(0 0 4px rgba(231, 76, 60, 0.5));
+    }
+    50% {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 8px rgba(231, 76, 60, 0.7));
+    }
   }
 
-  /* Report Icon - Document slide up, badge pop */
+  .process-step:hover .icon-schedule .ring {
+    stroke: #60a5fa;
+    stroke-width: 2;
+  }
+
+  /* ============================================
+     STEP 4: Report Icon - Document & Badge
+     ============================================ */
+  .icon-report {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  }
+
   .icon-report .doc {
-    animation: docFloat 3s ease-in-out infinite;
+    animation: docSlide 4s ease-in-out infinite;
   }
 
-  @keyframes docFloat {
+  @keyframes docSlide {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-3px); }
+    25% { transform: translateY(-4px); }
+    50% { transform: translateY(0); }
   }
 
   .icon-report .photo-1 {
-    animation: photoShimmer 2.5s ease-in-out infinite;
+    animation: photoGlow 3s ease-in-out infinite;
   }
 
   .icon-report .photo-2 {
-    animation: photoShimmer 2.5s ease-in-out 0.3s infinite;
+    animation: photoGlow 3s ease-in-out 0.4s infinite;
   }
 
-  @keyframes photoShimmer {
+  @keyframes photoGlow {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+    50% { opacity: 0.6; }
   }
 
   .icon-report .badge-bg {
-    animation: badgePop 2s ease-in-out infinite;
+    animation: badgePop 2.5s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
   }
 
   @keyframes badgePop {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+    0%, 100% {
+      transform: scale(1);
+      filter: drop-shadow(0 0 6px rgba(16, 185, 129, 0.4));
+    }
+    50% {
+      transform: scale(1.12);
+      filter: drop-shadow(0 0 10px rgba(16, 185, 129, 0.6));
+    }
   }
 
   .icon-report .badge-check {
@@ -492,6 +504,10 @@
 
   @keyframes badgeCheckDraw {
     to { stroke-dashoffset: 0; }
+  }
+
+  .process-step:hover .icon-report .badge-bg {
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.7));
   }
 
   /* ============================================
@@ -561,6 +577,161 @@
   }
 
   /* ============================================
+     PIPELINE CONNECTOR - Animated Line Above Cards
+     ============================================ */
+
+  .pipeline-connector {
+    max-width: 1400px;
+    margin: 0 auto 2rem;
+    padding: 0 3rem;
+    position: relative;
+    height: 40px;
+  }
+
+  .pipeline-track {
+    position: absolute;
+    top: 50%;
+    left: calc(3rem + 12.5%);
+    right: calc(3rem + 12.5%);
+    height: 4px;
+    transform: translateY(-50%);
+  }
+
+  .pipeline-line {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg,
+      #e74c3c 0%,
+      #3b82f6 33%,
+      #10b981 66%,
+      #f59e0b 100%
+    );
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+
+  .pipeline-glow {
+    position: absolute;
+    top: -2px;
+    bottom: -2px;
+    left: 0;
+    width: 80px;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      #e74c3c 20%,
+      #3b82f6 50%,
+      #10b981 80%,
+      transparent 100%
+    );
+    border-radius: 4px;
+    filter: blur(2px);
+    animation: glowMove 3s ease-in-out infinite;
+  }
+
+  .pipeline-dot {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    background: #e74c3c;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5);
+    animation: dotMove 3s ease-in-out infinite;
+  }
+
+  @keyframes glowMove {
+    0% {
+      left: -80px;
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      left: calc(100% + 80px);
+      opacity: 0;
+    }
+  }
+
+  @keyframes dotMove {
+    0% {
+      left: 0%;
+      background: #e74c3c;
+      box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5);
+    }
+    33% {
+      background: #3b82f6;
+      box-shadow: 0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5);
+    }
+    66% {
+      background: #10b981;
+      box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5);
+    }
+    100% {
+      left: 100%;
+      background: #f59e0b;
+      box-shadow: 0 0 12px #f59e0b, 0 0 24px rgba(245, 158, 11, 0.5);
+    }
+  }
+
+  .pipeline-chevrons {
+    position: absolute;
+    top: 50%;
+    left: calc(3rem + 12.5%);
+    right: calc(3rem + 12.5%);
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: space-around;
+    pointer-events: none;
+  }
+
+  .chevron {
+    font-size: 2rem;
+    font-weight: 300;
+    line-height: 1;
+    transform: scaleX(-1);
+    animation: chevronPulse 1.5s ease-in-out infinite;
+  }
+
+  .chevron:nth-child(1) {
+    color: #e74c3c;
+    animation-delay: 0s;
+  }
+
+  .chevron:nth-child(2) {
+    color: #3b82f6;
+    animation-delay: 0.2s;
+  }
+
+  .chevron:nth-child(3) {
+    color: #10b981;
+    animation-delay: 0.4s;
+  }
+
+  @keyframes chevronPulse {
+    0%, 100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* Light mode adjustments */
+  body.light-mode .pipeline-line {
+    opacity: 0.4;
+  }
+
+  body.light-mode .chevron {
+    filter: brightness(0.85);
+  }
+
+  /* ============================================
      RESPONSIVE
      ============================================ */
 
@@ -572,6 +743,11 @@
 
     .process-steps::before,
     .process-steps::after {
+      display: none;
+    }
+
+    /* Hide pipeline on smaller screens */
+    .pipeline-connector {
       display: none;
     }
   }
@@ -614,7 +790,10 @@
     .icon-report .photo-1,
     .icon-report .photo-2,
     .icon-report .badge-bg,
-    .icon-report .badge-check {
+    .icon-report .badge-check,
+    .pipeline-glow,
+    .pipeline-dot,
+    .chevron {
       animation: none;
     }
 
@@ -625,6 +804,21 @@
 
     .icon-report .badge-check {
       stroke-dashoffset: 0;
+    }
+
+    .pipeline-glow {
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0.5;
+    }
+
+    .pipeline-dot {
+      left: 50%;
+      background: #3b82f6;
+    }
+
+    .chevron {
+      opacity: 0.6;
     }
   }
 </style>

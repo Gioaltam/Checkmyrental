@@ -1,127 +1,236 @@
 ---
-// AI-Assisted PDF Reports - Visual Showcase of Features and Benefits
+// PDF Report Preview - Visual showcase of actual report pages
 ---
 
 <section class="pdf-showcase-section">
   <div class="showcase-container">
     <div class="section-header">
-      <p class="section-eyebrow">Quarterly Inspection Reports</p>
-      <h2>What's included in your report</h2>
+      <p class="section-eyebrow">Your Inspection Report</p>
+      <h2>What's Included in Your Report</h2>
       <p class="section-subtitle">
-        Each quarterly inspection includes a professional PDF report designed for property owners.
-        Our AI reviews photos and tells you exactly what needs fixing — and who should fix it.
+        Professional PDF delivered the same day as your inspection
       </p>
     </div>
 
-    <!-- Main Visual Split: Before/After or Problem/Solution -->
-    <div class="comparison-container">
-      <!-- Left: Old Way (Problem) -->
-      <div class="comparison-side old-way">
-        <div class="side-label label-old">DIY Documentation</div>
-        <div class="side-content">
-          <div class="problem-icon">📋</div>
-          <h3 class="side-title">Doing It Yourself</h3>
-          <ul class="feature-list problem-list">
-            <li class="feature-item">
-              <span class="item-icon">❌</span>
-              <span class="item-text">Takes time out of your busy schedule</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">❌</span>
-              <span class="item-text">Easy to miss issues without training</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">❌</span>
-              <span class="item-text">No consistent documentation format</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">❌</span>
-              <span class="item-text">Photos scattered across devices</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">❌</span>
-              <span class="item-text">Hard to track changes over time</span>
-            </li>
-          </ul>
-          <div class="time-badge badge-slow">
-            <span class="time-icon">⏰</span>
-            <span class="time-text">Time-consuming and inconsistent</span>
+    <div class="pdf-preview-grid">
+      <!-- Card 1: Cover Page -->
+      <div class="pdf-preview-card">
+        <div class="card-label">Cover Page</div>
+        <div class="pdf-page cover-page">
+          <!-- Top accent bar (red) -->
+          <div class="cover-accent-bar"></div>
+
+          <!-- Header section with gray background and diagonal lines -->
+          <div class="cover-header-bg">
+            <div class="diagonal-lines"></div>
+            <!-- Gold corner accents -->
+            <div class="corner-accent top-left"></div>
+            <div class="corner-accent top-right"></div>
+          </div>
+
+          <!-- Logo - Using inline SVG that matches PDF exactly -->
+          <div class="cover-logo-container">
+            <svg class="cover-logo-svg" viewBox="0 0 90 85" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Shadow circle (offset +2, -2 from main) -->
+              <circle cx="42" cy="38" r="36" fill="#d0d0d0"/>
+              <!-- Gold outer ring -->
+              <circle cx="40" cy="36" r="38" stroke="#d4af37" stroke-width="1.5" fill="none"/>
+              <!-- Navy inner ring -->
+              <circle cx="40" cy="36" r="35" stroke="#1a1a2e" stroke-width="2" fill="none"/>
+              <!-- House (rotated square) with windows - drawn in rotated coordinate system -->
+              <g transform="translate(40, 36) rotate(45)">
+                <!-- House body - 36x36 centered -->
+                <rect x="-18" y="-18" width="36" height="36" fill="#1a1a2e"/>
+                <!-- Windows - 7x7 squares with 1.5 gap, centered in house -->
+                <!-- These are squares in the rotated space, so they appear as diamonds -->
+                <rect x="-8.25" y="-8.25" width="7" height="7" fill="white"/>
+                <rect x="1.25" y="-8.25" width="7" height="7" fill="white"/>
+                <rect x="-8.25" y="1.25" width="7" height="7" fill="white"/>
+                <rect x="1.25" y="1.25" width="7" height="7" fill="white"/>
+              </g>
+              <!-- Badge shadow (offset +2, -2 from badge) -->
+              <circle cx="59" cy="55" r="12" fill="#c0392b"/>
+              <!-- Badge circle -->
+              <circle cx="57" cy="53" r="12" fill="#e74c3c"/>
+              <!-- Checkmark -->
+              <path d="M51 53 L55 57 L63 49" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+
+          <!-- Title -->
+          <div class="cover-title-section">
+            <p class="cover-subtitle">P R O P E R T Y &nbsp; I N S P E C T I O N</p>
+            <h3 class="cover-title">REPORT</h3>
+            <div class="cover-title-line">
+              <span class="diamond"></span>
+              <span class="line"></span>
+              <span class="diamond"></span>
+            </div>
+          </div>
+
+          <!-- Property info card -->
+          <div class="cover-property-card">
+            <div class="property-left">
+              <div class="property-row">
+                <div class="property-icon location-icon"></div>
+                <div>
+                  <p class="property-label">PROPERTY ADDRESS</p>
+                  <p class="property-value">1234 Oak Street</p>
+                  <p class="property-value-small">Tampa, FL 33601</p>
+                </div>
+              </div>
+            </div>
+            <div class="property-divider"></div>
+            <div class="property-right">
+              <div class="property-row">
+                <div class="property-icon calendar-icon"></div>
+                <div>
+                  <p class="property-label">INSPECTION DATE</p>
+                  <p class="property-value">January 19, 2025</p>
+                </div>
+              </div>
+              <div class="property-row">
+                <div class="property-icon person-icon"></div>
+                <div>
+                  <p class="property-label">PREPARED FOR</p>
+                  <p class="property-value">John Smith</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats badge -->
+          <div class="cover-stats">
+            <div class="camera-icon"></div>
+            <span>This report contains 24 detailed inspection photographs with professional analysis</span>
+          </div>
+
+          <!-- Bottom corner accents -->
+          <div class="corner-accent bottom-left"></div>
+          <div class="corner-accent bottom-right"></div>
+
+          <!-- Footer -->
+          <div class="cover-footer">
+            <span>Confidential Property Inspection Report</span>
+            <span>2025-01-19</span>
           </div>
         </div>
+        <p class="card-caption">Professional cover with property details</p>
       </div>
 
-      <!-- Divider with Arrow -->
-      <div class="comparison-divider">
-        <div class="divider-arrow">→</div>
-        <div class="divider-text">Choose Smarter</div>
-      </div>
+      <!-- Card 2: To-Do List -->
+      <div class="pdf-preview-card">
+        <div class="card-label">To-Do List</div>
+        <div class="pdf-page todo-page">
+          <!-- Header -->
+          <div class="todo-header">
+            <p class="todo-subtitle">WHAT NEEDS TO BE FIXED</p>
+            <h3 class="todo-title">TO-DO LIST</h3>
+            <div class="todo-title-line"></div>
+          </div>
 
-      <!-- Right: New Way (Solution) -->
-      <div class="comparison-side new-way">
-        <div class="side-label label-new">CheckMyRental Service</div>
-        <div class="side-content">
-          <div class="solution-icon">✅</div>
-          <h3 class="side-title">Inspection + AI Report</h3>
-          <ul class="feature-list solution-list">
-            <li class="feature-item">
-              <span class="item-icon">✅</span>
-              <span class="item-text">Professional cover page with property details</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">✅</span>
-              <span class="item-text">To-Do List separates tenant vs owner fixes</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">✅</span>
-              <span class="item-text">Photo pages with AI analysis side-by-side</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">✅</span>
-              <span class="item-text">Simple language anyone can understand</span>
-            </li>
-            <li class="feature-item">
-              <span class="item-icon">✅</span>
-              <span class="item-text">Clear urgency tags: Fix Now vs Fix Soon</span>
-            </li>
-          </ul>
-          <div class="time-badge badge-fast">
-            <span class="time-icon">📄</span>
-            <span class="time-text">Ready to share with tenants</span>
+          <!-- Tenant Section -->
+          <div class="todo-section tenant-section">
+            <div class="section-header-bar tenant-bar">
+              <span>ASK YOUR TENANT TO DO THESE (2)</span>
+            </div>
+            <div class="todo-item">
+              <div class="item-accent tenant-accent"></div>
+              <div class="item-content">
+                <div class="item-top">
+                  <span class="item-location">KITCHEN</span>
+                  <span class="priority-tag fix-soon">[FIX SOON]</span>
+                </div>
+                <p class="item-description">Dirty air filter needs replacement</p>
+                <p class="item-action">→ Buy a new air filter at any hardware store</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Owner Section -->
+          <div class="todo-section owner-section">
+            <div class="section-header-bar owner-bar">
+              <span>YOU NEED TO FIX THESE (1)</span>
+            </div>
+            <div class="todo-item">
+              <div class="item-accent owner-accent"></div>
+              <div class="item-content">
+                <div class="item-top">
+                  <span class="item-location">BATHROOM</span>
+                  <span class="priority-tag fix-now">[FIX NOW]</span>
+                </div>
+                <p class="item-description">Water damage under sink cabinet</p>
+              </div>
+            </div>
           </div>
         </div>
+        <p class="card-caption">Clear breakdown of who fixes what</p>
       </div>
-    </div>
 
-    <!-- Why It's Smarter Section -->
-    <div class="why-smarter-section">
-      <h3 class="smarter-title">What Makes Our Reports Different</h3>
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <div class="benefit-number">01</div>
-          <h4 class="benefit-title">To-Do List Page</h4>
-          <p class="benefit-text">
-            The second page of your report is a simple to-do list. It separates what your tenant can fix themselves
-            (like changing air filters) from what you need to hire someone for (like water damage).
-          </p>
-        </div>
+      <!-- Card 3: Photo Analysis -->
+      <div class="pdf-preview-card">
+        <div class="card-label">Photo Pages</div>
+        <div class="pdf-page analysis-page">
+          <!-- Page header bar -->
+          <div class="analysis-header">
+            <div class="header-left">
+              <div class="header-logo">
+                <div class="mini-house"></div>
+                <div class="mini-badge"></div>
+              </div>
+              <span class="photo-count">Photo 3 of 24</span>
+            </div>
+            <span class="header-address">1234 Oak Street, Tampa FL</span>
+          </div>
 
-        <div class="benefit-card">
-          <div class="benefit-number">02</div>
-          <h4 class="benefit-title">Easy to Understand</h4>
-          <p class="benefit-text">
-            We write in plain English, not inspector jargon. Many property owners are busy or speak English as a second language.
-            Our reports use simple words so everyone knows exactly what needs to be done.
-          </p>
-        </div>
+          <!-- Content area - matches PDF layout: photo 55%, text 45% -->
+          <div class="analysis-content">
+            <!-- Photo side (left, 55%) -->
+            <div class="photo-area">
+              <div class="photo-frame">
+                <div class="photo-shadow"></div>
+                <div class="photo-border">
+                  <img
+                    src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?w=400&h=300&fit=crop"
+                    alt="Water damage and leak under bathroom sink cabinet"
+                    class="mock-photo"
+                  />
+                </div>
+              </div>
+            </div>
 
-        <div class="benefit-card">
-          <div class="benefit-number">03</div>
-          <h4 class="benefit-title">Share With Your Tenant</h4>
-          <p class="benefit-text">
-            The tenant section of your report is designed to share. Show your tenant what they need to take care of —
-            with clear explanations like "buy a new air filter at the hardware store."
-          </p>
+            <!-- Analysis side (right, 45%) -->
+            <div class="analysis-box">
+              <div class="analysis-accent"></div>
+              <div class="analysis-text">
+                <p class="analysis-location">Location: Bathroom</p>
+                <div class="analysis-divider"></div>
+                <p class="analysis-section-title">Issues to Address:</p>
+                <p class="analysis-issue">
+                  <span class="tag owner-tag">[OWNER]</span>
+                  <span class="tag fix-now-tag">[FIX NOW]</span>
+                  <span class="issue-text">Active water leak under sink - water pooling on cabinet floor</span>
+                </p>
+                <p class="analysis-issue">
+                  <span class="tag owner-tag">[OWNER]</span>
+                  <span class="tag fix-now-tag">[FIX NOW]</span>
+                  <span class="issue-text">Water damage visible on cabinet base, possible mold risk</span>
+                </p>
+                <div class="analysis-divider"></div>
+                <p class="analysis-section-title">What To Do:</p>
+                <p class="analysis-action">• Call a plumber to fix the leak immediately</p>
+                <p class="analysis-action">• Inspect for mold after repairs</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="analysis-footer">
+            <span class="footer-date">2025-01-19</span>
+            <span class="footer-page">Page 4</span>
+          </div>
         </div>
+        <p class="card-caption">Every photo with detailed analysis</p>
       </div>
     </div>
   </div>
@@ -129,7 +238,7 @@
 
 <style>
   .pdf-showcase-section {
-    padding: 120px 20px;
+    padding: 100px 20px;
     background: linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 50%, #0a0a0a 100%);
     position: relative;
     overflow: hidden;
@@ -142,7 +251,7 @@
 
   .section-header {
     text-align: center;
-    margin-bottom: 80px;
+    margin-bottom: 60px;
   }
 
   .section-eyebrow {
@@ -155,236 +264,674 @@
   }
 
   .section-header h2 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-size: clamp(2rem, 5vw, 3rem);
     font-weight: 700;
     color: #fafafa;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     line-height: 1.2;
   }
 
   .section-subtitle {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     color: #a0a0a0;
-    max-width: 900px;
+    max-width: 600px;
     margin: 0 auto;
-    line-height: 1.7;
+    line-height: 1.6;
   }
 
-  /* Comparison Container */
-  .comparison-container {
+  /* Preview Grid */
+  .pdf-preview-grid {
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 40px;
-    margin-bottom: 100px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+  }
+
+  .pdf-preview-card {
+    display: flex;
+    flex-direction: column;
     align-items: center;
   }
 
-  .comparison-side {
-    background: rgba(26, 26, 26, 0.6);
-    border: 2px solid;
-    border-radius: 20px;
-    padding: 40px;
-    position: relative;
-    transition: transform 0.3s ease;
-  }
-
-  .old-way {
-    border-color: rgba(220, 38, 38, 0.3);
-  }
-
-  .new-way {
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.05);
-  }
-
-  .new-way:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(16, 185, 129, 0.2);
-  }
-
-  .side-label {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 6px 20px;
+  .card-label {
+    background: #e74c3c;
+    color: white;
+    padding: 6px 16px;
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
   }
 
-  .label-old {
-    background: #dc2626;
+  .card-caption {
+    margin-top: 16px;
+    color: #808080;
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  /* PDF Page Base Styling */
+  .pdf-page {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    width: 100%;
+    aspect-ratio: 8.5 / 11;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .pdf-preview-card:hover .pdf-page {
+    transform: translateY(-8px);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  }
+
+  /* ============================================
+     COVER PAGE STYLES
+     ============================================ */
+  .cover-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    background: #ffffff;
+  }
+
+  .cover-accent-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e74c3c;
+    z-index: 10;
+  }
+
+  .cover-header-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 22%;
+    background: #ecf0f1;
+    overflow: hidden;
+  }
+
+  .diagonal-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 8px,
+      rgba(220, 220, 220, 0.3) 8px,
+      rgba(220, 220, 220, 0.3) 9px
+    );
+  }
+
+  /* Gold corner accents - L shapes */
+  .corner-accent {
+    position: absolute;
+    z-index: 5;
+  }
+
+  .corner-accent.top-left {
+    top: 6px;
+    left: 6px;
+    width: 12px;
+    height: 8px;
+    border-left: 1px solid #d4af37;
+    border-top: 1px solid #d4af37;
+  }
+
+  .corner-accent.top-right {
+    top: 6px;
+    right: 6px;
+    width: 12px;
+    height: 8px;
+    border-right: 1px solid #d4af37;
+    border-top: 1px solid #d4af37;
+  }
+
+  .corner-accent.bottom-left {
+    bottom: 16px;
+    left: 6px;
+    width: 12px;
+    height: 8px;
+    border-left: 1px solid #d4af37;
+    border-bottom: 1px solid #d4af37;
+  }
+
+  .corner-accent.bottom-right {
+    bottom: 16px;
+    right: 6px;
+    width: 12px;
+    height: 8px;
+    border-right: 1px solid #d4af37;
+    border-bottom: 1px solid #d4af37;
+  }
+
+  /* Logo container */
+  .cover-logo-container {
+    margin-top: 10%;
+    margin-bottom: 4px;
+    z-index: 2;
+  }
+
+  .cover-logo-svg {
+    width: 50px;
+    height: 50px;
+    display: block;
+  }
+
+  .cover-title-section {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .cover-subtitle {
+    font-size: 5px;
+    color: #7f8c8d;
+    letter-spacing: 0.15em;
+    margin: 0 0 2px 0;
+  }
+
+  .cover-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2c3e50;
+    margin: 0;
+    letter-spacing: 0.05em;
+    text-shadow: 1px 1px 0 #e0e0e0;
+  }
+
+  .cover-title-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    margin-top: 4px;
+  }
+
+  .cover-title-line .line {
+    width: 35px;
+    height: 1px;
+    background: #d4af37;
+  }
+
+  .cover-title-line .diamond {
+    width: 4px;
+    height: 4px;
+    background: #d4af37;
+    transform: rotate(45deg);
+  }
+
+  .cover-property-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 8px;
+    width: 80%;
+    display: flex;
+    gap: 8px;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  .property-left,
+  .property-right {
+    flex: 1;
+  }
+
+  .property-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .property-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .property-divider {
+    width: 1px;
+    background: #e0e0e0;
+    align-self: stretch;
+  }
+
+  .property-icon {
+    width: 6px;
+    height: 6px;
+    background: #e74c3c;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .property-label {
+    font-size: 4px;
+    color: #95a5a6;
+    margin: 0 0 1px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .property-value {
+    font-size: 6px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .property-value-small {
+    font-size: 5px;
+    color: #2c3e50;
+    margin: 1px 0 0 0;
+  }
+
+  .cover-stats {
+    background: #ecf0f1;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 4px;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+  }
+
+  .camera-icon {
+    width: 8px;
+    height: 6px;
+    background: #7f8c8d;
+    border-radius: 1px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .camera-icon::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 3px;
+    border: 0.5px solid white;
+    border-radius: 50%;
+  }
+
+  .cover-footer {
+    position: absolute;
+    bottom: 8px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 4px;
+    color: #95a5a6;
+  }
+
+  /* ============================================
+     TO-DO LIST PAGE STYLES
+     ============================================ */
+  .todo-page {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .todo-header {
+    text-align: center;
+    margin-bottom: 12px;
+    padding-top: 16px;
+  }
+
+  .todo-subtitle {
+    font-size: 5px;
+    color: #7f8c8d;
+    margin: 0 0 4px 0;
+    letter-spacing: 0.05em;
+  }
+
+  .todo-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .todo-title-line {
+    width: 40px;
+    height: 2px;
+    background: #d4af37;
+    margin: 6px auto 0;
+  }
+
+  .todo-section {
+    margin-bottom: 10px;
+  }
+
+  .section-header-bar {
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+
+  .section-header-bar span {
+    font-size: 5px;
+    font-weight: 700;
     color: white;
+    letter-spacing: 0.03em;
   }
 
-  .label-new {
+  .tenant-bar {
+    background: #3b82f6;
+  }
+
+  .owner-bar {
+    background: #10b981;
+  }
+
+  .todo-item {
+    background: #f8f9fa;
+    border-radius: 3px;
+    display: flex;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .item-accent {
+    width: 3px;
+    flex-shrink: 0;
+  }
+
+  .tenant-accent {
+    background: #f59e0b;
+  }
+
+  .owner-accent {
+    background: #dc2626;
+  }
+
+  .item-content {
+    padding: 6px 8px;
+    flex: 1;
+  }
+
+  .item-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+  }
+
+  .item-location {
+    font-size: 5px;
+    font-weight: 700;
+    color: #7f8c8d;
+  }
+
+  .priority-tag {
+    font-size: 4px;
+    font-weight: 700;
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+
+  .fix-soon {
+    background: rgba(245, 158, 11, 0.2);
+    color: #d97706;
+  }
+
+  .fix-now {
+    background: rgba(220, 38, 38, 0.2);
+    color: #dc2626;
+  }
+
+  .item-description {
+    font-size: 6px;
+    color: #2c3e50;
+    margin: 0 0 2px 0;
+  }
+
+  .item-action {
+    font-size: 5px;
+    color: #3b82f6;
+    font-style: italic;
+    margin: 0;
+  }
+
+  /* ============================================
+     PHOTO ANALYSIS PAGE STYLES
+     ============================================ */
+  .analysis-page {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .analysis-header {
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #e74c3c;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .header-logo {
+    position: relative;
+    width: 12px;
+    height: 12px;
+  }
+
+  .mini-house {
+    width: 10px;
+    height: 10px;
+    background: #1a1a2e;
+    transform: rotate(45deg);
+  }
+
+  .mini-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -3px;
+    width: 6px;
+    height: 6px;
+    background: #e74c3c;
+    border-radius: 50%;
+  }
+
+  .photo-count {
+    font-size: 5px;
+    color: #7f8c8d;
+    font-weight: 500;
+  }
+
+  .header-address {
+    font-size: 4px;
+    color: #7f8c8d;
+  }
+
+  .analysis-content {
+    display: flex;
+    flex: 1;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+
+  /* Photo area - 55% width like in the PDF */
+  .photo-area {
+    flex: 0 0 55%;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .photo-frame {
+    position: relative;
+    width: 100%;
+  }
+
+  .photo-shadow {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: -2px;
+    bottom: -2px;
+    background: #e0e0e0;
+    border-radius: 2px;
+  }
+
+  .photo-border {
+    position: relative;
+    background: white;
+    padding: 3px;
+    border: 1px solid #d0d0d0;
+    border-radius: 2px;
+  }
+
+  .mock-photo {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 1px;
+  }
+
+  /* Analysis box - 45% width like in the PDF */
+  .analysis-box {
+    flex: 0 0 42%;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    overflow: hidden;
+    align-self: stretch;
+  }
+
+  .analysis-accent {
+    width: 3px;
+    background: #e74c3c;
+    flex-shrink: 0;
+  }
+
+  .analysis-text {
+    padding: 6px 8px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .analysis-location {
+    font-size: 6px;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: 0 0 4px 0;
+  }
+
+  .analysis-divider {
+    height: 1px;
+    background: #e0e0e0;
+    margin: 4px 0;
+  }
+
+  .analysis-section-title {
+    font-size: 5px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 3px 0;
+  }
+
+  .analysis-issue {
+    font-size: 4.5px;
+    color: #2c3e50;
+    margin: 0 0 4px 0;
+    line-height: 1.5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .issue-text {
+    flex: 1 1 100%;
+    margin-top: 1px;
+  }
+
+  .analysis-action {
+    font-size: 4.5px;
+    color: #2c3e50;
+    margin: 0 0 2px 0;
+    line-height: 1.4;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 3.5px;
+    font-weight: 700;
+    padding: 1px 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .owner-tag {
     background: #10b981;
     color: white;
   }
 
-  .side-content {
-    text-align: center;
-  }
-
-  .problem-icon,
-  .solution-icon {
-    font-size: 4rem;
-    margin-bottom: 16px;
-  }
-
-  .side-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fafafa;
-    margin-bottom: 24px;
-  }
-
-  .feature-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 24px 0;
-    text-align: left;
-  }
-
-  .feature-item {
-    display: flex;
-    align-items: start;
-    gap: 12px;
-    margin-bottom: 16px;
-    font-size: 0.95rem;
-    color: #d0d0d0;
-  }
-
-  .item-icon {
-    font-size: 1.2rem;
-    flex-shrink: 0;
-  }
-
-  .time-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
-    border-radius: 50px;
-    font-weight: 700;
-  }
-
-  .badge-slow {
-    background: rgba(220, 38, 38, 0.2);
-    border: 2px solid rgba(220, 38, 38, 0.4);
-    color: #ff6b6b;
-  }
-
-  .badge-fast {
-    background: rgba(16, 185, 129, 0.2);
-    border: 2px solid rgba(16, 185, 129, 0.4);
-    color: #34d399;
-  }
-
-  .time-icon {
-    font-size: 1.25rem;
-  }
-
-  .comparison-divider {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .divider-arrow {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
+  .tenant-tag {
+    background: #3b82f6;
     color: white;
-    font-weight: bold;
-    box-shadow: 0 8px 30px rgba(231, 76, 60, 0.4);
   }
 
-  .divider-text {
-    font-size: 0.875rem;
-    color: #e74c3c;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+  .fix-now-tag {
+    background: #dc2626;
+    color: white;
   }
 
-  /* Why Smarter Section */
-  .why-smarter-section {
-    margin-bottom: 80px;
+  .fix-soon-tag {
+    background: #f59e0b;
+    color: white;
   }
 
-  .smarter-title {
-    text-align: center;
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #fafafa;
-    margin-bottom: 60px;
+  .analysis-footer {
+    padding: 4px 10px;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #e0e0e0;
   }
 
-  .benefits-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+  .footer-date,
+  .footer-page {
+    font-size: 4px;
+    color: #95a5a6;
   }
 
-  .benefit-card {
-    background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(59, 130, 246, 0.1));
-    border: 1px solid rgba(231, 76, 60, 0.2);
-    border-radius: 16px;
-    padding: 40px;
-    position: relative;
-  }
-
-  .benefit-number {
-    font-size: 4rem;
-    font-weight: 900;
-    color: rgba(231, 76, 60, 0.2);
-    line-height: 1;
-    margin-bottom: 16px;
-  }
-
-  .benefit-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #fafafa;
-    margin-bottom: 16px;
-  }
-
-  .benefit-text {
-    color: #c0c0c0;
-    line-height: 1.7;
-  }
-
-  /* Responsive */
+  /* ============================================
+     RESPONSIVE STYLES
+     ============================================ */
   @media (max-width: 1024px) {
-    .comparison-container {
+    .pdf-preview-grid {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .pdf-preview-grid {
       grid-template-columns: 1fr;
-      gap: 30px;
-    }
-
-    .comparison-divider {
-      order: 2;
-    }
-
-    .old-way {
-      order: 1;
-    }
-
-    .new-way {
-      order: 3;
-    }
-
-    .divider-arrow {
-      transform: rotate(90deg);
+      max-width: 350px;
+      margin: 0 auto;
+      gap: 40px;
     }
   }
 
@@ -394,146 +941,34 @@
     }
 
     .section-header {
-      margin-bottom: 50px;
-    }
-
-    .section-header h2,
-    .breakdown-title,
-    .smarter-title {
-      font-size: clamp(1.75rem, 6vw, 2.5rem);
+      margin-bottom: 40px;
     }
 
     .section-subtitle {
       font-size: 1rem;
-      line-height: 1.6;
     }
 
-    .features-grid,
-    .benefits-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-
-    .comparison-container {
-      margin-bottom: 60px;
-    }
-
-    .comparison-side {
-      padding: 24px 20px;
-      border-radius: 16px;
-    }
-
-    .side-label {
-      font-size: 0.7rem;
-      padding: 5px 14px;
-    }
-
-    .problem-icon,
-    .solution-icon {
-      font-size: 3rem;
-      margin-bottom: 12px;
-    }
-
-    .side-title {
-      font-size: 1.25rem;
-      margin-bottom: 20px;
-    }
-
-    .feature-item {
-      font-size: 0.9rem;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .item-icon {
-      font-size: 1rem;
-    }
-
-    .time-badge {
-      padding: 10px 18px;
-      font-size: 0.85rem;
-    }
-
-    .time-icon {
-      font-size: 1rem;
-    }
-
-    .divider-arrow {
-      width: 50px;
-      height: 50px;
-      font-size: 1.5rem;
-    }
-
-    .divider-text {
-      font-size: 0.75rem;
-    }
-
-    .why-smarter-section {
-      margin-bottom: 50px;
-    }
-
-    .smarter-title {
-      margin-bottom: 40px;
-    }
-
-    .benefit-card {
-      padding: 28px 24px;
-      border-radius: 12px;
-    }
-
-    .benefit-number {
-      font-size: 3rem;
-      margin-bottom: 12px;
-    }
-
-    .benefit-title {
-      font-size: 1.25rem;
-      margin-bottom: 12px;
-    }
-
-    .benefit-text {
-      font-size: 0.95rem;
-      line-height: 1.6;
+    .pdf-preview-grid {
+      max-width: 300px;
     }
   }
 
-  /* Very small screens */
   @media (max-width: 360px) {
     .pdf-showcase-section {
       padding: 50px 12px;
     }
 
-    .section-header h2,
-    .smarter-title {
-      font-size: 1.5rem;
+    .pdf-preview-grid {
+      max-width: 260px;
     }
 
-    .section-subtitle {
-      font-size: 0.95rem;
+    .card-label {
+      font-size: 0.7rem;
+      padding: 5px 12px;
     }
 
-    .comparison-side {
-      padding: 20px 16px;
-    }
-
-    .side-title {
-      font-size: 1.1rem;
-    }
-
-    .feature-item {
+    .card-caption {
       font-size: 0.85rem;
-    }
-
-    .benefit-card {
-      padding: 24px 20px;
-    }
-
-    .benefit-title {
-      font-size: 1.1rem;
-    }
-
-    .benefit-text {
-      font-size: 0.9rem;
     }
   }
 </style>

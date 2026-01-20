@@ -7,10 +7,11 @@ const mainService = {
   href: "#quarterly",
   badges: ["Best Value", "Most Popular"],
   title: "Quarterly Property Documentation",
-  price: 100,
-  priceFormatted: "$100",
-  priceNote: "per visit",
-  description: "We check what matters: air filters, appliance interiors, leaks, water damage, and any visible issues. Photos delivered in a PDF report within 24 hours.",
+  priceHouse: 100,
+  priceApartment: 70,
+  priceFormatted: "$100 / $70",
+  priceNote: "house / apartment",
+  description: "We check what matters: air filters, appliance interiors, leaks, water damage, and any visible issues. Photos delivered in a PDF report same day.",
   cta: "Add to Cart",
   type: "subscription"
 };
@@ -50,8 +51,8 @@ const includedServices = [
   {
     id: "report",
     href: "#report",
-    title: "24-Hour PDF Reports",
-    description: "All photos and findings delivered in an organized PDF report within 24 hours. Easy to review and share with tenants if needed."
+    title: "Same-Day PDF Reports",
+    description: "All photos and findings delivered in an organized PDF report the same day of the visit. Easy to review and share with tenants if needed."
   }
 ];
 
@@ -62,7 +63,7 @@ const includedServices = [
   <header class="gallery-head included-header">
     <p class="eyebrow">Our Service</p>
     <h2>What's Included in Every Quarterly Documentation</h2>
-    <p>Everything you need to protect your investment—delivered every 3 months with 24-hour turnaround.</p>
+    <p>Everything you need to protect your investment—delivered every 3 months with same-day reports.</p>
   </header>
 
   <div class="photo-grid">

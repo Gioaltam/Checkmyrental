@@ -1,24 +1,129 @@
 ---
-// Process/How It Works Section
+// Process/How It Works Section - Enhanced with Animated SVG Icons
 ---
 
 <section class="process-section" id="process">
   <h2 class="process-title">How It Works</h2>
   <div class="process-steps">
+    <!-- Step 1: Submit Property Details -->
     <div class="process-step">
-      <div class="step-number">1</div>
-      <h3 class="step-title">Fill Out the Form</h3>
-      <p class="step-description">Complete our quick <a href="/onboarding" class="process-link">Get Started form</a> with your property details. We'll confirm within 2 hours and coordinate access.</p>
+      <div class="step-icon">
+        <svg class="icon-form" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Clipboard background -->
+          <rect x="15" y="12" width="50" height="58" rx="4" fill="#475569"/>
+          <!-- Paper -->
+          <rect x="20" y="20" width="40" height="46" rx="2" fill="white"/>
+          <!-- Clip -->
+          <rect x="30" y="8" width="20" height="10" rx="2" fill="#334155"/>
+          <circle cx="40" cy="13" r="3" fill="#64748b"/>
+          <!-- Form lines (checkboxes) -->
+          <rect x="25" y="28" width="8" height="8" rx="1" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
+          <rect x="25" y="40" width="8" height="8" rx="1" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
+          <rect x="25" y="52" width="8" height="8" rx="1" stroke="#cbd5e1" stroke-width="1.5" fill="none"/>
+          <!-- Text lines -->
+          <line x1="38" y1="32" x2="55" y2="32" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <line x1="38" y1="44" x2="52" y2="44" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <line x1="38" y1="56" x2="50" y2="56" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <!-- Animated checkmarks -->
+          <path class="check check-1" d="M27 32 L29 34 L33 28" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path class="check check-2" d="M27 44 L29 46 L33 40" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path class="check check-3" d="M27 56 L29 58 L33 52" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span class="step-badge">1</span>
+      </div>
+      <h3 class="step-title">Submit Property Details</h3>
+      <p class="step-description">Fill out our quick <a href="/onboarding" class="process-link">Get Started form</a> with your property address and tenant contact info. We'll review and respond within 2 hours.</p>
     </div>
+
+    <!-- Step 2: Confirm & Pay -->
     <div class="process-step">
-      <div class="step-number">2</div>
-      <h3 class="step-title">We Document Everything</h3>
-      <p class="step-description">Our systematic photography captures all visible areas and conditions. Each photo is analyzed by our custom-built AI agent, trained specifically for damage assessment and property inspections using advanced AI vision models.</p>
+      <div class="step-icon">
+        <svg class="icon-payment" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Credit card -->
+          <rect class="card" x="8" y="28" width="48" height="32" rx="4" fill="#475569"/>
+          <!-- Card stripe -->
+          <rect x="8" y="36" width="48" height="8" fill="#334155"/>
+          <!-- Card chip -->
+          <rect x="14" y="44" width="10" height="8" rx="1" fill="#d4af37"/>
+          <line x1="16" y1="48" x2="22" y2="48" stroke="#b8860b" stroke-width="1"/>
+          <!-- Card number dots -->
+          <circle cx="36" cy="52" r="1.5" fill="#94a3b8"/>
+          <circle cx="41" cy="52" r="1.5" fill="#94a3b8"/>
+          <circle cx="46" cy="52" r="1.5" fill="#94a3b8"/>
+          <circle cx="51" cy="52" r="1.5" fill="#94a3b8"/>
+          <!-- Security shield -->
+          <g class="shield-group">
+            <path class="shield" d="M58 18 L58 36 Q58 48 68 52 Q78 48 78 36 L78 18 L68 14 Z" fill="#10b981"/>
+            <path class="shield-check" d="M62 33 L66 37 L75 28" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </g>
+        </svg>
+        <span class="step-badge">2</span>
+      </div>
+      <h3 class="step-title">Confirm & Pay</h3>
+      <p class="step-description">Receive a secure payment link via email. Once paid, your visit is confirmed and scheduled.</p>
     </div>
+
+    <!-- Step 3: We Handle Scheduling -->
     <div class="process-step">
-      <div class="step-number">3</div>
-      <h3 class="step-title">Receive Your PDF Report</h3>
-      <p class="step-description">Organized photo documentation delivered via email within 24 hours.</p>
+      <div class="step-icon">
+        <svg class="icon-schedule" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Calendar -->
+          <rect x="8" y="18" width="42" height="48" rx="4" fill="#475569"/>
+          <!-- Calendar header -->
+          <rect x="8" y="18" width="42" height="14" rx="4" fill="#3b82f6"/>
+          <!-- Calendar rings -->
+          <rect x="16" y="12" width="4" height="12" rx="2" fill="#334155"/>
+          <rect x="38" y="12" width="4" height="12" rx="2" fill="#334155"/>
+          <!-- Date grid -->
+          <circle cx="18" cy="42" r="3" fill="#94a3b8"/>
+          <circle cx="29" cy="42" r="3" fill="#94a3b8"/>
+          <circle cx="40" cy="42" r="3" fill="#94a3b8"/>
+          <circle cx="18" cy="54" r="3" fill="#94a3b8"/>
+          <circle class="selected-date" cx="29" cy="54" r="5" fill="#e74c3c"/>
+          <circle cx="40" cy="54" r="3" fill="#94a3b8"/>
+          <!-- Phone -->
+          <rect x="54" y="30" width="22" height="38" rx="3" fill="#334155"/>
+          <rect x="56" y="34" width="18" height="28" rx="1" fill="#1e293b"/>
+          <!-- Phone speaker -->
+          <rect x="62" y="32" width="8" height="1" rx="0.5" fill="#475569"/>
+          <!-- Phone screen content (contact) -->
+          <circle cx="65" cy="44" r="4" fill="#64748b"/>
+          <line x1="58" y1="52" x2="72" y2="52" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+          <line x1="60" y1="56" x2="70" y2="56" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Phone pulse rings -->
+          <circle class="ring ring-1" cx="65" cy="49" r="10" stroke="#3b82f6" stroke-width="1.5" fill="none"/>
+          <circle class="ring ring-2" cx="65" cy="49" r="15" stroke="#3b82f6" stroke-width="1" fill="none"/>
+        </svg>
+        <span class="step-badge">3</span>
+      </div>
+      <h3 class="step-title">We Handle Scheduling</h3>
+      <p class="step-description">We contact your tenant directly to coordinate access. Just give them a heads up about the visit—we handle the rest.</p>
+    </div>
+
+    <!-- Step 4: Report Delivered Same Day -->
+    <div class="process-step">
+      <div class="step-icon">
+        <svg class="icon-report" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background document (shadow) -->
+          <rect class="doc-shadow" x="22" y="14" width="40" height="54" rx="3" fill="#334155"/>
+          <!-- Main document -->
+          <rect class="doc" x="18" y="10" width="40" height="54" rx="3" fill="white" stroke="#475569" stroke-width="2"/>
+          <!-- Photo thumbnails -->
+          <rect class="photo photo-1" x="24" y="18" width="14" height="11" rx="2" fill="#e74c3c"/>
+          <rect class="photo photo-2" x="42" y="18" width="14" height="11" rx="2" fill="#3b82f6"/>
+          <!-- Text lines -->
+          <line x1="24" y1="36" x2="52" y2="36" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
+          <line x1="24" y1="43" x2="48" y2="43" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <line x1="24" y1="50" x2="52" y2="50" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <line x1="24" y1="57" x2="40" y2="57" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+          <!-- Checkmark badge -->
+          <circle class="badge-bg" cx="58" cy="58" r="12" fill="#10b981"/>
+          <path class="badge-check" d="M52 58 L56 62 L65 53" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span class="step-badge">4</span>
+      </div>
+      <h3 class="step-title">Report Delivered Same Day</h3>
+      <p class="step-description">Receive a professional PDF report with photos, findings, and a clear to-do list—all within hours of the visit.</p>
     </div>
   </div>
   <p class="process-disclaimer">
@@ -75,21 +180,16 @@
 
   .process-steps {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
     position: relative;
     z-index: 1;
     margin-bottom: 3rem;
   }
 
-  /*
-   * CSS Custom Properties for line positioning
-   * Grid: 3 columns with 3rem gap = each card is (100% - 6rem) / 3 wide
-   * First card center: half card width = (100% - 6rem) / 6
-   * Last card center: 100% - half card width = 100% - (100% - 6rem) / 6
-   */
+  /* CSS Custom Properties for line positioning */
   .process-steps {
-    --card-width: calc((100% - 6rem) / 3);
+    --card-width: calc((100% - 6rem) / 4);
     --first-center: calc(var(--card-width) / 2);
     --last-center: calc(100% - var(--card-width) / 2);
   }
@@ -98,11 +198,9 @@
   .process-steps::before {
     content: '';
     position: absolute;
-    /* Position at center of step-number: padding-top (2.5rem = 40px) + half of number height (35px) = 75px */
     top: 75px;
-    /* Line starts after first number (center + half number width 35px) to before last number */
-    left: calc(var(--first-center) + 45px);
-    right: calc(var(--first-center) + 45px);
+    left: calc(var(--first-center) + 50px);
+    right: calc(var(--first-center) + 50px);
     height: 3px;
     background: linear-gradient(90deg,
       rgba(100, 116, 139, 0.2) 0%,
@@ -129,8 +227,7 @@
 
   @keyframes dotMove {
     0% {
-      /* Start just after first step number (center + half number width + small gap) */
-      left: calc((100% - 6rem) / 6 + 45px - 6px);
+      left: calc((100% - 6rem) / 8 + 50px - 6px);
       opacity: 0;
       transform: scale(0.6);
     }
@@ -139,7 +236,6 @@
       transform: scale(1);
     }
     50% {
-      /* Center between cards (middle of the line) */
       left: calc(50% - 6px);
       transform: scale(1.2);
       box-shadow: 0 0 20px rgba(231, 76, 60, 1),
@@ -150,8 +246,7 @@
       transform: scale(1);
     }
     100% {
-      /* End just before last step number */
-      left: calc(100% - (100% - 6rem) / 6 - 45px - 6px);
+      left: calc(100% - (100% - 6rem) / 8 - 50px - 6px);
       opacity: 0;
       transform: scale(0.6);
     }
@@ -159,8 +254,8 @@
 
   .process-step {
     text-align: center;
-    padding: 2.5rem;
-    padding-top: 2.5rem;
+    padding: 2rem;
+    padding-top: 2rem;
     background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.04) 0%,
       rgba(255, 255, 255, 0.02) 50%,
@@ -221,48 +316,191 @@
       0 0 0 1px rgba(231, 76, 60, 0.15);
   }
 
-  .step-number {
+  /* Step Icon Container */
+  .step-icon {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 70px;
-    height: 70px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, #475569 0%, #334155 100%);
-    color: white;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    box-shadow:
-      0 8px 20px rgba(0, 0, 0, 0.2),
-      inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition:
-      transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-      box-shadow 0.3s ease,
-      background 0.3s ease;
-    position: relative;
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1.5rem;
     z-index: 2;
   }
 
-  .process-step:hover .step-number {
-    transform: scale(1.15) rotate(5deg);
-    box-shadow:
-      0 15px 40px rgba(0, 0, 0, 0.3),
-      0 0 30px rgba(231, 76, 60, 0.2);
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  .step-icon svg {
+    width: 80px;
+    height: 80px;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  body.light-mode .step-number {
+  .process-step:hover .step-icon svg {
+    transform: scale(1.1);
+  }
+
+  /* Step Badge (small number) */
+  .step-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #475569 0%, #334155 100%);
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+  }
+
+  .process-step:hover .step-badge {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    transform: scale(1.1);
+  }
+
+  body.light-mode .step-badge {
     background: linear-gradient(135deg, #e74c3c, #ff6b6b);
   }
 
-  body.light-mode .process-step:hover .step-number {
-    background: linear-gradient(135deg, #c0392b, #e74c3c);
+  /* ============================================
+     ICON ANIMATIONS
+     ============================================ */
+
+  /* Form Icon - Checkmarks appearing */
+  .icon-form .check {
+    opacity: 0;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
   }
 
+  .icon-form .check-1 {
+    animation: checkDraw 0.4s ease-out 0.5s forwards;
+  }
+  .icon-form .check-2 {
+    animation: checkDraw 0.4s ease-out 1.2s forwards;
+  }
+  .icon-form .check-3 {
+    animation: checkDraw 0.4s ease-out 1.9s forwards;
+  }
+
+  @keyframes checkDraw {
+    0% {
+      opacity: 1;
+      stroke-dashoffset: 20;
+    }
+    100% {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Payment Icon - Shield pulse */
+  .icon-payment .shield-group {
+    transform-origin: 68px 35px;
+    animation: shieldPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes shieldPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  .icon-payment .card {
+    animation: cardFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes cardFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-2px); }
+  }
+
+  /* Schedule Icon - Phone rings pulse */
+  .icon-schedule .ring {
+    opacity: 0;
+    transform-origin: center;
+  }
+
+  .icon-schedule .ring-1 {
+    animation: ringPulse 2s ease-out infinite;
+  }
+
+  .icon-schedule .ring-2 {
+    animation: ringPulse 2s ease-out 0.4s infinite;
+  }
+
+  @keyframes ringPulse {
+    0% {
+      opacity: 0.6;
+      transform: scale(0.8);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.3);
+    }
+  }
+
+  .icon-schedule .selected-date {
+    animation: datePulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes datePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+  }
+
+  /* Report Icon - Document slide up, badge pop */
+  .icon-report .doc {
+    animation: docFloat 3s ease-in-out infinite;
+  }
+
+  @keyframes docFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+
+  .icon-report .photo-1 {
+    animation: photoShimmer 2.5s ease-in-out infinite;
+  }
+
+  .icon-report .photo-2 {
+    animation: photoShimmer 2.5s ease-in-out 0.3s infinite;
+  }
+
+  @keyframes photoShimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .icon-report .badge-bg {
+    animation: badgePop 2s ease-in-out infinite;
+  }
+
+  @keyframes badgePop {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .icon-report .badge-check {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    animation: badgeCheckDraw 0.6s ease-out 0.5s forwards;
+  }
+
+  @keyframes badgeCheckDraw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* ============================================
+     TEXT STYLES
+     ============================================ */
+
   .step-title {
-    font-size: 1.4rem;
-    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.95);
   }
@@ -274,8 +512,8 @@
   .step-description {
     color: rgba(255, 255, 255, 0.75);
     font-weight: 400;
-    line-height: 1.7;
-    font-size: 1rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
   }
 
   body.light-mode .step-description {
@@ -322,13 +560,16 @@
     color: rgba(0, 0, 0, 0.6);
   }
 
-  @media (max-width: 1024px) {
-    .process-steps {
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    }
-  }
+  /* ============================================
+     RESPONSIVE
+     ============================================ */
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1200px) {
+    .process-steps {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 2rem;
+    }
+
     .process-steps::before,
     .process-steps::after {
       display: none;
@@ -349,12 +590,41 @@
       grid-template-columns: 1fr;
       gap: 2rem;
     }
+
+    .step-icon {
+      width: 90px;
+      height: 90px;
+    }
+
+    .step-icon svg {
+      width: 70px;
+      height: 70px;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .process-section::before,
-    .process-steps::after {
+    .process-steps::after,
+    .icon-form .check,
+    .icon-payment .shield-group,
+    .icon-payment .card,
+    .icon-schedule .ring,
+    .icon-schedule .selected-date,
+    .icon-report .doc,
+    .icon-report .photo-1,
+    .icon-report .photo-2,
+    .icon-report .badge-bg,
+    .icon-report .badge-check {
       animation: none;
+    }
+
+    .icon-form .check {
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+
+    .icon-report .badge-check {
+      stroke-dashoffset: 0;
     }
   }
 </style>

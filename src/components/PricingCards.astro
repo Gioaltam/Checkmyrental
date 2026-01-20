@@ -5,10 +5,11 @@
 const quarterlyPlan = {
   id: "quarterly",
   title: "Quarterly Property Documentation",
-  price: 100,
-  priceFormatted: "$100",
-  priceNote: "per visit",
-  description: "Complete property documentation every 3 months with 24-hour photo-rich reports",
+  priceHouse: 100,
+  priceApartment: 70,
+  priceFormatted: "$100 / $70",
+  priceNote: "house / apartment per visit",
+  description: "Complete property documentation every 3 months with detailed photo reports delivered same day",
   features: [
     "Interior Condition Documentation",
     "Exterior Condition Documentation",
@@ -16,7 +17,7 @@ const quarterlyPlan = {
     "Plumbing System Documentation",
     "Appliance Condition Photos",
     "Kitchen Equipment Documentation",
-    "24-Hour Report Delivery",
+    "Same-Day Reports",
     "Photo Documentation",
     "PDF Report Download",
     "Quarterly Scheduling"
@@ -24,6 +25,28 @@ const quarterlyPlan = {
   type: "subscription",
   featured: true
 };
+
+// Add-on services
+const addOnServices = [
+  {
+    id: "move-in-out",
+    title: "Move-In / Move-Out",
+    price: 200,
+    priceFormatted: "$200",
+    priceNote: "per inspection",
+    description: "Comprehensive documentation at tenant transitions to protect your security deposit decisions",
+    type: "one-time"
+  },
+  {
+    id: "annual",
+    title: "Annual Inspection",
+    price: 200,
+    priceFormatted: "$200",
+    priceNote: "per inspection",
+    description: "Thorough yearly property assessment for long-term maintenance planning",
+    type: "one-time"
+  }
+];
 
 ---
 
@@ -37,10 +60,19 @@ const quarterlyPlan = {
         <p class="card-description">{quarterlyPlan.description}</p>
       </div>
 
-      <div class="price-display">
-        <span class="price-amount">{quarterlyPlan.priceFormatted}</span>
-        <span class="price-note">{quarterlyPlan.priceNote}</span>
+      <div class="price-display-tiered">
+        <div class="price-tier">
+          <span class="price-amount">$100</span>
+          <span class="price-label">per house</span>
+          <span class="price-condition">under 1,400 sq ft</span>
+        </div>
+        <span class="price-divider">/</span>
+        <div class="price-tier">
+          <span class="price-amount secondary">$70</span>
+          <span class="price-label">per apartment</span>
+        </div>
       </div>
+      <p class="sqft-note">Larger homes? <a href="/#contact">Contact us</a> for a custom quote.</p>
 
       <ul class="features-list">
         {quarterlyPlan.features.map(feature => (
@@ -61,6 +93,23 @@ const quarterlyPlan = {
       </a>
 
       <p class="volume-discount-note">Managing 6+ properties? Contact us for custom pricing.</p>
+    </div>
+  </div>
+
+  <!-- Add-On Services -->
+  <div class="addon-section">
+    <h3 class="addon-header">Additional Services</h3>
+    <p class="addon-subheader">One-time inspections available when you need them</p>
+    <div class="addon-grid">
+      {addOnServices.map(service => (
+        <div class="pricing-card addon">
+          <span class="addon-badge">One-Time</span>
+          <h4>{service.title}</h4>
+          <div class="addon-price">{service.priceFormatted}</div>
+          <p class="addon-description">{service.description}</p>
+          <a href="/#contact" class="add-to-cart-btn">Request Quote</a>
+        </div>
+      ))}
     </div>
   </div>
 
@@ -197,13 +246,89 @@ const quarterlyPlan = {
     border-bottom-color: rgba(0, 0, 0, 0.1);
   }
 
+  .price-display-tiered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .price-tier {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .price-divider {
+    font-size: 2rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  body.light-mode .price-divider {
+    color: rgba(0, 0, 0, 0.2);
+  }
+
   .price-amount {
-    font-size: 4rem;
+    font-size: 3.5rem;
     font-weight: 800;
     background: linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    line-height: 1;
+  }
+
+  .price-amount.secondary {
+    font-size: 3rem;
+  }
+
+  .price-label {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    margin-top: 0.5rem;
+  }
+
+  body.light-mode .price-label {
+    color: #666666;
+  }
+
+  .price-condition {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+    margin-top: 0.25rem;
+  }
+
+  body.light-mode .price-condition {
+    color: #888888;
+  }
+
+  .sqft-note {
+    text-align: center;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .sqft-note a {
+    color: #e74c3c;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .sqft-note a:hover {
+    text-decoration: underline;
+  }
+
+  body.light-mode .sqft-note {
+    color: #666666;
+    border-bottom-color: rgba(0, 0, 0, 0.1);
   }
 
   .price-note {
@@ -440,7 +565,19 @@ const quarterlyPlan = {
     }
 
     .price-amount {
-      font-size: 3rem;
+      font-size: 2.5rem;
+    }
+
+    .price-amount.secondary {
+      font-size: 2.25rem;
+    }
+
+    .price-display-tiered {
+      gap: 1rem;
+    }
+
+    .price-divider {
+      font-size: 1.5rem;
     }
 
     .addon-grid {

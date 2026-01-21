@@ -11,16 +11,46 @@ const quarterlyPlan = {
   priceNote: "house / apartment per visit",
   description: "Complete property documentation every 3 months with detailed photo reports delivered same day",
   features: [
-    "Interior Condition Documentation",
-    "Exterior Condition Documentation",
-    "HVAC System Photography",
-    "Plumbing System Documentation",
-    "Appliance Condition Photos",
-    "Kitchen Equipment Documentation",
-    "Same-Day Reports",
-    "Photo Documentation",
-    "PDF Report Download",
-    "Quarterly Scheduling"
+    {
+      name: "Interior Condition Documentation",
+      valueProposition: "Capture wall conditions, flooring wear, and fixture status to establish baseline documentation that protects against unfair damage claims."
+    },
+    {
+      name: "Exterior Condition Documentation",
+      valueProposition: "Document siding, roof visible areas, landscaping, and structural elements to track weather damage and tenant maintenance compliance."
+    },
+    {
+      name: "HVAC System Photography",
+      valueProposition: "Visual records of filters, vents, and unit condition help identify maintenance neglect early and prove system state at move-in."
+    },
+    {
+      name: "Plumbing System Documentation",
+      valueProposition: "Document visible pipes, water heater, and fixtures to catch leaks early and establish pre-existing conditions."
+    },
+    {
+      name: "Appliance Condition Photos",
+      valueProposition: "Detailed appliance documentation prevents disputes over normal wear vs. tenant damage when it's time to assess the security deposit."
+    },
+    {
+      name: "Kitchen Equipment Documentation",
+      valueProposition: "Capture cabinet interiors, countertops, and fixtures—high-traffic areas where damage disputes are most common."
+    },
+    {
+      name: "Same-Day Reports",
+      valueProposition: "Get your documentation within hours, not days. Fast turnaround means you can address issues before they escalate."
+    },
+    {
+      name: "Photo Documentation",
+      valueProposition: "High-resolution, timestamped photos provide legally defensible evidence for any property condition disputes."
+    },
+    {
+      name: "PDF Report Download",
+      valueProposition: "Professional, organized reports ready to share with tenants, property managers, or use in legal proceedings."
+    },
+    {
+      name: "Quarterly Scheduling",
+      valueProposition: "Consistent 3-month intervals catch problems early—before a small leak becomes water damage or minor wear becomes major repairs."
+    }
   ],
   type: "subscription",
   featured: true
@@ -75,12 +105,37 @@ const addOnServices = [
       <p class="sqft-note">Larger homes? <a href="/#contact">Contact us</a> for a custom quote.</p>
 
       <ul class="features-list">
-        {quarterlyPlan.features.map(feature => (
-          <li>
-            <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-            </svg>
-            {feature}
+        {quarterlyPlan.features.map((feature, index) => (
+          <li class="feature-accordion">
+            <button
+              class="feature-header"
+              aria-expanded="false"
+              data-index={index}
+              onclick={`
+                const btn = this;
+                const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+                const content = btn.nextElementSibling;
+                document.querySelectorAll('.feature-header').forEach(h => {
+                  if (h !== btn) {
+                    h.setAttribute('aria-expanded', 'false');
+                    h.nextElementSibling.hidden = true;
+                  }
+                });
+                btn.setAttribute('aria-expanded', !isExpanded);
+                content.hidden = isExpanded;
+              `}
+            >
+              <svg class="check-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span class="feature-name">{feature.name}</span>
+              <svg class="chevron-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </button>
+            <div class="feature-content" hidden>
+              <p class="value-proposition">{feature.valueProposition}</p>
+            </div>
           </li>
         ))}
       </ul>
@@ -347,12 +402,6 @@ const addOnServices = [
   }
 
   .features-list li {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 0;
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 1.05rem;
     opacity: 0;
     animation: featureFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
@@ -380,8 +429,48 @@ const addOnServices = [
     }
   }
 
-  body.light-mode .features-list li {
+  /* Feature Accordion Styles */
+  .feature-accordion {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .feature-accordion:last-child {
+    border-bottom: none;
+  }
+
+  body.light-mode .feature-accordion {
+    border-bottom-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .feature-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.875rem 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.05rem;
+    text-align: left;
+    transition: color 0.2s ease;
+  }
+
+  .feature-header:hover {
+    color: rgba(255, 255, 255, 1);
+  }
+
+  body.light-mode .feature-header {
     color: #333333;
+  }
+
+  body.light-mode .feature-header:hover {
+    color: #1a1a1a;
+  }
+
+  .feature-name {
+    flex: 1;
   }
 
   .check-icon {
@@ -392,8 +481,50 @@ const addOnServices = [
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .features-list li:hover .check-icon {
+  .feature-header:hover .check-icon {
     transform: scale(1.2) rotate(10deg);
+  }
+
+  .chevron-icon {
+    width: 18px;
+    height: 18px;
+    color: rgba(255, 255, 255, 0.5);
+    flex-shrink: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.light-mode .chevron-icon {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  .feature-header[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  .feature-content {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease;
+    opacity: 0;
+  }
+
+  .feature-content:not([hidden]) {
+    max-height: 200px;
+    opacity: 1;
+  }
+
+  .value-proposition {
+    padding: 0 0 1rem 2.25rem;
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  body.light-mode .value-proposition {
+    color: #666666;
   }
 
   .add-to-cart-btn {
@@ -589,3 +720,4 @@ const addOnServices = [
     }
   }
 </style>
+

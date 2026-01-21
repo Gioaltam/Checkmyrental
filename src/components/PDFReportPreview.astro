@@ -68,6 +68,11 @@
             </div>
           </div>
 
+          <!-- Inspection Type Badge -->
+          <div class="cover-inspection-badge">
+            QUARTERLY INSPECTION
+          </div>
+
           <!-- Property info card -->
           <div class="cover-property-card">
             <div class="property-left">
@@ -103,6 +108,12 @@
           <div class="cover-stats">
             <div class="camera-icon"></div>
             <span>This report contains 24 detailed inspection photographs with professional analysis</span>
+          </div>
+
+          <!-- Executive Summary -->
+          <div class="cover-executive-summary">
+            <p class="summary-count">3 ACTION ITEMS IDENTIFIED</p>
+            <p class="summary-breakdown">(2 tenant | 1 owner)</p>
           </div>
 
           <!-- Bottom corner accents -->
@@ -565,6 +576,37 @@
     height: 3px;
     border: 0.5px solid white;
     border-radius: 50%;
+  }
+
+  /* Inspection Type Badge */
+  .cover-inspection-badge {
+    background: #e74c3c;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 10px;
+    font-size: 5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  /* Executive Summary */
+  .cover-executive-summary {
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .summary-count {
+    font-size: 6px;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: 0 0 2px 0;
+  }
+
+  .summary-breakdown {
+    font-size: 5px;
+    color: #7f8c8d;
+    margin: 0;
   }
 
   .cover-footer {

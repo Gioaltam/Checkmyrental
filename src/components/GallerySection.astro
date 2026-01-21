@@ -22,37 +22,97 @@ const includedServices = [
     id: "interior",
     href: "#interior",
     title: "Visible Damage Check",
-    description: "We look for broken windows, damaged walls, ceiling stains, and any visible issues that need your attention. Problems are photographed and documented."
+    description: "We look for broken windows, damaged walls, ceiling stains, and any visible issues that need your attention. Problems are photographed and documented.",
+    valueProposition: {
+      headline: "Catch Problems Before They Escalate",
+      benefits: [
+        "Small issues become expensive repairs when left unchecked",
+        "Documented proof of property condition at each visit",
+        "Clear evidence for security deposit decisions",
+        "Early detection of tenant neglect or misuse"
+      ],
+      statistic: "Unreported damage costs landlords an average of $3,000+ per incident"
+    }
   },
   {
     id: "hvac",
     href: "#hvac",
     title: "Air Filter Inspection",
-    description: "We check if air filters are being changed regularly. Dirty filters are photographed so you can follow up with tenants about proper maintenance."
+    description: "We check if air filters are being changed regularly. Dirty filters are photographed so you can follow up with tenants about proper maintenance.",
+    valueProposition: {
+      headline: "Protect Your HVAC Investment",
+      benefits: [
+        "Dirty filters increase energy bills by up to 15%",
+        "Clogged filters can cut HVAC lifespan in half",
+        "Photo evidence helps enforce lease maintenance terms",
+        "Prevents costly emergency HVAC repairs"
+      ],
+      statistic: "HVAC replacement costs $5,000-$10,000 on average"
+    }
   },
   {
     id: "plumbing",
     href: "#plumbing",
     title: "Leak & Water Damage Check",
-    description: "We look under sinks, around toilets, and near water heaters for leaks or water damage. Early detection helps prevent costly repairs."
+    description: "We look under sinks, around toilets, and near water heaters for leaks or water damage. Early detection helps prevent costly repairs.",
+    valueProposition: {
+      headline: "Stop Water Damage Before It Spreads",
+      benefits: [
+        "Water damage leads to mold within 24-48 hours",
+        "We check hidden areas tenants often overlook",
+        "Quarterly checks catch slow leaks early",
+        "Prevents structural damage and health hazards"
+      ],
+      statistic: "Water damage is the #2 most common homeowner insurance claim"
+    }
   },
   {
     id: "appliances",
     href: "#appliances",
     title: "Appliance Interior Photos",
-    description: "We photograph inside the oven, dishwasher, refrigerator, and other appliances to verify tenants are maintaining them properly."
+    description: "We photograph inside the oven, dishwasher, refrigerator, and other appliances to verify tenants are maintaining them properly.",
+    valueProposition: {
+      headline: "Hold Tenants Accountable for Appliance Care",
+      benefits: [
+        "Interior photos reveal true maintenance habits",
+        "Clear evidence for security deposit deductions",
+        "Track appliance condition over time",
+        "Distinguish abuse from normal wear and tear"
+      ],
+      statistic: "Appliance replacements cost $400-$2,500 each"
+    }
   },
   {
     id: "exterior",
     href: "#exterior",
     title: "Exterior Walk-Around",
-    description: "Quick exterior check for obvious issues like damaged siding, broken fixtures, or yard concerns that may need attention."
+    description: "Quick exterior check for obvious issues like damaged siding, broken fixtures, or yard concerns that may need attention.",
+    valueProposition: {
+      headline: "Monitor Curb Appeal & Structural Issues",
+      benefits: [
+        "Document landscaping and yard maintenance compliance",
+        "Catch weather-related damage early",
+        "Track seasonal wear on exterior elements",
+        "Maintain property value and neighborhood standards"
+      ],
+      statistic: "Exterior neglect can reduce property value by 5-10%"
+    }
   },
   {
     id: "report",
     href: "#report",
     title: "Same-Day PDF Reports",
-    description: "All photos and findings delivered in an organized PDF report the same day of the visit. Easy to review and share with tenants if needed."
+    description: "All photos and findings delivered in an organized PDF report the same day of the visit. Easy to review and share with tenants if needed.",
+    valueProposition: {
+      headline: "Professional Documentation When You Need It",
+      benefits: [
+        "Reports delivered same day—no waiting",
+        "Organized sections for easy review",
+        "Shareable with property managers or attorneys",
+        "Timestamped photos for legal protection"
+      ],
+      statistic: "Each report contains 50+ timestamped photos"
+    }
   }
 ];
 
@@ -68,96 +128,142 @@ const includedServices = [
 
   <div class="photo-grid">
     {includedServices.map(service => (
-      <a class="photo-item" href={service.href} data-service={service.id} aria-label={`Learn more about ${service.title}`} target={service.external ? "_blank" : undefined} rel={service.external ? "noopener noreferrer" : undefined}>
-        <!-- Animated icon backgrounds -->
-        <div class="animated-bg" role="img" aria-label={`${service.title} icon`}>
-          {service.id === 'interior' && (
-            <div class="icon-interior">
-              <div class="room-walls"></div>
-              <div class="room-floor"></div>
-              <div class="door-frame-small"></div>
-              <div class="window-frame"></div>
-              <div class="damage-marker wall-crack"></div>
-              <div class="damage-marker floor-stain"></div>
-              <div class="inspection-beam"></div>
-            </div>
-          )}
+      <div class="photo-item-wrapper" data-service={service.id}>
+        <button
+          class="photo-item"
+          data-service-toggle={service.id}
+          aria-expanded="false"
+          aria-controls={`value-prop-${service.id}`}
+          aria-label={`Learn more about ${service.title}`}
+        >
+          <!-- Animated icon backgrounds -->
+          <div class="animated-bg" role="img" aria-label={`${service.title} icon`}>
+            {service.id === 'interior' && (
+              <div class="icon-interior">
+                <div class="room-walls"></div>
+                <div class="room-floor"></div>
+                <div class="door-frame-small"></div>
+                <div class="window-frame"></div>
+                <div class="damage-marker wall-crack"></div>
+                <div class="damage-marker floor-stain"></div>
+                <div class="inspection-beam"></div>
+              </div>
+            )}
 
-          {service.id === 'exterior' && (
-            <div class="icon-exterior">
-              <div class="house-exterior"></div>
-              <div class="house-roof-ext"></div>
-              <div class="foundation"></div>
-              <div class="siding-panel" style="animation-delay: 0s;"></div>
-              <div class="siding-panel" style="animation-delay: 0.3s;"></div>
-              <div class="siding-panel" style="animation-delay: 0.6s;"></div>
-              <div class="damage-indicator ext-crack"></div>
-              <div class="inspection-light"></div>
-            </div>
-          )}
+            {service.id === 'exterior' && (
+              <div class="icon-exterior">
+                <div class="house-exterior"></div>
+                <div class="house-roof-ext"></div>
+                <div class="foundation"></div>
+                <div class="siding-panel" style="animation-delay: 0s;"></div>
+                <div class="siding-panel" style="animation-delay: 0.3s;"></div>
+                <div class="siding-panel" style="animation-delay: 0.6s;"></div>
+                <div class="damage-indicator ext-crack"></div>
+                <div class="inspection-light"></div>
+              </div>
+            )}
 
-          {service.id === 'hvac' && (
-            <div class="icon-hvac">
-              <div class="hvac-unit"></div>
-              <div class="fan-blade blade-1"></div>
-              <div class="fan-blade blade-2"></div>
-              <div class="fan-blade blade-3"></div>
-              <div class="fan-blade blade-4"></div>
-              <div class="air-particle" style="animation-delay: 0s;"></div>
-              <div class="air-particle" style="animation-delay: 0.3s;"></div>
-              <div class="air-particle" style="animation-delay: 0.6s;"></div>
-              <div class="air-particle" style="animation-delay: 0.9s;"></div>
-            </div>
-          )}
+            {service.id === 'hvac' && (
+              <div class="icon-hvac">
+                <div class="hvac-unit"></div>
+                <div class="fan-blade blade-1"></div>
+                <div class="fan-blade blade-2"></div>
+                <div class="fan-blade blade-3"></div>
+                <div class="fan-blade blade-4"></div>
+                <div class="air-particle" style="animation-delay: 0s;"></div>
+                <div class="air-particle" style="animation-delay: 0.3s;"></div>
+                <div class="air-particle" style="animation-delay: 0.6s;"></div>
+                <div class="air-particle" style="animation-delay: 0.9s;"></div>
+              </div>
+            )}
 
-          {service.id === 'plumbing' && (
-            <div class="icon-plumbing">
-              <div class="pipe-vertical"></div>
-              <div class="pipe-horizontal"></div>
-              <div class="pipe-elbow"></div>
-              <div class="faucet-base"></div>
-              <div class="faucet-spout"></div>
-              <div class="faucet-handle"></div>
-              <div class="water-drop" style="animation-delay: 0s;"></div>
-              <div class="water-drop" style="animation-delay: 0.6s;"></div>
-              <div class="water-drop" style="animation-delay: 1.2s;"></div>
-              <div class="water-flow"></div>
-              <div class="leak-indicator"></div>
-            </div>
-          )}
+            {service.id === 'plumbing' && (
+              <div class="icon-plumbing">
+                <div class="pipe-vertical"></div>
+                <div class="pipe-horizontal"></div>
+                <div class="pipe-elbow"></div>
+                <div class="faucet-base"></div>
+                <div class="faucet-spout"></div>
+                <div class="faucet-handle"></div>
+                <div class="water-drop" style="animation-delay: 0s;"></div>
+                <div class="water-drop" style="animation-delay: 0.6s;"></div>
+                <div class="water-drop" style="animation-delay: 1.2s;"></div>
+                <div class="water-flow"></div>
+                <div class="leak-indicator"></div>
+              </div>
+            )}
 
-          {service.id === 'appliances' && (
-            <div class="icon-appliances">
-              <div class="oven-body"></div>
-              <div class="oven-door"></div>
-              <div class="oven-window"></div>
-              <div class="oven-handle"></div>
-              <div class="heat-wave" style="animation-delay: 0s;"></div>
-              <div class="heat-wave" style="animation-delay: 0.3s;"></div>
-              <div class="heat-wave" style="animation-delay: 0.6s;"></div>
-              <div class="temp-indicator"></div>
-            </div>
-          )}
+            {service.id === 'appliances' && (
+              <div class="icon-appliances">
+                <div class="oven-body"></div>
+                <div class="oven-door"></div>
+                <div class="oven-window"></div>
+                <div class="oven-handle"></div>
+                <div class="heat-wave" style="animation-delay: 0s;"></div>
+                <div class="heat-wave" style="animation-delay: 0.3s;"></div>
+                <div class="heat-wave" style="animation-delay: 0.6s;"></div>
+                <div class="temp-indicator"></div>
+              </div>
+            )}
 
-          {service.id === 'report' && (
-            <div class="icon-report">
-              <div class="report-page"></div>
-              <div class="report-header"></div>
-              <div class="report-line line-1"></div>
-              <div class="report-line line-2"></div>
-              <div class="report-line line-3"></div>
-              <div class="report-photo"></div>
-              <div class="report-checkmark"></div>
-            </div>
-          )}
+            {service.id === 'report' && (
+              <div class="icon-report">
+                <div class="report-page"></div>
+                <div class="report-header"></div>
+                <div class="report-line line-1"></div>
+                <div class="report-line line-2"></div>
+                <div class="report-line line-3"></div>
+                <div class="report-photo"></div>
+                <div class="report-checkmark"></div>
+              </div>
+            )}
+          </div>
+
+          <div class="photo-label">
+            <h3>{service.title}</h3>
+            <p>{service.description}</p>
+            <span class="expand-indicator">
+              <span class="expand-text">Learn More</span>
+              <svg class="expand-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+              </svg>
+            </span>
+          </div>
+        </button>
+
+        <!-- Expanded Value Proposition Panel -->
+        <div
+          class="value-prop-panel"
+          id={`value-prop-${service.id}`}
+          hidden
+          aria-hidden="true"
+        >
+          <div class="value-prop-content">
+            <h4 class="value-prop-headline">{service.valueProposition.headline}</h4>
+
+            <ul class="value-prop-benefits">
+              {service.valueProposition.benefits.map(benefit => (
+                <li>
+                  <svg class="benefit-check" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  {benefit}
+                </li>
+              ))}
+            </ul>
+
+            {service.valueProposition.statistic && (
+              <div class="value-prop-stat">
+                <svg class="stat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18"/>
+                  <path d="M18 9l-5 5-4-4-4 4"/>
+                </svg>
+                <span class="stat-text">{service.valueProposition.statistic}</span>
+              </div>
+            )}
+          </div>
         </div>
-
-        <div class="photo-label">
-          <h3>{service.title}</h3>
-          <p>{service.description}</p>
-          {service.cta && <span class="card-cta">{service.cta}</span>}
-        </div>
-      </a>
+      </div>
     ))}
   </div>
 
@@ -2408,5 +2514,320 @@ const includedServices = [
       animation: none;
     }
   }
+
+  /* ====== Service Card Expansion Styles ====== */
+  .photo-item-wrapper {
+    position: relative;
+  }
+
+  /* Convert .photo-item to button styles */
+  button.photo-item {
+    border: none;
+    font-family: inherit;
+    text-align: left;
+    width: 100%;
+  }
+
+  .photo-item:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.5);
+  }
+
+  .photo-item:focus-visible {
+    box-shadow: 0 0 0 3px #e74c3c;
+  }
+
+  /* Expand Indicator */
+  .expand-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .expand-chevron {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .photo-item[aria-expanded="true"] .expand-chevron {
+    transform: rotate(180deg);
+  }
+
+  .photo-item[aria-expanded="true"] .expand-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+
+  .photo-item:hover .expand-indicator {
+    color: #ff6b6b;
+  }
+
+  /* Value Proposition Panel */
+  .value-prop-panel {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg,
+      rgba(231, 76, 60, 0.08) 0%,
+      rgba(100, 116, 139, 0.04) 100%);
+    border-radius: 0 0 24px 24px;
+    margin-top: -24px;
+    position: relative;
+    z-index: 5;
+  }
+
+  .value-prop-panel:not([hidden]) {
+    border-top: 1px solid rgba(231, 76, 60, 0.2);
+  }
+
+  body.light-mode .value-prop-panel {
+    background: linear-gradient(135deg,
+      rgba(231, 76, 60, 0.06) 0%,
+      rgba(100, 116, 139, 0.02) 100%);
+  }
+
+  .value-prop-content {
+    padding: 2rem;
+    position: relative;
+  }
+
+  /* Headline */
+  .value-prop-headline {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 1.5rem;
+    line-height: 1.3;
+  }
+
+  body.light-mode .value-prop-headline {
+    color: #1a1a1a;
+  }
+
+  /* Benefits List */
+  .value-prop-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+  }
+
+  .value-prop-benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  body.light-mode .value-prop-benefits li {
+    color: #4a4a4a;
+  }
+
+  .benefit-check {
+    width: 20px;
+    height: 20px;
+    color: #e74c3c;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* Statistic */
+  .value-prop-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 12px;
+    border-left: 3px solid #e74c3c;
+    margin-top: 1rem;
+  }
+
+  body.light-mode .value-prop-stat {
+    background: rgba(231, 76, 60, 0.08);
+  }
+
+  .stat-icon {
+    width: 24px;
+    height: 24px;
+    color: #e74c3c;
+    flex-shrink: 0;
+  }
+
+  .stat-text {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+  }
+
+  body.light-mode .stat-text {
+    color: #1a1a1a;
+  }
+
+  /* Expanded State Styling */
+  .photo-item-wrapper.expanded .photo-item {
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -4px 30px rgba(231, 76, 60, 0.15);
+  }
+
+  .photo-item-wrapper.expanded {
+    z-index: 10;
+  }
+
+  /* Animation for panel content */
+  .value-prop-content > * {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .value-prop-panel:not([hidden]) .value-prop-content > * {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .value-prop-panel:not([hidden]) .value-prop-content > *:nth-child(1) { transition-delay: 0.1s; }
+  .value-prop-panel:not([hidden]) .value-prop-content > *:nth-child(2) { transition-delay: 0.15s; }
+  .value-prop-panel:not([hidden]) .value-prop-content > *:nth-child(3) { transition-delay: 0.2s; }
+
+  /* Mobile Responsive for value props */
+  @media (max-width: 768px) {
+    .value-prop-content {
+      padding: 1.5rem;
+    }
+
+    .value-prop-headline {
+      font-size: 1.1rem;
+    }
+
+    .value-prop-benefits li {
+      font-size: 0.9rem;
+    }
+
+    .value-prop-stat {
+      padding: 0.875rem 1rem;
+    }
+
+    .stat-text {
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Reduced Motion for value props */
+  @media (prefers-reduced-motion: reduce) {
+    .value-prop-panel,
+    .expand-chevron,
+    .value-prop-content > * {
+      transition: none;
+    }
+  }
 </style>
+
+<script is:inline>
+  (function() {
+    function initServiceCards() {
+      const wrappers = document.querySelectorAll('.photo-item-wrapper');
+
+      wrappers.forEach(function(wrapper) {
+        const toggle = wrapper.querySelector('[data-service-toggle]');
+        const serviceId = toggle?.getAttribute('data-service-toggle');
+        const panel = document.getElementById('value-prop-' + serviceId);
+
+        if (!toggle || !panel) return;
+
+        // Skip if already initialized
+        if (toggle.dataset.initialized) return;
+        toggle.dataset.initialized = 'true';
+
+        function handleClick(e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+
+          // Close all other panels (accordion behavior)
+          document.querySelectorAll('.photo-item-wrapper').forEach(function(otherWrapper) {
+            if (otherWrapper !== wrapper) {
+              const otherToggle = otherWrapper.querySelector('[data-service-toggle]');
+              const otherId = otherToggle?.getAttribute('data-service-toggle');
+              const otherPanel = document.getElementById('value-prop-' + otherId);
+              if (otherToggle && otherPanel) {
+                otherToggle.setAttribute('aria-expanded', 'false');
+                otherPanel.hidden = true;
+                otherPanel.setAttribute('aria-hidden', 'true');
+                otherPanel.style.maxHeight = '0';
+                otherWrapper.classList.remove('expanded');
+              }
+            }
+          });
+
+          // Toggle current panel
+          if (isExpanded) {
+            toggle.setAttribute('aria-expanded', 'false');
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            panel.style.maxHeight = '0';
+            wrapper.classList.remove('expanded');
+          } else {
+            toggle.setAttribute('aria-expanded', 'true');
+            panel.hidden = false;
+            panel.setAttribute('aria-hidden', 'false');
+            // Force reflow to get accurate scrollHeight
+            panel.offsetHeight;
+            panel.style.maxHeight = panel.scrollHeight + 'px';
+            wrapper.classList.add('expanded');
+
+            // Smooth scroll into view if needed
+            setTimeout(function() {
+              wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 300);
+          }
+        }
+
+        toggle.addEventListener('click', handleClick);
+      });
+    }
+
+    // Handle Escape key globally (only add once)
+    if (!window._serviceCardsEscapeInit) {
+      window._serviceCardsEscapeInit = true;
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.photo-item-wrapper').forEach(function(wrapper) {
+            const toggle = wrapper.querySelector('[data-service-toggle]');
+            const serviceId = toggle?.getAttribute('data-service-toggle');
+            const panel = document.getElementById('value-prop-' + serviceId);
+            if (toggle && panel && !panel.hidden) {
+              toggle.setAttribute('aria-expanded', 'false');
+              panel.hidden = true;
+              panel.setAttribute('aria-hidden', 'true');
+              panel.style.maxHeight = '0';
+              wrapper.classList.remove('expanded');
+              toggle.focus();
+            }
+          });
+        }
+      });
+    }
+
+    // Initialize immediately if DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initServiceCards);
+    } else {
+      initServiceCards();
+    }
+
+    // Re-initialize on Astro page transitions
+    document.addEventListener('astro:page-load', initServiceCards);
+  })();
+</script>
 

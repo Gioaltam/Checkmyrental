@@ -10,6 +10,11 @@
       <div class="pipeline-line"></div>
       <div class="pipeline-glow"></div>
       <div class="pipeline-dot"></div>
+      <!-- Node points at each card position -->
+      <div class="pipeline-node node-1"></div>
+      <div class="pipeline-node node-2"></div>
+      <div class="pipeline-node node-3"></div>
+      <div class="pipeline-node node-4"></div>
     </div>
     <div class="pipeline-chevrons">
       <span class="chevron">‹</span>
@@ -110,8 +115,8 @@
         </svg>
         <span class="step-badge">3</span>
       </div>
-      <h3 class="step-title">We Handle Scheduling</h3>
-      <p class="step-description">We contact your tenant directly to coordinate access. Just give them a heads up about the visit—we handle the rest.</p>
+      <h3 class="step-title">Inform Your Tenant</h3>
+      <p class="step-description">Let your tenant know you've signed up for quarterly inspections. They'll receive a consent form and appointment link to schedule a convenient time.</p>
     </div>
 
     <!-- Step 4: Report Delivered Same Day -->
@@ -593,13 +598,17 @@
     top: 50%;
     left: calc(3rem + 12.5%);
     right: calc(3rem + 12.5%);
-    height: 4px;
+    height: 40px;
     transform: translateY(-50%);
   }
 
   .pipeline-line {
     position: absolute;
-    inset: 0;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    transform: translateY(-50%);
     background: linear-gradient(90deg,
       #e74c3c 0%,
       #3b82f6 33%,
@@ -608,24 +617,27 @@
     );
     border-radius: 2px;
     opacity: 0.3;
+    overflow: hidden;
   }
 
   .pipeline-glow {
     position: absolute;
-    top: -2px;
-    bottom: -2px;
+    top: 50%;
+    height: 8px;
+    transform: translateY(-50%);
     left: 0;
-    width: 80px;
+    width: 60px;
     background: linear-gradient(90deg,
       transparent 0%,
-      #e74c3c 20%,
-      #3b82f6 50%,
-      #10b981 80%,
+      rgba(231, 76, 60, 0.8) 30%,
+      rgba(59, 130, 246, 0.8) 50%,
+      rgba(16, 185, 129, 0.8) 70%,
       transparent 100%
     );
     border-radius: 4px;
-    filter: blur(2px);
-    animation: glowMove 3s ease-in-out infinite;
+    filter: blur(3px);
+    animation: glowMove 3s linear infinite;
+    clip-path: inset(0 0 0 0);
   }
 
   .pipeline-dot {
@@ -638,23 +650,55 @@
     border-radius: 50%;
     transform: translate(-50%, -50%);
     box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5);
-    animation: dotMove 3s ease-in-out infinite;
+    animation: dotMove 3s linear infinite;
+    z-index: 2;
+  }
+
+  /* Node points at each card position */
+  .pipeline-node {
+    position: absolute;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    background: rgba(100, 116, 139, 0.3);
+    border: 2px solid rgba(100, 116, 139, 0.5);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+
+  /* Position nodes at card centers */
+  .node-1 { left: 0%; }
+  .node-2 { left: 33.33%; }
+  .node-3 { left: 66.66%; }
+  .node-4 { left: 100%; }
+
+  /* Static node colors - no animation */
+  .node-1 {
+    background: #e74c3c;
+    border-color: #e74c3c;
+  }
+  .node-2 {
+    background: #3b82f6;
+    border-color: #3b82f6;
+  }
+  .node-3 {
+    background: #10b981;
+    border-color: #10b981;
+  }
+  .node-4 {
+    background: #f59e0b;
+    border-color: #f59e0b;
   }
 
   @keyframes glowMove {
     0% {
-      left: -80px;
-      opacity: 0;
-    }
-    10% {
-      opacity: 1;
-    }
-    90% {
-      opacity: 1;
+      left: -30px;
+      opacity: 0.8;
     }
     100% {
-      left: calc(100% + 80px);
-      opacity: 0;
+      left: calc(100% - 30px);
+      opacity: 0.8;
     }
   }
 
@@ -664,11 +708,13 @@
       background: #e74c3c;
       box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5);
     }
-    33% {
+    33.33% {
+      left: 33.33%;
       background: #3b82f6;
       box-shadow: 0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5);
     }
-    66% {
+    66.66% {
+      left: 66.66%;
       background: #10b981;
       box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5);
     }
@@ -815,6 +861,24 @@
     .pipeline-dot {
       left: 50%;
       background: #3b82f6;
+    }
+
+    /* Nodes are already static with their colors, no changes needed */
+    .node-1 {
+      background: #e74c3c;
+      border-color: #e74c3c;
+    }
+    .node-2 {
+      background: #3b82f6;
+      border-color: #3b82f6;
+    }
+    .node-3 {
+      background: #10b981;
+      border-color: #10b981;
+    }
+    .node-4 {
+      background: #f59e0b;
+      border-color: #f59e0b;
     }
 
     .chevron {

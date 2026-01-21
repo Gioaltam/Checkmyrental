@@ -274,7 +274,7 @@ def analyze_images(images: List[Path]) -> Dict[str, str]:
 
 # ============== PDF Report Generation ==============
 
-def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "") -> None:
+def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "", inspection_type: str = "Quarterly") -> None:
     """Generate executive-quality PDF report with sophisticated design
 
     Args:
@@ -442,7 +442,22 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     c.rotate(45)
     c.rect(-3, -3, 6, 6, fill=1, stroke=0)
     c.restoreState()
-    
+
+    # Inspection Type Badge
+    badge_text = inspection_type.upper() + " INSPECTION"
+    badge_width = c.stringWidth(badge_text, "Helvetica-Bold", 10) + 30
+    badge_x = (width - badge_width) / 2
+    badge_y = height - 285
+
+    # Badge background
+    c.setFillColor(accent_color)
+    c.roundRect(badge_x, badge_y, badge_width, 22, 11, fill=1, stroke=0)
+
+    # Badge text
+    c.setFillColor(HexColor('#ffffff'))
+    c.setFont("Helvetica-Bold", 10)
+    c.drawCentredString(width / 2, badge_y + 7, badge_text)
+
     # Property Information Card - elevated design
     card_y = height - 480
     card_height = 180
@@ -537,6 +552,36 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     stats_text = f"This report contains {len(images)} detailed inspection photographs with professional analysis"
     stats_width = c.stringWidth(stats_text, "Helvetica", 11)
     c.drawString((width - stats_width) / 2 + 10, stats_y + 18, stats_text)
+
+    # Executive Summary - Issues found
+    if vision_results and ACTION_ITEMS_AVAILABLE:
+        issues = parse_issues_from_vision_results(vision_results)
+        tenant_count = len(issues.get('tenant', []))
+        owner_count = len(issues.get('owner', []))
+        total_issues = tenant_count + owner_count
+
+        summary_y = stats_y - 45
+
+        if total_issues == 0:
+            # Green "No Issues" indicator
+            c.setFillColor(HexColor('#10b981'))
+            summary_text = "NO ACTION ITEMS IDENTIFIED"
+        else:
+            # Show issue count
+            c.setFillColor(accent_color)
+            summary_text = f"{total_issues} ACTION ITEM{'S' if total_issues != 1 else ''} IDENTIFIED"
+
+        c.setFont("Helvetica-Bold", 12)
+        summary_width = c.stringWidth(summary_text, "Helvetica-Bold", 12)
+        c.drawString((width - summary_width) / 2, summary_y, summary_text)
+
+        # Show breakdown if there are issues
+        if total_issues > 0:
+            c.setFont("Helvetica", 10)
+            c.setFillColor(text_secondary)
+            breakdown = f"({tenant_count} tenant | {owner_count} owner)"
+            breakdown_width = c.stringWidth(breakdown, "Helvetica", 10)
+            c.drawString((width - breakdown_width) / 2, summary_y - 18, breakdown)
 
     # Bottom corner accents
     c.setFillColor(gold_accent)
@@ -959,7 +1004,7 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     c.save()
     print(f"PDF generated: {out_pdf}")
 
-def build_reports(source_path: Path, client_name: str, property_address: str, gallery_name: str = None) -> Dict[str, Any]:
+def build_reports(source_path: Path, client_name: str, property_address: str, gallery_name: str = None, inspection_type: str = "Quarterly") -> Dict[str, Any]:
     """
     Main function to build inspection reports from source (ZIP or directory)
     Returns artifacts dictionary with path to generated PDF
@@ -969,6 +1014,7 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
         client_name: Client/inspector name
         property_address: Property address
         gallery_name: Optional gallery name
+        inspection_type: Type of inspection (Quarterly, Move-In, Move-Out, Annual)
     """
     try:
         print(f"\n{'='*60}")
@@ -1012,7 +1058,7 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
 
         # Generate PDF report directly in outputs folder
         try:
-            generate_pdf(property_address, images, pdf_path, vision_results, client_name)
+            generate_pdf(property_address, images, pdf_path, vision_results, client_name, inspection_type)
             print(f"\nPDF report saved: {pdf_path}")
         except Exception as e:
             print(f"ERROR generating PDF: {e}")
@@ -1046,6 +1092,8 @@ def main():
     parser.add_argument('--dir', type=str, help='Path to directory containing photos')
     parser.add_argument('--client', type=str, default='Property Owner', help='Client/Inspector name')
     parser.add_argument('--property', type=str, default='Property Address', help='Property address')
+    parser.add_argument('--type', type=str, default='Quarterly',
+                        help='Inspection type (Quarterly, Move-In, Move-Out, Annual)')
 
     args = parser.parse_args()
 
@@ -1076,7 +1124,7 @@ def main():
 
     try:
         # Generate PDF report only
-        artifacts = build_reports(source, args.client, property_address)
+        artifacts = build_reports(source, args.client, property_address, inspection_type=args.type)
         print("\nReport generation complete!")
         print(f"PDF saved to: {artifacts['pdf_path']}")
 

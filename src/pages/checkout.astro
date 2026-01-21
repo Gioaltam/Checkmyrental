@@ -2,133 +2,243 @@
 import LandingLayout from '../layouts/LandingLayout.astro';
 import Header from '../components/Header.astro';
 import LandingFooter from '../components/LandingFooter.astro';
+
+// Payment configuration - UPDATE THESE WITH YOUR ACTUAL SQUARE PAYMENT LINKS
+const SQUARE_LINKS = {
+  quarterlyHouse: "SQUARE_PAYMENT_LINK_HOUSE_107",      // $100 + 7% tax = $107
+  quarterlyApartment: "SQUARE_PAYMENT_LINK_APT_74_90",  // $70 + 7% tax = $74.90
+  moveInOut: "SQUARE_PAYMENT_LINK_MOVEINOUT_214",       // $200 + 7% tax = $214
+  annual: "SQUARE_PAYMENT_LINK_ANNUAL_214"              // $200 + 7% tax = $214
+};
+
+const ZELLE_EMAIL = "giovannigomes11@gmail.com";
 ---
 
 <LandingLayout
-  title="Checkout | CheckMyRental"
-  description="Complete your purchase for professional property inspection services"
+  title="Book Your Inspection | CheckMyRental"
+  description="Book your professional property inspection - select service, enter details, and pay securely"
 >
   <Header />
 
   <main id="main-content" class="checkout-main" tabindex="-1">
     <div class="checkout-container">
+      <div class="checkout-header">
+        <h1>Book Your Inspection</h1>
+        <p>Select your service, enter property details, and choose your payment method</p>
+      </div>
+
       <div class="checkout-content">
-        <!-- Order Summary -->
-        <div class="order-summary-section">
-          <h1>Order Summary</h1>
-          <div id="checkout-items" class="checkout-items">
-            <!-- Cart items will be inserted here by JavaScript -->
-          </div>
-
-          <div class="empty-cart-message" id="empty-cart-message">
-            <div class="empty-icon">🛒</div>
-            <p>Your cart is empty</p>
-            <a href="/pricing" class="btn-back-to-pricing">View Pricing</a>
-          </div>
-
-          <div class="order-totals" id="order-totals">
-            <div class="total-row subtotal">
-              <span>Subtotal</span>
-              <span id="checkout-subtotal">$0.00</span>
-            </div>
-            <div class="total-row tax">
-              <span>Tax (estimated)</span>
-              <span id="checkout-tax">$0.00</span>
-            </div>
-            <div class="total-row total">
-              <span>Total</span>
-              <span id="checkout-total">$0.00</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Checkout Form -->
+        <!-- Left: Form -->
         <div class="checkout-form-section">
-          <h2>Contact Information</h2>
           <form id="checkout-form" class="checkout-form">
-            <div class="form-group">
-              <label for="full-name">Full Name <span class="required">*</span></label>
-              <input type="text" id="full-name" name="full_name" required />
+
+            <!-- Step 1: Service Selection -->
+            <div class="form-section">
+              <h2><span class="step-number">1</span> Select Service</h2>
+              <div class="service-options">
+                <label class="service-option">
+                  <input type="radio" name="service_type" value="quarterly" checked />
+                  <div class="service-card">
+                    <div class="service-header">
+                      <span class="service-name">Quarterly Property Documentation</span>
+                      <span class="service-badge popular">Most Popular</span>
+                    </div>
+                    <p class="service-desc">Complete property documentation every 3 months with detailed photo reports</p>
+                    <div class="service-price-range">$70 - $100 <span class="price-note">depending on property type</span></div>
+                  </div>
+                </label>
+
+                <label class="service-option">
+                  <input type="radio" name="service_type" value="moveInOut" />
+                  <div class="service-card">
+                    <div class="service-header">
+                      <span class="service-name">Move-In / Move-Out Inspection</span>
+                      <span class="service-badge">One-Time</span>
+                    </div>
+                    <p class="service-desc">Comprehensive documentation at tenant transitions</p>
+                    <div class="service-price-range">$200</div>
+                  </div>
+                </label>
+
+                <label class="service-option">
+                  <input type="radio" name="service_type" value="annual" />
+                  <div class="service-card">
+                    <div class="service-header">
+                      <span class="service-name">Annual Inspection</span>
+                      <span class="service-badge">One-Time</span>
+                    </div>
+                    <p class="service-desc">Thorough yearly property assessment for long-term maintenance planning</p>
+                    <div class="service-price-range">$200</div>
+                  </div>
+                </label>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label for="email">Email <span class="required">*</span></label>
-              <input type="email" id="email" name="email" required />
+            <!-- Step 2: Property Type (shown only for Quarterly) -->
+            <div class="form-section" id="property-type-section">
+              <h2><span class="step-number">2</span> Property Type</h2>
+              <div class="property-type-options">
+                <label class="property-type-option">
+                  <input type="radio" name="property_type" value="house" checked />
+                  <div class="property-type-card">
+                    <span class="property-icon">🏠</span>
+                    <span class="property-label">House</span>
+                    <span class="property-price">$100</span>
+                    <span class="property-note">under 1,400 sq ft</span>
+                  </div>
+                </label>
+
+                <label class="property-type-option">
+                  <input type="radio" name="property_type" value="apartment" />
+                  <div class="property-type-card">
+                    <span class="property-icon">🏢</span>
+                    <span class="property-label">Apartment</span>
+                    <span class="property-price">$70</span>
+                    <span class="property-note">any size</span>
+                  </div>
+                </label>
+              </div>
+              <p class="larger-home-note">Larger home? <a href="mailto:info@checkmyrental.io">Contact us</a> for a custom quote.</p>
             </div>
 
-            <div class="form-group">
-              <label for="phone">Phone Number <span class="required">*</span></label>
-              <input type="tel" id="phone" name="phone" required />
+            <!-- Step 3: Contact Information -->
+            <div class="form-section">
+              <h2><span class="step-number" id="contact-step">3</span> Contact Information</h2>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="full-name">Full Name <span class="required">*</span></label>
+                  <input type="text" id="full-name" name="full_name" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="email">Email <span class="required">*</span></label>
+                  <input type="email" id="email" name="email" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="phone">Phone Number <span class="required">*</span></label>
+                  <input type="tel" id="phone" name="phone" required />
+                </div>
+              </div>
             </div>
 
-            <h2>Property Information</h2>
-
-            <div class="form-group">
-              <label for="property-address">Property Address <span class="required">*</span></label>
-              <input type="text" id="property-address" name="property_address" required />
-            </div>
-
-            <div class="form-row">
+            <!-- Step 4: Property Information -->
+            <div class="form-section">
+              <h2><span class="step-number" id="property-step">4</span> Property Details</h2>
               <div class="form-group">
-                <label for="city">City <span class="required">*</span></label>
-                <input type="text" id="city" name="city" required />
+                <label for="property-address">Property Address <span class="required">*</span></label>
+                <input type="text" id="property-address" name="property_address" required />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="city">City <span class="required">*</span></label>
+                  <input type="text" id="city" name="city" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="state">State <span class="required">*</span></label>
+                  <input type="text" id="state" name="state" value="FL" required />
+                </div>
+
+                <div class="form-group">
+                  <label for="zip">ZIP Code <span class="required">*</span></label>
+                  <input type="text" id="zip" name="zip" required />
+                </div>
               </div>
 
               <div class="form-group">
-                <label for="state">State <span class="required">*</span></label>
-                <input type="text" id="state" name="state" placeholder="FL" required />
+                <label for="access-instructions">Property Access Instructions</label>
+                <textarea id="access-instructions" name="access_instructions" rows="3" placeholder="Gate codes, key location, tenant contact info, etc."></textarea>
+              </div>
+            </div>
+
+            <!-- Step 5: Scheduling -->
+            <div class="form-section">
+              <h2><span class="step-number" id="schedule-step">5</span> Preferred Date</h2>
+              <div class="form-group">
+                <label for="preferred-date">Select a date <span class="required">*</span></label>
+                <input type="date" id="preferred-date" name="preferred_date" required />
+                <small class="form-hint">We'll confirm availability within 24 hours. Minimum 48 hours notice required.</small>
               </div>
 
               <div class="form-group">
-                <label for="zip">ZIP Code <span class="required">*</span></label>
-                <input type="text" id="zip" name="zip" required />
+                <label for="notes">Additional Notes</label>
+                <textarea id="notes" name="notes" rows="2" placeholder="Any special requests?"></textarea>
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="access-instructions">Property Access Instructions</label>
-              <textarea id="access-instructions" name="access_instructions" rows="4" placeholder="Gate codes, key location, tenant contact info, etc."></textarea>
-            </div>
-
-            <h2>Scheduling Preference</h2>
-
-            <div class="form-group">
-              <label for="preferred-date">Preferred Documentation Visit Date <span class="required">*</span></label>
-              <input type="date" id="preferred-date" name="preferred_date" required />
-              <small class="form-hint">We'll confirm availability within 24 hours</small>
-            </div>
-
-            <div class="form-group">
-              <label for="notes">Additional Notes</label>
-              <textarea id="notes" name="notes" rows="3" placeholder="Any special requests or concerns?"></textarea>
-            </div>
-
+            <!-- Terms -->
             <div class="form-group checkbox-group">
               <label class="checkbox-label">
                 <input type="checkbox" id="terms" name="terms" required />
                 <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
               </label>
             </div>
+          </form>
+        </div>
 
-            <div class="form-actions">
-              <a href="/pricing" class="btn btn-secondary">Back to Pricing</a>
-              <button type="submit" class="btn btn-primary">
-                <span class="btn-icon">🔒</span>
-                Complete Order
-              </button>
+        <!-- Right: Order Summary & Payment -->
+        <div class="order-summary-section">
+          <div class="order-summary-card">
+            <h3>Order Summary</h3>
+
+            <div class="summary-line-item">
+              <span id="summary-service">Quarterly - House</span>
+              <span id="summary-price">$100.00</span>
             </div>
 
-            <div id="form-error" class="form-error"></div>
-            <div id="form-success" class="form-success"></div>
-          </form>
+            <div class="summary-divider"></div>
 
-          <div class="payment-info">
-            <p class="payment-note">
-              <strong>Payment:</strong> We'll send you a secure payment link after confirming your documentation visit appointment.
-            </p>
-            <p class="payment-note">
-              <strong>Questions?</strong> Contact us at <a href="mailto:info@checkmyrental.io">info@checkmyrental.io</a> or <a href="tel:8132520524">(813) 252-0524</a>
-            </p>
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="summary-subtotal">$100.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax (7%)</span>
+              <span id="summary-tax">$7.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="summary-total">$107.00</span>
+            </div>
+          </div>
+
+          <!-- Payment Options -->
+          <div class="payment-section">
+            <h3><span class="step-number" id="payment-step">6</span> Choose Payment Method</h3>
+
+            <button type="button" id="pay-card-btn" class="payment-btn card-btn">
+              <span class="payment-icon">💳</span>
+              <span class="payment-text">
+                <span class="payment-label">Pay with Card</span>
+                <span class="payment-sublabel">Secure checkout via Square</span>
+              </span>
+              <span class="payment-amount" id="card-amount">$107.00</span>
+            </button>
+
+            <div class="payment-divider">
+              <span>or</span>
+            </div>
+
+            <button type="button" id="pay-zelle-btn" class="payment-btn zelle-btn">
+              <span class="payment-icon">🏦</span>
+              <span class="payment-text">
+                <span class="payment-label">Pay with Zelle</span>
+                <span class="payment-sublabel">No fees - send directly</span>
+              </span>
+            </button>
+
+            <div id="zelle-instructions" class="zelle-instructions" style="display: none;">
+              <p><strong>Send payment to:</strong></p>
+              <p class="zelle-email">{ZELLE_EMAIL}</p>
+              <p class="zelle-note">Include your name and property address in the memo. We'll confirm receipt and schedule your inspection.</p>
+            </div>
+          </div>
+
+          <div class="contact-help">
+            <p>Questions? <a href="mailto:info@checkmyrental.io">info@checkmyrental.io</a></p>
+            <p><a href="tel:8132520524">(813) 252-0524</a></p>
           </div>
         </div>
       </div>
@@ -150,193 +260,49 @@ import LandingFooter from '../components/LandingFooter.astro';
   }
 
   .checkout-container {
-    max-width: 1400px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 3rem;
+    padding: 2rem 2rem 4rem;
+  }
+
+  .checkout-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .checkout-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  body.light-mode .checkout-header h1 {
+    color: #1a1a1a;
+  }
+
+  .checkout-header p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.1rem;
+  }
+
+  body.light-mode .checkout-header p {
+    color: #666;
   }
 
   .checkout-content {
     display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 3rem;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
     align-items: start;
   }
 
-  /* Order Summary Section */
-  .order-summary-section {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 2.5rem;
-    position: sticky;
-    top: 100px;
-  }
-
-  body.light-mode .order-summary-section {
-    background: white;
-    border-color: rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  }
-
-  .order-summary-section h1 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    color: white;
-  }
-
-  body.light-mode .order-summary-section h1 {
-    color: #1a1a1a;
-  }
-
-  .checkout-items {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
-  }
-
-  .checkout-item {
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-  }
-
-  body.light-mode .checkout-item {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.08);
-  }
-
-  .checkout-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
-    margin-bottom: 0.75rem;
-  }
-
-  .checkout-item-title {
-    font-weight: 700;
-    color: white;
-    font-size: 1.1rem;
-  }
-
-  body.light-mode .checkout-item-title {
-    color: #1a1a1a;
-  }
-
-  .checkout-item-price {
-    font-weight: 700;
-    color: #e74c3c;
-    font-size: 1.25rem;
-  }
-
-  .checkout-item-description {
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-  }
-
-  body.light-mode .checkout-item-description {
-    color: rgba(0, 0, 0, 0.6);
-  }
-
-  .checkout-item-quantity {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.85rem;
-  }
-
-  body.light-mode .checkout-item-quantity {
-    color: rgba(0, 0, 0, 0.5);
-  }
-
-  .empty-cart-message {
-    text-align: center;
-    padding: 3rem 2rem;
-    display: none;
-  }
-
-  .empty-cart-message.show {
-    display: block;
-  }
-
-  .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    opacity: 0.3;
-  }
-
-  .empty-cart-message p {
-    color: rgba(255, 255, 255, 0.6);
-    margin-bottom: 1.5rem;
-  }
-
-  body.light-mode .empty-cart-message p {
-    color: rgba(0, 0, 0, 0.5);
-  }
-
-  .btn-back-to-pricing {
-    display: inline-block;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    color: white;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: all 0.3s;
-  }
-
-  .btn-back-to-pricing:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-  }
-
-  .order-totals {
-    border-top: 2px solid rgba(255, 255, 255, 0.1);
-    padding-top: 1.5rem;
-    display: none;
-  }
-
-  .order-totals.show {
-    display: block;
-  }
-
-  body.light-mode .order-totals {
-    border-top-color: rgba(0, 0, 0, 0.1);
-  }
-
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.8);
-  }
-
-  body.light-mode .total-row {
-    color: rgba(0, 0, 0, 0.7);
-  }
-
-  .total-row.total {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  body.light-mode .total-row.total {
-    color: #1a1a1a;
-    border-top-color: rgba(0, 0, 0, 0.1);
-  }
-
-  /* Checkout Form Section */
+  /* Form Section */
   .checkout-form-section {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    padding: 2.5rem;
+    padding: 2rem;
   }
 
   body.light-mode .checkout-form-section {
@@ -345,25 +311,250 @@ import LandingFooter from '../components/LandingFooter.astro';
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
 
-  .checkout-form-section h2 {
-    font-size: 1.5rem;
+  .form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .form-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 1rem;
+  }
+
+  body.light-mode .form-section {
+    border-bottom-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .form-section h2 {
+    font-size: 1.25rem;
     font-weight: 700;
-    margin: 2rem 0 1.5rem 0;
     color: white;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
   }
 
-  .checkout-form-section h2:first-child {
-    margin-top: 0;
-  }
-
-  body.light-mode .checkout-form-section h2 {
+  body.light-mode .form-section h2 {
     color: #1a1a1a;
   }
 
-  .checkout-form {
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  /* Service Options */
+  .service-options {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
+  }
+
+  .service-option input {
+    display: none;
+  }
+
+  .service-card {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .service-option input:checked + .service-card {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+  }
+
+  .service-card:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+  }
+
+  body.light-mode .service-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  body.light-mode .service-option input:checked + .service-card {
+    background: rgba(231, 76, 60, 0.05);
+    border-color: #e74c3c;
+  }
+
+  .service-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .service-name {
+    font-weight: 700;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  body.light-mode .service-name {
+    color: #1a1a1a;
+  }
+
+  .service-badge {
+    padding: 0.25rem 0.75rem;
+    background: rgba(100, 116, 139, 0.2);
+    color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .service-badge.popular {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+  }
+
+  body.light-mode .service-badge {
+    background: rgba(0, 0, 0, 0.08);
+    color: #666;
+  }
+
+  body.light-mode .service-badge.popular {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+  }
+
+  .service-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+
+  body.light-mode .service-desc {
+    color: #666;
+  }
+
+  .service-price-range {
+    font-weight: 700;
+    color: #e74c3c;
+    font-size: 1.1rem;
+  }
+
+  .service-price-range .price-note {
+    font-weight: 400;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  body.light-mode .service-price-range .price-note {
+    color: #888;
+  }
+
+  /* Property Type Options */
+  .property-type-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .property-type-option input {
+    display: none;
+  }
+
+  .property-type-card {
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .property-type-option input:checked + .property-type-card {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+  }
+
+  .property-type-card:hover {
+    border-color: rgba(231, 76, 60, 0.5);
+  }
+
+  body.light-mode .property-type-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  body.light-mode .property-type-option input:checked + .property-type-card {
+    background: rgba(231, 76, 60, 0.05);
+    border-color: #e74c3c;
+  }
+
+  .property-icon {
+    font-size: 2rem;
+  }
+
+  .property-label {
+    font-weight: 700;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  body.light-mode .property-label {
+    color: #1a1a1a;
+  }
+
+  .property-price {
+    font-weight: 700;
+    color: #e74c3c;
+    font-size: 1.5rem;
+  }
+
+  .property-note {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+  }
+
+  body.light-mode .property-note {
+    color: #888;
+  }
+
+  .larger-home-note {
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+  }
+
+  .larger-home-note a {
+    color: #e74c3c;
+  }
+
+  body.light-mode .larger-home-note {
+    color: #666;
+  }
+
+  #property-type-section.hidden {
+    display: none;
+  }
+
+  /* Form Fields */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
   }
 
   .form-row {
@@ -393,7 +584,8 @@ import LandingFooter from '../components/LandingFooter.astro';
   }
 
   .form-group input,
-  .form-group textarea {
+  .form-group textarea,
+  .form-group select {
     padding: 0.875rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.15);
@@ -405,14 +597,16 @@ import LandingFooter from '../components/LandingFooter.astro';
   }
 
   body.light-mode .form-group input,
-  body.light-mode .form-group textarea {
+  body.light-mode .form-group textarea,
+  body.light-mode .form-group select {
     background: rgba(0, 0, 0, 0.03);
     border-color: rgba(0, 0, 0, 0.15);
     color: #1a1a1a;
   }
 
   .form-group input:focus,
-  .form-group textarea:focus {
+  .form-group textarea:focus,
+  .form-group select:focus {
     outline: none;
     border-color: #e74c3c;
     background: rgba(255, 255, 255, 0.08);
@@ -420,7 +614,8 @@ import LandingFooter from '../components/LandingFooter.astro';
   }
 
   body.light-mode .form-group input:focus,
-  body.light-mode .form-group textarea:focus {
+  body.light-mode .form-group textarea:focus,
+  body.light-mode .form-group select:focus {
     background: white;
     border-color: #e74c3c;
   }
@@ -461,291 +656,458 @@ import LandingFooter from '../components/LandingFooter.astro';
     text-decoration: underline;
   }
 
-  .checkbox-label a:hover {
-    color: #ff6b6b;
+  /* Order Summary Section */
+  .order-summary-section {
+    position: sticky;
+    top: 100px;
   }
 
-  .form-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
+  .order-summary-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .btn {
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 12px;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+  body.light-mode .order-summary-card {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
 
-  .btn-primary {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  .order-summary-card h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
     color: white;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-    flex: 1;
+    margin-bottom: 1.5rem;
   }
 
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-  }
-
-  .btn-secondary {
-    background: rgba(100, 116, 139, 0.15);
-    color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(100, 116, 139, 0.3);
-  }
-
-  .btn-secondary:hover {
-    background: rgba(100, 116, 139, 0.25);
-  }
-
-  body.light-mode .btn-secondary {
-    background: rgba(0, 0, 0, 0.05);
+  body.light-mode .order-summary-card h3 {
     color: #1a1a1a;
-    border-color: rgba(0, 0, 0, 0.15);
   }
 
-  body.light-mode .btn-secondary:hover {
+  .summary-line-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: rgba(231, 76, 60, 0.1);
+    border-radius: 10px;
+    margin-bottom: 1rem;
+  }
+
+  #summary-service {
+    font-weight: 600;
+    color: white;
+  }
+
+  body.light-mode #summary-service {
+    color: #1a1a1a;
+  }
+
+  #summary-price {
+    font-weight: 700;
+    color: #e74c3c;
+  }
+
+  .summary-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 1rem 0;
+  }
+
+  body.light-mode .summary-divider {
     background: rgba(0, 0, 0, 0.1);
   }
 
-  .btn-icon {
-    font-size: 1.1rem;
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
   }
 
-  .form-error,
-  .form-success {
-    padding: 1rem;
-    border-radius: 10px;
+  body.light-mode .summary-row {
+    color: #666;
+  }
+
+  .summary-row.total {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: white;
     margin-top: 1rem;
-    display: none;
-  }
-
-  .form-error {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid rgba(231, 76, 60, 0.3);
-    color: #ff6b6b;
-  }
-
-  .form-error.show {
-    display: block;
-  }
-
-  .form-success {
-    background: rgba(46, 213, 115, 0.1);
-    border: 1px solid rgba(46, 213, 115, 0.3);
-    color: #2ed573;
-  }
-
-  .form-success.show {
-    display: block;
-  }
-
-  .payment-info {
-    margin-top: 2rem;
-    padding-top: 2rem;
+    padding-top: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  body.light-mode .payment-info {
+  body.light-mode .summary-row.total {
+    color: #1a1a1a;
     border-top-color: rgba(0, 0, 0, 0.1);
   }
 
-  .payment-note {
+  /* Payment Section */
+  .payment-section {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  body.light-mode .payment-section {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .payment-section h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  body.light-mode .payment-section h3 {
+    color: #1a1a1a;
+  }
+
+  .payment-btn {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .payment-btn:hover {
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+  }
+
+  body.light-mode .payment-btn {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  body.light-mode .payment-btn:hover {
+    background: rgba(231, 76, 60, 0.05);
+    border-color: #e74c3c;
+  }
+
+  .card-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  }
+
+  .card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-color: transparent;
+  }
+
+  .payment-icon {
+    font-size: 1.5rem;
+  }
+
+  .payment-text {
+    flex: 1;
+    text-align: left;
+  }
+
+  .payment-label {
+    display: block;
+    font-weight: 700;
+    color: white;
+    font-size: 1rem;
+  }
+
+  body.light-mode .zelle-btn .payment-label {
+    color: #1a1a1a;
+  }
+
+  .payment-sublabel {
+    display: block;
+    font-size: 0.85rem;
     color: rgba(255, 255, 255, 0.7);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 0.75rem;
   }
 
-  body.light-mode .payment-note {
-    color: rgba(0, 0, 0, 0.6);
+  body.light-mode .zelle-btn .payment-sublabel {
+    color: #666;
   }
 
-  .payment-note a {
+  .payment-amount {
+    font-weight: 700;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  .payment-divider {
+    text-align: center;
+    margin: 1rem 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+  }
+
+  body.light-mode .payment-divider {
+    color: #888;
+  }
+
+  .zelle-instructions {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    text-align: center;
+  }
+
+  body.light-mode .zelle-instructions {
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .zelle-instructions p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+  }
+
+  body.light-mode .zelle-instructions p {
+    color: #333;
+  }
+
+  .zelle-email {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #e74c3c;
+    user-select: all;
+    margin: 0.75rem 0;
+  }
+
+  .zelle-note {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6) !important;
+  }
+
+  body.light-mode .zelle-note {
+    color: #666 !important;
+  }
+
+  .contact-help {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9rem;
+  }
+
+  body.light-mode .contact-help {
+    color: #666;
+  }
+
+  .contact-help a {
     color: #e74c3c;
     text-decoration: none;
   }
 
-  .payment-note a:hover {
+  .contact-help a:hover {
     text-decoration: underline;
   }
 
-  @media (max-width: 1024px) {
+  /* Responsive */
+  @media (max-width: 900px) {
     .checkout-content {
       grid-template-columns: 1fr;
     }
 
     .order-summary-section {
       position: static;
-      order: 2;
-    }
-
-    .checkout-form-section {
-      order: 1;
-    }
-  }
-
-  @media (max-width: 768px) {
-    .checkout-container {
-      padding: 2rem 1.5rem;
+      order: -1;
     }
 
     .form-row {
       grid-template-columns: 1fr;
     }
 
-    .form-actions {
-      flex-direction: column;
+    .property-type-options {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .checkout-container {
+      padding: 1rem;
     }
 
-    .order-summary-section,
-    .checkout-form-section {
-      padding: 1.5rem;
+    .checkout-form-section,
+    .order-summary-card,
+    .payment-section {
+      padding: 1.25rem;
+    }
+
+    .checkout-header h1 {
+      font-size: 1.75rem;
     }
   }
 </style>
 
-<script is:inline>
-  // Load cart data
-  function loadCheckoutCart() {
-    const saved = localStorage.getItem('checkmyrental_cart');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return [];
-  }
+<script is:inline define:vars={{ SQUARE_LINKS, ZELLE_EMAIL }}>
+  // Pricing configuration
+  const PRICES = {
+    quarterly: { house: 100, apartment: 70 },
+    moveInOut: 200,
+    annual: 200
+  };
+  const TAX_RATE = 0.07;
 
-  // Calculate totals
-  function calculateTotals(cart) {
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.07; // 7% estimated tax
+  // Service labels
+  const SERVICE_LABELS = {
+    quarterly: { house: 'Quarterly - House', apartment: 'Quarterly - Apartment' },
+    moveInOut: 'Move-In / Move-Out',
+    annual: 'Annual Inspection'
+  };
+
+  // Calculate total
+  function calculateTotal(serviceType, propertyType) {
+    let subtotal;
+    if (serviceType === 'quarterly') {
+      subtotal = PRICES.quarterly[propertyType];
+    } else {
+      subtotal = PRICES[serviceType];
+    }
+    const tax = subtotal * TAX_RATE;
     const total = subtotal + tax;
     return { subtotal, tax, total };
   }
 
-  // Render checkout items
-  function renderCheckoutItems() {
-    const cart = loadCheckoutCart();
-    const checkoutItems = document.getElementById('checkout-items');
-    const emptyMessage = document.getElementById('empty-cart-message');
-    const orderTotals = document.getElementById('order-totals');
-
-    if (cart.length === 0) {
-      checkoutItems.style.display = 'none';
-      orderTotals.classList.remove('show');
-      emptyMessage.classList.add('show');
-      return;
+  // Get service label
+  function getServiceLabel(serviceType, propertyType) {
+    if (serviceType === 'quarterly') {
+      return SERVICE_LABELS.quarterly[propertyType];
     }
-
-    emptyMessage.classList.remove('show');
-    checkoutItems.style.display = 'flex';
-    orderTotals.classList.add('show');
-
-    // Render cart items
-    checkoutItems.innerHTML = cart.map(item => `
-      <div class="checkout-item">
-        <div class="checkout-item-header">
-          <div class="checkout-item-title">${item.title}</div>
-          <div class="checkout-item-price">$${(item.price * item.quantity).toFixed(2)}</div>
-        </div>
-        ${item.description ? `<div class="checkout-item-description">${item.description}</div>` : ''}
-        <div class="checkout-item-quantity">Quantity: ${item.quantity}</div>
-      </div>
-    `).join('');
-
-    // Calculate and display totals
-    const { subtotal, tax, total } = calculateTotals(cart);
-    document.getElementById('checkout-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('checkout-tax').textContent = `$${tax.toFixed(2)}`;
-    document.getElementById('checkout-total').textContent = `$${total.toFixed(2)}`;
+    return SERVICE_LABELS[serviceType];
   }
 
-  // Handle form submission
-  function handleCheckoutSubmit(e) {
-    e.preventDefault();
+  // Update summary display
+  function updateSummary() {
+    const serviceType = document.querySelector('input[name="service_type"]:checked')?.value || 'quarterly';
+    const propertyType = document.querySelector('input[name="property_type"]:checked')?.value || 'house';
 
-    const formError = document.getElementById('form-error');
-    const formSuccess = document.getElementById('form-success');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const { subtotal, tax, total } = calculateTotal(serviceType, propertyType);
+    const label = getServiceLabel(serviceType, propertyType);
 
-    // Clear previous messages
-    formError.classList.remove('show');
-    formSuccess.classList.remove('show');
+    document.getElementById('summary-service').textContent = label;
+    document.getElementById('summary-price').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('summary-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('summary-tax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('card-amount').textContent = `$${total.toFixed(2)}`;
 
-    // Get cart data
-    const cart = loadCheckoutCart();
-    if (cart.length === 0) {
-      formError.textContent = 'Your cart is empty. Please add items before checkout.';
-      formError.classList.add('show');
-      return;
+    // Show/hide property type section
+    const propertySection = document.getElementById('property-type-section');
+    if (serviceType === 'quarterly') {
+      propertySection.classList.remove('hidden');
+      // Update step numbers
+      document.getElementById('contact-step').textContent = '3';
+      document.getElementById('property-step').textContent = '4';
+      document.getElementById('schedule-step').textContent = '5';
+      document.getElementById('payment-step').textContent = '6';
+    } else {
+      propertySection.classList.add('hidden');
+      // Update step numbers (skip step 2)
+      document.getElementById('contact-step').textContent = '2';
+      document.getElementById('property-step').textContent = '3';
+      document.getElementById('schedule-step').textContent = '4';
+      document.getElementById('payment-step').textContent = '5';
     }
-
-    // Get form data
-    const formData = new FormData(e.target);
-    const data = Object.fromEntries(formData.entries());
-
-    // Add cart items to submission
-    data.cart_items = cart;
-    data.totals = calculateTotals(cart);
-
-    // Disable submit button
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Processing...';
-
-    // TODO: Send to backend API
-    // For now, simulate success
-    setTimeout(() => {
-      formSuccess.innerHTML = `
-        <strong>Order Received!</strong><br>
-        Thank you for your order. We'll contact you within 24 hours to confirm your inspection appointment and send a secure payment link.<br>
-        <br>
-        A confirmation has been sent to <strong>${data.email}</strong>
-      `;
-      formSuccess.classList.add('show');
-
-      // Clear cart
-      localStorage.removeItem('checkmyrental_cart');
-
-      // Reset form
-      e.target.reset();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span class="btn-icon">🔒</span> Complete Order';
-
-      // Update display
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 5000);
-    }, 1500);
   }
 
-  // Set minimum date to tomorrow
+  // Get correct Square link
+  function getSquareLink(serviceType, propertyType) {
+    if (serviceType === 'quarterly') {
+      return propertyType === 'house' ? SQUARE_LINKS.quarterlyHouse : SQUARE_LINKS.quarterlyApartment;
+    } else if (serviceType === 'moveInOut') {
+      return SQUARE_LINKS.moveInOut;
+    } else {
+      return SQUARE_LINKS.annual;
+    }
+  }
+
+  // Validate form
+  function validateForm() {
+    const form = document.getElementById('checkout-form');
+    const requiredFields = form.querySelectorAll('[required]');
+
+    for (const field of requiredFields) {
+      if (!field.value || (field.type === 'checkbox' && !field.checked)) {
+        field.focus();
+        field.classList.add('error');
+        return false;
+      }
+      field.classList.remove('error');
+    }
+    return true;
+  }
+
+  // Set minimum date
   function setMinDate() {
     const dateInput = document.getElementById('preferred-date');
     if (dateInput) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 2); // At least 48 hours in advance
-      dateInput.min = tomorrow.toISOString().split('T')[0];
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + 2);
+      dateInput.min = minDate.toISOString().split('T')[0];
     }
   }
 
-  // Initialize on page load
+  // Initialize
   document.addEventListener('DOMContentLoaded', () => {
-    renderCheckoutItems();
-    setMinDate();
+    // Set up event listeners for service type
+    document.querySelectorAll('input[name="service_type"]').forEach(radio => {
+      radio.addEventListener('change', updateSummary);
+    });
 
-    const form = document.getElementById('checkout-form');
-    if (form) {
-      form.addEventListener('submit', handleCheckoutSubmit);
-    }
+    // Set up event listeners for property type
+    document.querySelectorAll('input[name="property_type"]').forEach(radio => {
+      radio.addEventListener('change', updateSummary);
+    });
+
+    // Pay with Card button
+    document.getElementById('pay-card-btn').addEventListener('click', () => {
+      if (!validateForm()) {
+        alert('Please fill in all required fields before proceeding to payment.');
+        return;
+      }
+
+      const serviceType = document.querySelector('input[name="service_type"]:checked').value;
+      const propertyType = document.querySelector('input[name="property_type"]:checked')?.value || 'house';
+      const squareLink = getSquareLink(serviceType, propertyType);
+
+      // Save form data to localStorage for reference
+      const formData = new FormData(document.getElementById('checkout-form'));
+      localStorage.setItem('checkmyrental_checkout', JSON.stringify(Object.fromEntries(formData)));
+
+      // Open Square payment link
+      window.open(squareLink, '_blank');
+    });
+
+    // Pay with Zelle button
+    document.getElementById('pay-zelle-btn').addEventListener('click', () => {
+      if (!validateForm()) {
+        alert('Please fill in all required fields.');
+        return;
+      }
+
+      const zelleInstructions = document.getElementById('zelle-instructions');
+      zelleInstructions.style.display = zelleInstructions.style.display === 'none' ? 'block' : 'none';
+    });
+
+    // Initial setup
+    setMinDate();
+    updateSummary();
   });
 </script>

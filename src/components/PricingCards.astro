@@ -56,27 +56,15 @@ const quarterlyPlan = {
   featured: true
 };
 
-// Add-on services
-const addOnServices = [
-  {
-    id: "move-in-out",
-    title: "Move-In / Move-Out",
-    price: 200,
-    priceFormatted: "$200",
-    priceNote: "per inspection",
-    description: "Comprehensive documentation at tenant transitions to protect your security deposit decisions",
-    type: "one-time"
-  },
-  {
-    id: "annual",
-    title: "Annual Inspection",
-    price: 200,
-    priceFormatted: "$200",
-    priceNote: "per inspection",
-    description: "Thorough yearly property assessment for long-term maintenance planning",
-    type: "one-time"
-  }
-];
+// Payment link placeholders - replace with actual Square Payment Links
+const SQUARE_LINKS = {
+  house100: "SQUARE_PAYMENT_LINK_HOUSE_100",
+  apt70: "SQUARE_PAYMENT_LINK_APT_70",
+  moveInOut200: "SQUARE_PAYMENT_LINK_MOVEINOUT_200",
+  annual200: "SQUARE_PAYMENT_LINK_ANNUAL_200"
+};
+
+const ZELLE_EMAIL = "giovannigomes11@gmail.com";
 
 ---
 
@@ -140,12 +128,28 @@ const addOnServices = [
         ))}
       </ul>
 
-      <a
-        href="/#contact"
-        class="add-to-cart-btn featured-btn"
-      >
-        Get Started
-      </a>
+      <div class="payment-options">
+        <a
+          href={SQUARE_LINKS.house100}
+          class="add-to-cart-btn featured-btn"
+          target="_blank"
+          rel="noopener"
+        >
+          Pay with Card - $100 (House)
+        </a>
+        <a
+          href={SQUARE_LINKS.apt70}
+          class="add-to-cart-btn featured-btn secondary-btn"
+          target="_blank"
+          rel="noopener"
+        >
+          Pay with Card - $70 (Apartment)
+        </a>
+        <div class="zelle-option">
+          <span class="zelle-label">Or pay with Zelle (no fees):</span>
+          <span class="zelle-email">{ZELLE_EMAIL}</span>
+        </div>
+      </div>
 
       <p class="volume-discount-note">Managing 6+ properties? Contact us for custom pricing.</p>
     </div>
@@ -156,15 +160,28 @@ const addOnServices = [
     <h3 class="addon-header">Additional Services</h3>
     <p class="addon-subheader">One-time inspections available when you need them</p>
     <div class="addon-grid">
-      {addOnServices.map(service => (
-        <div class="pricing-card addon">
-          <span class="addon-badge">One-Time</span>
-          <h4>{service.title}</h4>
-          <div class="addon-price">{service.priceFormatted}</div>
-          <p class="addon-description">{service.description}</p>
-          <a href="/#contact" class="add-to-cart-btn">Request Quote</a>
+      <div class="pricing-card addon">
+        <span class="addon-badge">One-Time</span>
+        <h4>Move-In / Move-Out</h4>
+        <div class="addon-price">$200</div>
+        <p class="addon-description">Comprehensive documentation at tenant transitions to protect your security deposit decisions</p>
+        <a href={SQUARE_LINKS.moveInOut200} class="add-to-cart-btn" target="_blank" rel="noopener">Pay with Card - $200</a>
+        <div class="zelle-option addon-zelle">
+          <span class="zelle-label">Or Zelle:</span>
+          <span class="zelle-email">{ZELLE_EMAIL}</span>
         </div>
-      ))}
+      </div>
+      <div class="pricing-card addon">
+        <span class="addon-badge">One-Time</span>
+        <h4>Annual Inspection</h4>
+        <div class="addon-price">$200</div>
+        <p class="addon-description">Thorough yearly property assessment for long-term maintenance planning</p>
+        <a href={SQUARE_LINKS.annual200} class="add-to-cart-btn" target="_blank" rel="noopener">Pay with Card - $200</a>
+        <div class="zelle-option addon-zelle">
+          <span class="zelle-label">Or Zelle:</span>
+          <span class="zelle-email">{ZELLE_EMAIL}</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -580,6 +597,73 @@ const addOnServices = [
 
   body.light-mode .volume-discount-note {
     color: #666666;
+  }
+
+  /* Payment Options Styles */
+  .payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .payment-options .add-to-cart-btn {
+    text-align: center;
+    text-decoration: none;
+    display: block;
+  }
+
+  .payment-options .secondary-btn {
+    background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+    box-shadow: 0 6px 24px rgba(100, 116, 139, 0.3);
+  }
+
+  .payment-options .secondary-btn:hover {
+    box-shadow: 0 12px 40px rgba(100, 116, 139, 0.5);
+  }
+
+  .zelle-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  body.light-mode .zelle-option {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .zelle-label {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  body.light-mode .zelle-label {
+    color: #666666;
+  }
+
+  .zelle-email {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e74c3c;
+    user-select: all;
+  }
+
+  .addon-zelle {
+    margin-top: 1rem;
+    padding: 0.75rem;
+  }
+
+  .addon-zelle .zelle-label {
+    font-size: 0.85rem;
+  }
+
+  .addon-zelle .zelle-email {
+    font-size: 0.9rem;
   }
 
   /* Add-On Services Styles */

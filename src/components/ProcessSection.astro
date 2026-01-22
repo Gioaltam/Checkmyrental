@@ -54,6 +54,20 @@
       <p class="step-description">Fill out our quick <a href="/checkout" class="process-link">booking form</a> with your property address and contact info. Select your service and pay securely online.</p>
     </div>
 
+    <!-- Vertical Connector 1: Steps 1→2 -->
+    <div class="vertical-connector connector-1" aria-hidden="true">
+      <div class="vertical-track">
+        <div class="vertical-line"></div>
+        <div class="vertical-glow"></div>
+        <div class="vertical-dot"></div>
+      </div>
+      <div class="vertical-chevrons">
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+      </div>
+    </div>
+
     <!-- Step 2: Confirm & Pay -->
     <div class="process-step">
       <div class="step-icon">
@@ -80,6 +94,20 @@
       </div>
       <h3 class="step-title">Confirm & Pay</h3>
       <p class="step-description">Receive a secure payment link via email. Once paid, your visit is confirmed and scheduled.</p>
+    </div>
+
+    <!-- Vertical Connector 2: Steps 2→3 -->
+    <div class="vertical-connector connector-2" aria-hidden="true">
+      <div class="vertical-track">
+        <div class="vertical-line"></div>
+        <div class="vertical-glow"></div>
+        <div class="vertical-dot"></div>
+      </div>
+      <div class="vertical-chevrons">
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+      </div>
     </div>
 
     <!-- Step 3: We Handle Scheduling -->
@@ -117,6 +145,20 @@
       </div>
       <h3 class="step-title">Inform Your Tenant</h3>
       <p class="step-description">Let your tenant know you've signed up for quarterly inspections. They'll receive a consent form and appointment link to schedule a convenient time.</p>
+    </div>
+
+    <!-- Vertical Connector 3: Steps 3→4 -->
+    <div class="vertical-connector connector-3" aria-hidden="true">
+      <div class="vertical-track">
+        <div class="vertical-line"></div>
+        <div class="vertical-glow"></div>
+        <div class="vertical-dot"></div>
+      </div>
+      <div class="vertical-chevrons">
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+        <span class="v-chevron">›</span>
+      </div>
     </div>
 
     <!-- Step 4: Report Delivered Same Day -->
@@ -778,6 +820,165 @@
   }
 
   /* ============================================
+     VERTICAL CONNECTORS - For Tablet & Mobile
+     ============================================ */
+
+  .vertical-connector {
+    display: none; /* Hidden on desktop */
+    position: relative;
+    height: 50px;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .vertical-track {
+    position: relative;
+    height: 100%;
+    width: 4px;
+  }
+
+  .vertical-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 100%;
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+
+  /* Connector 1: Red to Blue */
+  .connector-1 .vertical-line {
+    background: linear-gradient(180deg, #e74c3c 0%, #3b82f6 100%);
+  }
+  .connector-1 .vertical-dot {
+    background: #e74c3c;
+    box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5);
+    animation: verticalDotMove1 2s linear infinite;
+  }
+  .connector-1 .vertical-glow {
+    background: linear-gradient(180deg, transparent 0%, rgba(231, 76, 60, 0.8) 30%, rgba(59, 130, 246, 0.8) 70%, transparent 100%);
+  }
+  .connector-1 .v-chevron:nth-child(1) { color: #e74c3c; }
+  .connector-1 .v-chevron:nth-child(2) { color: #9f5fb3; }
+  .connector-1 .v-chevron:nth-child(3) { color: #3b82f6; }
+
+  /* Connector 2: Blue to Green */
+  .connector-2 .vertical-line {
+    background: linear-gradient(180deg, #3b82f6 0%, #10b981 100%);
+  }
+  .connector-2 .vertical-dot {
+    background: #3b82f6;
+    box-shadow: 0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5);
+    animation: verticalDotMove2 2s linear infinite;
+  }
+  .connector-2 .vertical-glow {
+    background: linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.8) 30%, rgba(16, 185, 129, 0.8) 70%, transparent 100%);
+  }
+  .connector-2 .v-chevron:nth-child(1) { color: #3b82f6; }
+  .connector-2 .v-chevron:nth-child(2) { color: #259ea0; }
+  .connector-2 .v-chevron:nth-child(3) { color: #10b981; }
+
+  /* Connector 3: Green to Orange */
+  .connector-3 .vertical-line {
+    background: linear-gradient(180deg, #10b981 0%, #f59e0b 100%);
+  }
+  .connector-3 .vertical-dot {
+    background: #10b981;
+    box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5);
+    animation: verticalDotMove3 2s linear infinite;
+  }
+  .connector-3 .vertical-glow {
+    background: linear-gradient(180deg, transparent 0%, rgba(16, 185, 129, 0.8) 30%, rgba(245, 158, 11, 0.8) 70%, transparent 100%);
+  }
+  .connector-3 .v-chevron:nth-child(1) { color: #10b981; }
+  .connector-3 .v-chevron:nth-child(2) { color: #82ac4e; }
+  .connector-3 .v-chevron:nth-child(3) { color: #f59e0b; }
+
+  .vertical-glow {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 20px;
+    border-radius: 4px;
+    filter: blur(3px);
+    animation: verticalGlowMove 2s linear infinite;
+  }
+
+  .vertical-dot {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+  }
+
+  .vertical-chevrons {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    pointer-events: none;
+  }
+
+  .v-chevron {
+    font-size: 1.2rem;
+    font-weight: 300;
+    line-height: 1;
+    transform: rotate(90deg);
+    animation: verticalChevronPulse 1.5s ease-in-out infinite;
+  }
+
+  .v-chevron:nth-child(1) { animation-delay: 0s; }
+  .v-chevron:nth-child(2) { animation-delay: 0.2s; }
+  .v-chevron:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes verticalGlowMove {
+    0% { top: -10px; opacity: 0.8; }
+    100% { top: calc(100% - 10px); opacity: 0.8; }
+  }
+
+  @keyframes verticalDotMove1 {
+    0% { top: 0%; background: #e74c3c; box-shadow: 0 0 12px #e74c3c, 0 0 24px rgba(231, 76, 60, 0.5); }
+    100% { top: 100%; background: #3b82f6; box-shadow: 0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5); }
+  }
+
+  @keyframes verticalDotMove2 {
+    0% { top: 0%; background: #3b82f6; box-shadow: 0 0 12px #3b82f6, 0 0 24px rgba(59, 130, 246, 0.5); }
+    100% { top: 100%; background: #10b981; box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5); }
+  }
+
+  @keyframes verticalDotMove3 {
+    0% { top: 0%; background: #10b981; box-shadow: 0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.5); }
+    100% { top: 100%; background: #f59e0b; box-shadow: 0 0 12px #f59e0b, 0 0 24px rgba(245, 158, 11, 0.5); }
+  }
+
+  @keyframes verticalChevronPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* Light mode adjustments for vertical connectors */
+  body.light-mode .vertical-line {
+    opacity: 0.4;
+  }
+
+  body.light-mode .v-chevron {
+    filter: brightness(0.85);
+  }
+
+  /* ============================================
      RESPONSIVE
      ============================================ */
 
@@ -792,9 +993,15 @@
       display: none;
     }
 
-    /* Hide pipeline on smaller screens */
+    /* Hide horizontal pipeline on smaller screens */
     .pipeline-connector {
       display: none;
+    }
+
+    /* Show vertical connectors on tablet */
+    .vertical-connector {
+      display: flex;
+      grid-column: 1 / -1; /* Span full width */
     }
   }
 
@@ -810,7 +1017,7 @@
 
     .process-steps {
       grid-template-columns: 1fr;
-      gap: 2rem;
+      gap: 1.5rem;
     }
 
     .step-icon {
@@ -821,6 +1028,12 @@
     .step-icon svg {
       width: 70px;
       height: 70px;
+    }
+
+    /* Vertical connectors visible on mobile */
+    .vertical-connector {
+      display: flex;
+      height: 40px;
     }
   }
 
@@ -839,7 +1052,10 @@
     .icon-report .badge-check,
     .pipeline-glow,
     .pipeline-dot,
-    .chevron {
+    .chevron,
+    .vertical-glow,
+    .vertical-dot,
+    .v-chevron {
       animation: none;
     }
 
@@ -882,6 +1098,25 @@
     }
 
     .chevron {
+      opacity: 0.6;
+    }
+
+    /* Vertical connector reduced motion */
+    .vertical-glow {
+      top: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.5;
+    }
+
+    .vertical-dot {
+      top: 50%;
+    }
+
+    .connector-1 .vertical-dot { background: #9f5fb3; }
+    .connector-2 .vertical-dot { background: #259ea0; }
+    .connector-3 .vertical-dot { background: #82ac4e; }
+
+    .v-chevron {
       opacity: 0.6;
     }
   }

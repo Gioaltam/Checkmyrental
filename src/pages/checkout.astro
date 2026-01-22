@@ -3,243 +3,237 @@ import LandingLayout from '../layouts/LandingLayout.astro';
 import Header from '../components/Header.astro';
 import LandingFooter from '../components/LandingFooter.astro';
 
-// Payment configuration - UPDATE THESE WITH YOUR ACTUAL SQUARE PAYMENT LINKS
-const SQUARE_LINKS = {
-  quarterlyHouse: "SQUARE_PAYMENT_LINK_HOUSE_107",      // $100 + 7% tax = $107
-  quarterlyApartment: "SQUARE_PAYMENT_LINK_APT_74_90",  // $70 + 7% tax = $74.90
-  moveInOut: "SQUARE_PAYMENT_LINK_MOVEINOUT_214",       // $200 + 7% tax = $214
-  annual: "SQUARE_PAYMENT_LINK_ANNUAL_214"              // $200 + 7% tax = $214
-};
+// Formspree endpoint - UPDATE WITH YOUR FORM ID
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xanrrqqr";
 
 const ZELLE_EMAIL = "giovannigomes11@gmail.com";
 ---
 
 <LandingLayout
   title="Book Your Inspection | CheckMyRental"
-  description="Book your professional property inspection - select service, enter details, and pay securely"
+  description="Book your professional property inspection - enter property details and we'll send you an invoice"
 >
   <Header />
 
   <main id="main-content" class="checkout-main" tabindex="-1">
     <div class="checkout-container">
-      <div class="checkout-header">
-        <h1>Book Your Inspection</h1>
-        <p>Select your service, enter property details, and choose your payment method</p>
-      </div>
-
-      <div class="checkout-content">
-        <!-- Left: Form -->
-        <div class="checkout-form-section">
-          <form id="checkout-form" class="checkout-form">
-
-            <!-- Step 1: Service Selection -->
-            <div class="form-section">
-              <h2><span class="step-number">1</span> Select Service</h2>
-              <div class="service-options">
-                <label class="service-option">
-                  <input type="radio" name="service_type" value="quarterly" checked />
-                  <div class="service-card">
-                    <div class="service-header">
-                      <span class="service-name">Quarterly Property Documentation</span>
-                      <span class="service-badge popular">Most Popular</span>
-                    </div>
-                    <p class="service-desc">Complete property documentation every 3 months with detailed photo reports</p>
-                    <div class="service-price-range">$70 - $100 <span class="price-note">depending on property type</span></div>
-                  </div>
-                </label>
-
-                <label class="service-option">
-                  <input type="radio" name="service_type" value="moveInOut" />
-                  <div class="service-card">
-                    <div class="service-header">
-                      <span class="service-name">Move-In / Move-Out Inspection</span>
-                      <span class="service-badge">One-Time</span>
-                    </div>
-                    <p class="service-desc">Comprehensive documentation at tenant transitions</p>
-                    <div class="service-price-range">$200</div>
-                  </div>
-                </label>
-
-                <label class="service-option">
-                  <input type="radio" name="service_type" value="annual" />
-                  <div class="service-card">
-                    <div class="service-header">
-                      <span class="service-name">Annual Inspection</span>
-                      <span class="service-badge">One-Time</span>
-                    </div>
-                    <p class="service-desc">Thorough yearly property assessment for long-term maintenance planning</p>
-                    <div class="service-price-range">$200</div>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <!-- Step 2: Property Type (shown only for Quarterly) -->
-            <div class="form-section" id="property-type-section">
-              <h2><span class="step-number">2</span> Property Type</h2>
-              <div class="property-type-options">
-                <label class="property-type-option">
-                  <input type="radio" name="property_type" value="house" checked />
-                  <div class="property-type-card">
-                    <span class="property-icon">🏠</span>
-                    <span class="property-label">House</span>
-                    <span class="property-price">$100</span>
-                    <span class="property-note">under 1,400 sq ft</span>
-                  </div>
-                </label>
-
-                <label class="property-type-option">
-                  <input type="radio" name="property_type" value="apartment" />
-                  <div class="property-type-card">
-                    <span class="property-icon">🏢</span>
-                    <span class="property-label">Apartment</span>
-                    <span class="property-price">$70</span>
-                    <span class="property-note">any size</span>
-                  </div>
-                </label>
-              </div>
-              <p class="larger-home-note">Larger home? <a href="mailto:info@checkmyrental.io">Contact us</a> for a custom quote.</p>
-            </div>
-
-            <!-- Step 3: Contact Information -->
-            <div class="form-section">
-              <h2><span class="step-number" id="contact-step">3</span> Contact Information</h2>
-              <div class="form-grid">
-                <div class="form-group">
-                  <label for="full-name">Full Name <span class="required">*</span></label>
-                  <input type="text" id="full-name" name="full_name" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="email">Email <span class="required">*</span></label>
-                  <input type="email" id="email" name="email" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="phone">Phone Number <span class="required">*</span></label>
-                  <input type="tel" id="phone" name="phone" required />
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 4: Property Information -->
-            <div class="form-section">
-              <h2><span class="step-number" id="property-step">4</span> Property Details</h2>
-              <div class="form-group">
-                <label for="property-address">Property Address <span class="required">*</span></label>
-                <input type="text" id="property-address" name="property_address" required />
-              </div>
-
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="city">City <span class="required">*</span></label>
-                  <input type="text" id="city" name="city" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="state">State <span class="required">*</span></label>
-                  <input type="text" id="state" name="state" value="FL" required />
-                </div>
-
-                <div class="form-group">
-                  <label for="zip">ZIP Code <span class="required">*</span></label>
-                  <input type="text" id="zip" name="zip" required />
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label for="access-instructions">Property Access Instructions</label>
-                <textarea id="access-instructions" name="access_instructions" rows="3" placeholder="Gate codes, key location, tenant contact info, etc."></textarea>
-              </div>
-            </div>
-
-            <!-- Step 5: Scheduling -->
-            <div class="form-section">
-              <h2><span class="step-number" id="schedule-step">5</span> Preferred Date</h2>
-              <div class="form-group">
-                <label for="preferred-date">Select a date <span class="required">*</span></label>
-                <input type="date" id="preferred-date" name="preferred_date" required />
-                <small class="form-hint">We'll confirm availability within 24 hours. Minimum 48 hours notice required.</small>
-              </div>
-
-              <div class="form-group">
-                <label for="notes">Additional Notes</label>
-                <textarea id="notes" name="notes" rows="2" placeholder="Any special requests?"></textarea>
-              </div>
-            </div>
-
-            <!-- Terms -->
-            <div class="form-group checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" id="terms" name="terms" required />
-                <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
-              </label>
-            </div>
-          </form>
+      <!-- Form View -->
+      <div id="form-view">
+        <div class="checkout-header">
+          <h1>Start Quarterly Inspections</h1>
+          <p>Register your properties and we'll set up recurring quarterly invoices</p>
+          <div class="service-highlight">
+            <span class="highlight-icon">🔄</span>
+            <span>Automatic quarterly billing • Cancel anytime • Same-day reports</span>
+          </div>
         </div>
 
-        <!-- Right: Order Summary & Payment -->
-        <div class="order-summary-section">
-          <div class="order-summary-card">
-            <h3>Order Summary</h3>
+        <div class="checkout-content">
+          <!-- Left: Form -->
+          <div class="checkout-form-section">
+            <form id="checkout-form" action={FORMSPREE_ENDPOINT} method="POST">
+              <!-- Hidden fields for Formspree -->
+              <input type="hidden" name="_subject" value="New Inspection Request" />
+              <input type="hidden" name="calculated_total" id="hidden-total" value="$0.00" />
 
-            <div class="summary-line-item">
-              <span id="summary-service">Quarterly - House</span>
-              <span id="summary-price">$100.00</span>
-            </div>
+              <!-- Step 1: Contact Information -->
+              <div class="form-section">
+                <h2><span class="step-number">1</span> Contact Information</h2>
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label for="full-name">Full Name <span class="required">*</span></label>
+                    <input type="text" id="full-name" name="full_name" required />
+                  </div>
 
-            <div class="summary-divider"></div>
+                  <div class="form-group">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input type="email" id="email" name="email" required />
+                  </div>
 
-            <div class="summary-row">
-              <span>Subtotal</span>
-              <span id="summary-subtotal">$100.00</span>
-            </div>
-            <div class="summary-row">
-              <span>Tax (7%)</span>
-              <span id="summary-tax">$7.00</span>
-            </div>
-            <div class="summary-row total">
-              <span>Total</span>
-              <span id="summary-total">$107.00</span>
-            </div>
+                  <div class="form-group">
+                    <label for="phone">Phone Number <span class="required">*</span></label>
+                    <input type="tel" id="phone" name="phone" required />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Step 2: Properties -->
+              <div class="form-section">
+                <h2><span class="step-number">2</span> Properties to Inspect</h2>
+                <p class="section-desc">Add all properties for quarterly inspections. You'll receive one invoice each quarter for all properties.</p>
+
+                <div id="properties-container">
+                  <!-- Property 1 (default) -->
+                  <div class="property-card" data-property-index="1">
+                    <div class="property-card-header">
+                      <span class="property-number">Property 1</span>
+                      <button type="button" class="remove-property-btn" style="display: none;" aria-label="Remove property">×</button>
+                    </div>
+
+                    <!-- Property Type Pills -->
+                    <div class="property-type-pills">
+                      <label class="type-pill">
+                        <input type="radio" name="property_1_type" value="apartment" required />
+                        <span class="pill-content">
+                          <span class="pill-icon">🏢</span>
+                          <span class="pill-label">Apartment</span>
+                          <span class="pill-price">$72</span>
+                        </span>
+                      </label>
+                      <label class="type-pill">
+                        <input type="radio" name="property_1_type" value="single_family" checked />
+                        <span class="pill-content">
+                          <span class="pill-icon">🏠</span>
+                          <span class="pill-label">House</span>
+                          <span class="pill-price">$103</span>
+                        </span>
+                      </label>
+                      <label class="type-pill">
+                        <input type="radio" name="property_1_type" value="multifamily" />
+                        <span class="pill-content">
+                          <span class="pill-icon">🏘️</span>
+                          <span class="pill-label">Multi</span>
+                          <span class="pill-price">$170</span>
+                        </span>
+                      </label>
+                    </div>
+
+                    <!-- Address -->
+                    <input type="text" class="property-address" name="property_1_address" placeholder="Property address (e.g. 123 Main St, Tampa, FL)" required />
+
+                    <!-- Tenant Info Row -->
+                    <div class="tenant-row">
+                      <input type="text" name="property_1_tenant_name" placeholder="Tenant name" />
+                      <input type="tel" name="property_1_tenant_phone" placeholder="Tenant phone (for booking text)" />
+                    </div>
+
+                    <!-- Access Notes -->
+                    <textarea class="access-notes" name="property_1_access" rows="1" placeholder="Access notes: gate code, lockbox, etc. (optional)"></textarea>
+                  </div>
+                </div>
+
+                <button type="button" id="add-property-btn" class="add-property-link">
+                  + Add property
+                </button>
+              </div>
+
+              <!-- Step 3: Scheduling -->
+              <div class="form-section">
+                <h2><span class="step-number">3</span> Scheduling Preference</h2>
+                <div class="form-group">
+                  <label for="preferred-timeframe">Preferred Timeframe <span class="required">*</span></label>
+                  <select id="preferred-timeframe" name="preferred_timeframe" required>
+                    <option value="">Select a timeframe...</option>
+                    <option value="asap">As soon as possible</option>
+                    <option value="this_week">This week</option>
+                    <option value="next_week">Next week</option>
+                    <option value="this_month">Within this month</option>
+                    <option value="flexible">I'm flexible</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="notes">Additional Notes</label>
+                  <textarea id="notes" name="notes" rows="2" placeholder="Any special requests or scheduling constraints?"></textarea>
+                </div>
+              </div>
+
+              <!-- Terms -->
+              <div class="form-group checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="terms" name="terms" required />
+                  <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
+                </label>
+              </div>
+            </form>
           </div>
 
-          <!-- Payment Options -->
-          <div class="payment-section">
-            <h3><span class="step-number" id="payment-step">6</span> Choose Payment Method</h3>
+          <!-- Right: Order Summary & Submit -->
+          <div class="order-summary-section">
+            <div class="order-summary-card">
+              <h3>Order Summary</h3>
 
-            <button type="button" id="pay-card-btn" class="payment-btn card-btn">
-              <span class="payment-icon">💳</span>
-              <span class="payment-text">
-                <span class="payment-label">Pay with Card</span>
-                <span class="payment-sublabel">Secure checkout via Square</span>
+              <div id="summary-items">
+                <div class="summary-line-item">
+                  <span>1× Single Family Home</span>
+                  <span>$103.20</span>
+                </div>
+              </div>
+
+              <div class="summary-divider"></div>
+
+              <div class="summary-row total">
+                <span>Quarterly Total</span>
+                <span id="summary-total">$103.20</span>
+              </div>
+
+              <p class="summary-note">You'll receive this invoice every quarter via email. Pay by card or Zelle before each inspection.</p>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" form="checkout-form" class="submit-btn">
+              <span class="submit-icon">🔄</span>
+              <span class="submit-text">
+                <span class="submit-label">Start Quarterly Service</span>
+                <span class="submit-sublabel">We'll send your first invoice within 24 hours</span>
               </span>
-              <span class="payment-amount" id="card-amount">$107.00</span>
             </button>
 
+            <!-- Zelle Info -->
             <div class="payment-divider">
-              <span>or</span>
+              <span>prefer Zelle?</span>
             </div>
 
             <button type="button" id="pay-zelle-btn" class="payment-btn zelle-btn">
               <span class="payment-icon">🏦</span>
               <span class="payment-text">
-                <span class="payment-label">Pay with Zelle</span>
-                <span class="payment-sublabel">No fees - send directly</span>
+                <span class="payment-label">Pay Invoices via Zelle</span>
+                <span class="payment-sublabel">No processing fees • Save 3%</span>
               </span>
             </button>
 
             <div id="zelle-instructions" class="zelle-instructions" style="display: none;">
-              <p><strong>Send payment to:</strong></p>
+              <p><strong>When you receive your invoice, send payment to:</strong></p>
               <p class="zelle-email">{ZELLE_EMAIL}</p>
-              <p class="zelle-note">Include your name and property address in the memo. We'll confirm receipt and schedule your inspection.</p>
+              <p class="zelle-note">Include your name and property address in the memo. We'll mark your invoice as paid once received.</p>
+            </div>
+
+            <div class="contact-help">
+              <p>Questions? <a href="mailto:info@checkmyrental.io">info@checkmyrental.io</a></p>
+              <p><a href="tel:8132520524">(813) 252-0524</a></p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div class="contact-help">
-            <p>Questions? <a href="mailto:info@checkmyrental.io">info@checkmyrental.io</a></p>
-            <p><a href="tel:8132520524">(813) 252-0524</a></p>
+      <!-- Success View (hidden by default) -->
+      <div id="success-view" style="display: none;">
+        <div class="success-container">
+          <div class="success-icon">✓</div>
+          <h1>You're All Set!</h1>
+          <p class="success-message">Welcome to CheckMyRental's quarterly inspection service. We'll send your first invoice within 24 hours.</p>
+
+          <div class="success-details">
+            <h3>What happens next?</h3>
+            <ol>
+              <li><strong>First invoice</strong> — You'll receive your first quarterly invoice via email within 24 hours</li>
+              <li><strong>Payment</strong> — Pay by card directly on the invoice, or via Zelle to save on fees</li>
+              <li><strong>Tenant notification</strong> — We'll text your tenant(s) a booking link (required 24-hour notice per FL law)</li>
+              <li><strong>Tenant books time</strong> — Your tenant selects an available appointment slot</li>
+              <li><strong>Inspection</strong> — We conduct the property documentation visit</li>
+              <li><strong>Report delivery</strong> — Receive your detailed report within 24 hours of the visit</li>
+            </ol>
           </div>
+
+          <div class="success-note">
+            <p><strong>About tenant notification:</strong> Per Florida Statute 83.53, tenants must receive at least 24 hours notice before property inspections. We handle this by texting your tenant a booking link.</p>
+          </div>
+
+          <div class="success-note" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2);">
+            <p>Need to add or remove properties? Just reply to any invoice email or contact us directly.</p>
+          </div>
+
+          <a href="/" class="back-home-btn">Back to Home</a>
         </div>
       </div>
     </div>
@@ -290,6 +284,28 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     color: #666;
   }
 
+  .service-highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(231, 76, 60, 0.1);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    border-radius: 50px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+  }
+
+  body.light-mode .service-highlight {
+    background: rgba(231, 76, 60, 0.08);
+    color: #444;
+  }
+
+  .highlight-icon {
+    font-size: 1.1rem;
+  }
+
   .checkout-content {
     display: grid;
     grid-template-columns: 1fr 400px;
@@ -330,7 +346,7 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     font-size: 1.25rem;
     font-weight: 700;
     color: white;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -338,6 +354,16 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
 
   body.light-mode .form-section h2 {
     color: #1a1a1a;
+  }
+
+  .section-desc {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
+
+  body.light-mode .section-desc {
+    color: #666;
   }
 
   .step-number {
@@ -353,201 +379,249 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     font-weight: 700;
   }
 
-  /* Service Options */
-  .service-options {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  /* Property Card */
+  .property-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1rem;
   }
 
-  .service-option input {
+  body.light-mode .property-card {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .property-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .property-number {
+    font-weight: 700;
+    color: #e74c3c;
+    font-size: 0.9rem;
+  }
+
+  .remove-property-btn {
+    background: rgba(231, 76, 60, 0.1);
+    border: none;
+    color: #e74c3c;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    transition: all 0.2s;
+  }
+
+  .remove-property-btn:hover {
+    background: #e74c3c;
+    color: white;
+  }
+
+  /* Property Type Pills - Horizontal Selection */
+  .property-type-pills {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .type-pill {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .type-pill input {
     display: none;
   }
 
-  .service-card {
-    padding: 1.25rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s;
+  .pill-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.65rem 0.5rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-radius: 25px;
+    transition: all 0.2s;
   }
 
-  .service-option input:checked + .service-card {
+  .type-pill input:checked + .pill-content {
+    background: rgba(231, 76, 60, 0.15);
     border-color: #e74c3c;
-    background: rgba(231, 76, 60, 0.1);
   }
 
-  .service-card:hover {
+  .pill-content:hover {
     border-color: rgba(231, 76, 60, 0.5);
   }
 
-  body.light-mode .service-card {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.1);
+  body.light-mode .pill-content {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.12);
   }
 
-  body.light-mode .service-option input:checked + .service-card {
-    background: rgba(231, 76, 60, 0.05);
+  body.light-mode .type-pill input:checked + .pill-content {
+    background: rgba(231, 76, 60, 0.1);
     border-color: #e74c3c;
   }
 
-  .service-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .service-name {
-    font-weight: 700;
-    color: white;
+  .pill-icon {
     font-size: 1.1rem;
   }
 
-  body.light-mode .service-name {
+  .pill-label {
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+  }
+
+  body.light-mode .pill-label {
+    color: #333;
+  }
+
+  .pill-price {
+    font-weight: 700;
+    color: #e74c3c;
+    font-size: 0.85rem;
+  }
+
+  /* Property Address Input */
+  .property-address {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    color: white;
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    transition: all 0.2s;
+  }
+
+  .property-address:focus {
+    outline: none;
+    border-color: #e74c3c;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  body.light-mode .property-address {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.15);
     color: #1a1a1a;
   }
 
-  .service-badge {
-    padding: 0.25rem 0.75rem;
-    background: rgba(100, 116, 139, 0.2);
-    color: rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
+  body.light-mode .property-address:focus {
+    background: white;
+    border-color: #e74c3c;
   }
 
-  .service-badge.popular {
-    background: rgba(231, 76, 60, 0.2);
-    color: #e74c3c;
-  }
-
-  body.light-mode .service-badge {
-    background: rgba(0, 0, 0, 0.08);
-    color: #666;
-  }
-
-  body.light-mode .service-badge.popular {
-    background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
-  }
-
-  .service-desc {
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
-  }
-
-  body.light-mode .service-desc {
-    color: #666;
-  }
-
-  .service-price-range {
-    font-weight: 700;
-    color: #e74c3c;
-    font-size: 1.1rem;
-  }
-
-  .service-price-range .price-note {
-    font-weight: 400;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  body.light-mode .service-price-range .price-note {
-    color: #888;
-  }
-
-  /* Property Type Options */
-  .property-type-options {
+  /* Tenant Row - Compact 2-column */
+  .tenant-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-  }
-
-  .property-type-option input {
-    display: none;
-  }
-
-  .property-type-card {
-    padding: 1.5rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
     gap: 0.5rem;
+    margin-bottom: 0.75rem;
   }
 
-  .property-type-option input:checked + .property-type-card {
-    border-color: #e74c3c;
-    background: rgba(231, 76, 60, 0.1);
+  .tenant-row input {
+    padding: 0.6rem 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    transition: all 0.2s;
   }
 
-  .property-type-card:hover {
+  .tenant-row input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  .tenant-row input:focus {
+    outline: none;
+    border-color: rgba(231, 76, 60, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  body.light-mode .tenant-row input {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #333;
+  }
+
+  body.light-mode .tenant-row input::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+  }
+
+  body.light-mode .tenant-row input:focus {
+    background: white;
     border-color: rgba(231, 76, 60, 0.5);
   }
 
-  body.light-mode .property-type-card {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.1);
-  }
-
-  body.light-mode .property-type-option input:checked + .property-type-card {
-    background: rgba(231, 76, 60, 0.05);
-    border-color: #e74c3c;
-  }
-
-  .property-icon {
-    font-size: 2rem;
-  }
-
-  .property-label {
-    font-weight: 700;
-    color: white;
-    font-size: 1.1rem;
-  }
-
-  body.light-mode .property-label {
-    color: #1a1a1a;
-  }
-
-  .property-price {
-    font-weight: 700;
-    color: #e74c3c;
-    font-size: 1.5rem;
-  }
-
-  .property-note {
-    color: rgba(255, 255, 255, 0.5);
+  /* Access Notes - Minimal */
+  .access-notes {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.85rem;
+    resize: none;
+    font-family: inherit;
+    transition: all 0.2s;
   }
 
-  body.light-mode .property-note {
-    color: #888;
+  .access-notes::placeholder {
+    color: rgba(255, 255, 255, 0.35);
   }
 
-  .larger-home-note {
-    margin-top: 1rem;
-    color: rgba(255, 255, 255, 0.6);
-    font-size: 0.9rem;
+  .access-notes:focus {
+    outline: none;
+    border-color: rgba(231, 76, 60, 0.4);
+    background: rgba(255, 255, 255, 0.04);
   }
 
-  .larger-home-note a {
+  body.light-mode .access-notes {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08);
+    color: #555;
+  }
+
+  body.light-mode .access-notes::placeholder {
+    color: rgba(0, 0, 0, 0.35);
+  }
+
+  body.light-mode .access-notes:focus {
+    background: white;
+    border-color: rgba(231, 76, 60, 0.4);
+  }
+
+  /* Add Property Link */
+  .add-property-link {
+    display: inline-flex;
+    align-items: center;
+    background: none;
+    border: none;
     color: #e74c3c;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    margin-top: 0.25rem;
+    transition: all 0.2s;
   }
 
-  body.light-mode .larger-home-note {
-    color: #666;
-  }
-
-  #property-type-section.hidden {
-    display: none;
+  .add-property-link:hover {
+    color: #c0392b;
+    text-decoration: underline;
   }
 
   /* Form Fields */
@@ -557,9 +631,9 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     gap: 1rem;
   }
 
-  .form-row {
+  .form-row-2 {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
 
@@ -567,12 +641,17 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
   }
 
   .form-group label {
     font-weight: 600;
     color: rgba(255, 255, 255, 0.9);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   body.light-mode .form-group label {
@@ -618,15 +697,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
   body.light-mode .form-group select:focus {
     background: white;
     border-color: #e74c3c;
-  }
-
-  .form-hint {
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.85rem;
-  }
-
-  body.light-mode .form-hint {
-    color: rgba(0, 0, 0, 0.5);
   }
 
   .checkbox-group {
@@ -687,27 +757,24 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     color: #1a1a1a;
   }
 
+  #summary-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
   .summary-line-item {
     display: flex;
     justify-content: space-between;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
     background: rgba(231, 76, 60, 0.1);
-    border-radius: 10px;
-    margin-bottom: 1rem;
-  }
-
-  #summary-service {
-    font-weight: 600;
+    border-radius: 8px;
     color: white;
+    font-size: 0.95rem;
   }
 
-  body.light-mode #summary-service {
+  body.light-mode .summary-line-item {
     color: #1a1a1a;
-  }
-
-  #summary-price {
-    font-weight: 700;
-    color: #e74c3c;
   }
 
   .summary-divider {
@@ -720,58 +787,86 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     background: rgba(0, 0, 0, 0.1);
   }
 
-  .summary-row {
+  .summary-row.total {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  body.light-mode .summary-row {
-    color: #666;
-  }
-
-  .summary-row.total {
     font-size: 1.25rem;
     font-weight: 700;
     color: white;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   body.light-mode .summary-row.total {
     color: #1a1a1a;
-    border-top-color: rgba(0, 0, 0, 0.1);
   }
 
-  /* Payment Section */
-  .payment-section {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
+  #summary-total {
+    color: #e74c3c;
   }
 
-  body.light-mode .payment-section {
-    background: white;
-    border-color: rgba(0, 0, 0, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  .summary-note {
+    margin-top: 1rem;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 
-  .payment-section h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: white;
-    margin-bottom: 1.25rem;
+  body.light-mode .summary-note {
+    color: #666;
+  }
+
+  /* Submit Button */
+  .submit-btn {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    margin-bottom: 1rem;
   }
 
-  body.light-mode .payment-section h3 {
-    color: #1a1a1a;
+  .submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+  }
+
+  .submit-icon {
+    font-size: 1.5rem;
+  }
+
+  .submit-text {
+    flex: 1;
+    text-align: left;
+  }
+
+  .submit-label {
+    display: block;
+    font-weight: 700;
+    color: white;
+    font-size: 1.1rem;
+  }
+
+  .submit-sublabel {
+    display: block;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  /* Payment Options */
+  .payment-divider {
+    text-align: center;
+    margin: 1rem 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9rem;
+  }
+
+  body.light-mode .payment-divider {
+    color: #888;
   }
 
   .payment-btn {
@@ -802,19 +897,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     border-color: #e74c3c;
   }
 
-  .card-btn {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    border-color: transparent;
-    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-  }
-
-  .card-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-    border-color: transparent;
-  }
-
   .payment-icon {
     font-size: 1.5rem;
   }
@@ -831,7 +913,7 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     font-size: 1rem;
   }
 
-  body.light-mode .zelle-btn .payment-label {
+  body.light-mode .payment-label {
     color: #1a1a1a;
   }
 
@@ -841,25 +923,8 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     color: rgba(255, 255, 255, 0.7);
   }
 
-  body.light-mode .zelle-btn .payment-sublabel {
+  body.light-mode .payment-sublabel {
     color: #666;
-  }
-
-  .payment-amount {
-    font-weight: 700;
-    color: white;
-    font-size: 1.1rem;
-  }
-
-  .payment-divider {
-    text-align: center;
-    margin: 1rem 0;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
-  }
-
-  body.light-mode .payment-divider {
-    color: #888;
   }
 
   .zelle-instructions {
@@ -904,6 +969,7 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
     font-size: 0.9rem;
+    margin-top: 1.5rem;
   }
 
   body.light-mode .contact-help {
@@ -919,6 +985,132 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     text-decoration: underline;
   }
 
+  /* Success View */
+  .success-container {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 3rem 2rem;
+  }
+
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    margin: 0 auto 2rem;
+  }
+
+  .success-container h1 {
+    font-size: 2rem;
+    color: white;
+    margin-bottom: 1rem;
+  }
+
+  body.light-mode .success-container h1 {
+    color: #1a1a1a;
+  }
+
+  .success-message {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+  }
+
+  body.light-mode .success-message {
+    color: #666;
+  }
+
+  .success-details {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: left;
+    margin-bottom: 2rem;
+  }
+
+  body.light-mode .success-details {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+
+  .success-details h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+  }
+
+  body.light-mode .success-details h3 {
+    color: #1a1a1a;
+  }
+
+  .success-details ol {
+    color: rgba(255, 255, 255, 0.8);
+    padding-left: 1.5rem;
+    line-height: 2;
+  }
+
+  .success-details ol li {
+    margin-bottom: 0.5rem;
+  }
+
+  .success-details ol strong {
+    color: white;
+  }
+
+  body.light-mode .success-details ol {
+    color: #666;
+  }
+
+  body.light-mode .success-details ol strong {
+    color: #1a1a1a;
+  }
+
+  .success-note {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .success-note p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+    margin: 0;
+  }
+
+  body.light-mode .success-note {
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  body.light-mode .success-note p {
+    color: #555;
+  }
+
+  .back-home-btn {
+    display: inline-block;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
+  }
+
+  .back-home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+  }
+
   /* Responsive */
   @media (max-width: 900px) {
     .checkout-content {
@@ -929,14 +1121,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
       position: static;
       order: -1;
     }
-
-    .form-row {
-      grid-template-columns: 1fr;
-    }
-
-    .property-type-options {
-      grid-template-columns: 1fr;
-    }
   }
 
   @media (max-width: 600px) {
@@ -945,169 +1129,240 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     }
 
     .checkout-form-section,
-    .order-summary-card,
-    .payment-section {
+    .order-summary-card {
       padding: 1.25rem;
     }
 
     .checkout-header h1 {
       font-size: 1.75rem;
     }
+
+    .property-type-pills {
+      flex-direction: column;
+    }
+
+    .pill-content {
+      justify-content: flex-start;
+      padding: 0.75rem 1rem;
+    }
+
+    .tenant-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row-2 {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
 
-<script is:inline define:vars={{ SQUARE_LINKS, ZELLE_EMAIL }}>
-  // Pricing configuration
+<script is:inline>
+  // Pricing configuration (includes Square processing fee)
   const PRICES = {
-    quarterly: { house: 100, apartment: 70 },
-    moveInOut: 200,
-    annual: 200
-  };
-  const TAX_RATE = 0.07;
-
-  // Service labels
-  const SERVICE_LABELS = {
-    quarterly: { house: 'Quarterly - House', apartment: 'Quarterly - Apartment' },
-    moveInOut: 'Move-In / Move-Out',
-    annual: 'Annual Inspection'
+    apartment: 72.33,
+    single_family: 103.20,
+    multifamily: 170.09
   };
 
-  // Calculate total
-  function calculateTotal(serviceType, propertyType) {
-    let subtotal;
-    if (serviceType === 'quarterly') {
-      subtotal = PRICES.quarterly[propertyType];
-    } else {
-      subtotal = PRICES[serviceType];
-    }
-    const tax = subtotal * TAX_RATE;
-    const total = subtotal + tax;
-    return { subtotal, tax, total };
+  const LABELS = {
+    apartment: 'Apartment',
+    single_family: 'Single Family Home',
+    multifamily: 'Multifamily Home'
+  };
+
+  let propertyCount = 1;
+  const maxProperties = 10;
+
+  // Property card template
+  function createPropertyCard(index) {
+    return `
+      <div class="property-card" data-property-index="${index}">
+        <div class="property-card-header">
+          <span class="property-number">Property ${index}</span>
+          <button type="button" class="remove-property-btn" aria-label="Remove property">×</button>
+        </div>
+
+        <!-- Property Type Pills -->
+        <div class="property-type-pills">
+          <label class="type-pill">
+            <input type="radio" name="property_${index}_type" value="apartment" required />
+            <span class="pill-content">
+              <span class="pill-icon">🏢</span>
+              <span class="pill-label">Apartment</span>
+              <span class="pill-price">$72</span>
+            </span>
+          </label>
+          <label class="type-pill">
+            <input type="radio" name="property_${index}_type" value="single_family" checked />
+            <span class="pill-content">
+              <span class="pill-icon">🏠</span>
+              <span class="pill-label">House</span>
+              <span class="pill-price">$103</span>
+            </span>
+          </label>
+          <label class="type-pill">
+            <input type="radio" name="property_${index}_type" value="multifamily" />
+            <span class="pill-content">
+              <span class="pill-icon">🏘️</span>
+              <span class="pill-label">Multi</span>
+              <span class="pill-price">$170</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Address -->
+        <input type="text" class="property-address" name="property_${index}_address" placeholder="Property address (e.g. 123 Main St, Tampa, FL)" required />
+
+        <!-- Tenant Info Row -->
+        <div class="tenant-row">
+          <input type="text" name="property_${index}_tenant_name" placeholder="Tenant name" />
+          <input type="tel" name="property_${index}_tenant_phone" placeholder="Tenant phone (for booking text)" />
+        </div>
+
+        <!-- Access Notes -->
+        <textarea class="access-notes" name="property_${index}_access" rows="1" placeholder="Access notes: gate code, lockbox, etc. (optional)"></textarea>
+      </div>
+    `;
   }
 
-  // Get service label
-  function getServiceLabel(serviceType, propertyType) {
-    if (serviceType === 'quarterly') {
-      return SERVICE_LABELS.quarterly[propertyType];
-    }
-    return SERVICE_LABELS[serviceType];
-  }
-
-  // Update summary display
+  // Update order summary
   function updateSummary() {
-    const serviceType = document.querySelector('input[name="service_type"]:checked')?.value || 'quarterly';
-    const propertyType = document.querySelector('input[name="property_type"]:checked')?.value || 'house';
+    const summaryItems = document.getElementById('summary-items');
+    const summaryTotal = document.getElementById('summary-total');
+    const hiddenTotal = document.getElementById('hidden-total');
 
-    const { subtotal, tax, total } = calculateTotal(serviceType, propertyType);
-    const label = getServiceLabel(serviceType, propertyType);
+    let total = 0;
+    const items = {};
 
-    document.getElementById('summary-service').textContent = label;
-    document.getElementById('summary-price').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('summary-subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('summary-tax').textContent = `$${tax.toFixed(2)}`;
-    document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
-    document.getElementById('card-amount').textContent = `$${total.toFixed(2)}`;
-
-    // Show/hide property type section
-    const propertySection = document.getElementById('property-type-section');
-    if (serviceType === 'quarterly') {
-      propertySection.classList.remove('hidden');
-      // Update step numbers
-      document.getElementById('contact-step').textContent = '3';
-      document.getElementById('property-step').textContent = '4';
-      document.getElementById('schedule-step').textContent = '5';
-      document.getElementById('payment-step').textContent = '6';
-    } else {
-      propertySection.classList.add('hidden');
-      // Update step numbers (skip step 2)
-      document.getElementById('contact-step').textContent = '2';
-      document.getElementById('property-step').textContent = '3';
-      document.getElementById('schedule-step').textContent = '4';
-      document.getElementById('payment-step').textContent = '5';
-    }
-  }
-
-  // Get correct Square link
-  function getSquareLink(serviceType, propertyType) {
-    if (serviceType === 'quarterly') {
-      return propertyType === 'house' ? SQUARE_LINKS.quarterlyHouse : SQUARE_LINKS.quarterlyApartment;
-    } else if (serviceType === 'moveInOut') {
-      return SQUARE_LINKS.moveInOut;
-    } else {
-      return SQUARE_LINKS.annual;
-    }
-  }
-
-  // Validate form
-  function validateForm() {
-    const form = document.getElementById('checkout-form');
-    const requiredFields = form.querySelectorAll('[required]');
-
-    for (const field of requiredFields) {
-      if (!field.value || (field.type === 'checkbox' && !field.checked)) {
-        field.focus();
-        field.classList.add('error');
-        return false;
+    // Count properties by type
+    document.querySelectorAll('.property-card').forEach(card => {
+      const index = card.dataset.propertyIndex;
+      const typeInput = card.querySelector(`input[name="property_${index}_type"]:checked`);
+      if (typeInput) {
+        const type = typeInput.value;
+        items[type] = (items[type] || 0) + 1;
+        total += PRICES[type];
       }
-      field.classList.remove('error');
+    });
+
+    // Build summary HTML
+    let html = '';
+    for (const [type, count] of Object.entries(items)) {
+      const subtotal = (PRICES[type] * count).toFixed(2);
+      html += `
+        <div class="summary-line-item">
+          <span>${count}× ${LABELS[type]}</span>
+          <span>$${subtotal}</span>
+        </div>
+      `;
     }
-    return true;
+
+    summaryItems.innerHTML = html;
+    summaryTotal.textContent = `$${total.toFixed(2)}`;
+    hiddenTotal.value = `$${total.toFixed(2)}`;
   }
 
-  // Set minimum date
-  function setMinDate() {
-    const dateInput = document.getElementById('preferred-date');
-    if (dateInput) {
-      const minDate = new Date();
-      minDate.setDate(minDate.getDate() + 2);
-      dateInput.min = minDate.toISOString().split('T')[0];
+  // Update property numbers after removal
+  function updatePropertyNumbers() {
+    const cards = document.querySelectorAll('.property-card');
+    cards.forEach((card, idx) => {
+      const newIndex = idx + 1;
+      card.dataset.propertyIndex = newIndex;
+      card.querySelector('.property-number').textContent = `Property ${newIndex}`;
+
+      // Update input names
+      card.querySelectorAll('input, textarea').forEach(input => {
+        const name = input.name;
+        if (name) {
+          input.name = name.replace(/property_\d+_/, `property_${newIndex}_`);
+        }
+      });
+
+      // Show/hide remove button (hide for first property if it's the only one)
+      const removeBtn = card.querySelector('.remove-property-btn');
+      removeBtn.style.display = cards.length > 1 ? 'block' : 'none';
+    });
+    propertyCount = cards.length;
+  }
+
+  // Add property
+  function addProperty() {
+    if (propertyCount >= maxProperties) {
+      alert(`Maximum ${maxProperties} properties allowed. Contact us for larger portfolios.`);
+      return;
     }
+
+    propertyCount++;
+    const container = document.getElementById('properties-container');
+    container.insertAdjacentHTML('beforeend', createPropertyCard(propertyCount));
+
+    // Add event listeners to new card
+    const newCard = container.lastElementChild;
+    newCard.querySelector('.remove-property-btn').addEventListener('click', function() {
+      newCard.remove();
+      updatePropertyNumbers();
+      updateSummary();
+    });
+
+    newCard.querySelectorAll('input[type="radio"]').forEach(radio => {
+      radio.addEventListener('change', updateSummary);
+    });
+
+    // Update remove button visibility
+    updatePropertyNumbers();
+    updateSummary();
   }
 
   // Initialize
   document.addEventListener('DOMContentLoaded', () => {
-    // Set up event listeners for service type
-    document.querySelectorAll('input[name="service_type"]').forEach(radio => {
+    // Add property button
+    document.getElementById('add-property-btn').addEventListener('click', addProperty);
+
+    // Initial property type change listeners
+    document.querySelectorAll('input[name="property_1_type"]').forEach(radio => {
       radio.addEventListener('change', updateSummary);
     });
 
-    // Set up event listeners for property type
-    document.querySelectorAll('input[name="property_type"]').forEach(radio => {
-      radio.addEventListener('change', updateSummary);
-    });
-
-    // Pay with Card button
-    document.getElementById('pay-card-btn').addEventListener('click', () => {
-      if (!validateForm()) {
-        alert('Please fill in all required fields before proceeding to payment.');
-        return;
-      }
-
-      const serviceType = document.querySelector('input[name="service_type"]:checked').value;
-      const propertyType = document.querySelector('input[name="property_type"]:checked')?.value || 'house';
-      const squareLink = getSquareLink(serviceType, propertyType);
-
-      // Save form data to localStorage for reference
-      const formData = new FormData(document.getElementById('checkout-form'));
-      localStorage.setItem('checkmyrental_checkout', JSON.stringify(Object.fromEntries(formData)));
-
-      // Open Square payment link
-      window.open(squareLink, '_blank');
-    });
-
-    // Pay with Zelle button
+    // Zelle button
     document.getElementById('pay-zelle-btn').addEventListener('click', () => {
-      if (!validateForm()) {
-        alert('Please fill in all required fields.');
-        return;
-      }
-
       const zelleInstructions = document.getElementById('zelle-instructions');
       zelleInstructions.style.display = zelleInstructions.style.display === 'none' ? 'block' : 'none';
     });
 
-    // Initial setup
-    setMinDate();
+    // Form submission - show success view
+    document.getElementById('checkout-form').addEventListener('submit', function(e) {
+      // Let form submit naturally to Formspree
+      // After submission, Formspree will redirect back or we show success
+
+      // For better UX, we'll use fetch and show success view
+      e.preventDefault();
+
+      const form = this;
+      const formData = new FormData(form);
+
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          document.getElementById('form-view').style.display = 'none';
+          document.getElementById('success-view').style.display = 'block';
+          window.scrollTo(0, 0);
+        } else {
+          alert('There was an error submitting your request. Please try again or contact us directly.');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert('There was an error submitting your request. Please try again or contact us directly.');
+      });
+    });
+
+    // Initial summary
     updateSummary();
   });
 </script>

@@ -5,8 +5,6 @@ import LandingFooter from '../components/LandingFooter.astro';
 
 // Formspree endpoint - UPDATE WITH YOUR FORM ID
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
-
-const ZELLE_EMAIL = "giovannigomes11@gmail.com";
 ---
 
 <LandingLayout
@@ -24,7 +22,7 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
           <p>Register your properties and we'll set up recurring quarterly invoices</p>
           <div class="service-highlight">
             <span class="highlight-icon">🔄</span>
-            <span>Automatic quarterly billing • Cancel anytime • Same-day reports</span>
+            <span>Quarterly billing • Cancel anytime • Same-day reports</span>
           </div>
         </div>
 
@@ -117,19 +115,30 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
                 </button>
               </div>
 
-              <!-- Step 3: Scheduling -->
+              <!-- Step 3: Preferences -->
               <div class="form-section">
-                <h2><span class="step-number">3</span> Scheduling Preference</h2>
-                <div class="form-group">
-                  <label for="preferred-timeframe">Preferred Timeframe <span class="required">*</span></label>
-                  <select id="preferred-timeframe" name="preferred_timeframe" required>
-                    <option value="">Select a timeframe...</option>
-                    <option value="asap">As soon as possible</option>
-                    <option value="this_week">This week</option>
-                    <option value="next_week">Next week</option>
-                    <option value="this_month">Within this month</option>
-                    <option value="flexible">I'm flexible</option>
-                  </select>
+                <h2><span class="step-number">3</span> Preferences</h2>
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label for="preferred-timeframe">Preferred Timeframe <span class="required">*</span></label>
+                    <select id="preferred-timeframe" name="preferred_timeframe" required>
+                      <option value="">Select a timeframe...</option>
+                      <option value="asap">As soon as possible</option>
+                      <option value="this_week">This week</option>
+                      <option value="next_week">Next week</option>
+                      <option value="this_month">Within this month</option>
+                      <option value="flexible">I'm flexible</option>
+                    </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="payment-preference">Invoice Payment Method <span class="required">*</span></label>
+                    <select id="payment-preference" name="payment_preference" required>
+                      <option value="">Select payment method...</option>
+                      <option value="card">Credit/Debit Card</option>
+                      <option value="zelle">Zelle (save 3% on fees)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -167,7 +176,7 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
                 <span id="summary-total">$103.20</span>
               </div>
 
-              <p class="summary-note">You'll receive this invoice every quarter via email. Pay by card or Zelle before each inspection.</p>
+              <p class="summary-note">You'll receive this invoice every quarter via email.</p>
             </div>
 
             <!-- Submit Button -->
@@ -178,25 +187,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
                 <span class="submit-sublabel">We'll send your first invoice within 24 hours</span>
               </span>
             </button>
-
-            <!-- Zelle Info -->
-            <div class="payment-divider">
-              <span>prefer Zelle?</span>
-            </div>
-
-            <button type="button" id="pay-zelle-btn" class="payment-btn zelle-btn">
-              <span class="payment-icon">🏦</span>
-              <span class="payment-text">
-                <span class="payment-label">Pay Invoices via Zelle</span>
-                <span class="payment-sublabel">No processing fees • Save 3%</span>
-              </span>
-            </button>
-
-            <div id="zelle-instructions" class="zelle-instructions" style="display: none;">
-              <p><strong>When you receive your invoice, send payment to:</strong></p>
-              <p class="zelle-email">{ZELLE_EMAIL}</p>
-              <p class="zelle-note">Include your name and property address in the memo. We'll mark your invoice as paid once received.</p>
-            </div>
 
             <div class="contact-help">
               <p>Questions? <a href="mailto:info@checkmyrental.io">info@checkmyrental.io</a></p>
@@ -857,114 +847,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     color: rgba(255, 255, 255, 0.8);
   }
 
-  /* Payment Options */
-  .payment-divider {
-    text-align: center;
-    margin: 1rem 0;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 0.9rem;
-  }
-
-  body.light-mode .payment-divider {
-    color: #888;
-  }
-
-  .payment-btn {
-    width: 100%;
-    padding: 1rem;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.03);
-    cursor: pointer;
-    transition: all 0.3s;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .payment-btn:hover {
-    border-color: #e74c3c;
-    background: rgba(231, 76, 60, 0.1);
-  }
-
-  body.light-mode .payment-btn {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.1);
-  }
-
-  body.light-mode .payment-btn:hover {
-    background: rgba(231, 76, 60, 0.05);
-    border-color: #e74c3c;
-  }
-
-  .payment-icon {
-    font-size: 1.5rem;
-  }
-
-  .payment-text {
-    flex: 1;
-    text-align: left;
-  }
-
-  .payment-label {
-    display: block;
-    font-weight: 700;
-    color: white;
-    font-size: 1rem;
-  }
-
-  body.light-mode .payment-label {
-    color: #1a1a1a;
-  }
-
-  .payment-sublabel {
-    display: block;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  body.light-mode .payment-sublabel {
-    color: #666;
-  }
-
-  .zelle-instructions {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 10px;
-    text-align: center;
-  }
-
-  body.light-mode .zelle-instructions {
-    background: rgba(0, 0, 0, 0.03);
-  }
-
-  .zelle-instructions p {
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 0.5rem;
-  }
-
-  body.light-mode .zelle-instructions p {
-    color: #333;
-  }
-
-  .zelle-email {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #e74c3c;
-    user-select: all;
-    margin: 0.75rem 0;
-  }
-
-  .zelle-note {
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.6) !important;
-  }
-
-  body.light-mode .zelle-note {
-    color: #666 !important;
-  }
-
   .contact-help {
     text-align: center;
     color: rgba(255, 255, 255, 0.6);
@@ -1321,12 +1203,6 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
     // Initial property type change listeners
     document.querySelectorAll('input[name="property_1_type"]').forEach(radio => {
       radio.addEventListener('change', updateSummary);
-    });
-
-    // Zelle button
-    document.getElementById('pay-zelle-btn').addEventListener('click', () => {
-      const zelleInstructions = document.getElementById('zelle-instructions');
-      zelleInstructions.style.display = zelleInstructions.style.display === 'none' ? 'block' : 'none';
     });
 
     // Form submission - show success view

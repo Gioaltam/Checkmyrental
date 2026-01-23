@@ -88,8 +88,10 @@
     transition: transform 0.3s ease;
   }
 
-  .roi-card:hover {
-    transform: translateY(-4px);
+  @media (hover: hover) {
+    .roi-card:hover {
+      transform: translateY(-4px);
+    }
   }
 
   body.light-mode .roi-card {
@@ -203,9 +205,11 @@
     transition: background 0.3s ease, transform 0.3s ease;
   }
 
-  .roi-cta:hover {
-    background: #c0392b;
-    transform: translateY(-2px);
+  @media (hover: hover) {
+    .roi-cta:hover {
+      background: #c0392b;
+      transform: translateY(-2px);
+    }
   }
 
   @media (max-width: 768px) {
@@ -225,6 +229,30 @@
 
     .roi-vs {
       font-size: 1.1rem;
+    }
+
+    .roi-cta {
+      display: block;
+      width: 100%;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 360px) {
+    .roi-section {
+      padding: 3rem 1rem;
+    }
+
+    .roi-card {
+      padding: 2rem 1.5rem;
+    }
+
+    .roi-headline {
+      margin-bottom: 2rem;
+    }
+
+    .roi-price {
+      font-size: 1.75rem;
     }
   }
 </style>

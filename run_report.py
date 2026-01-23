@@ -49,12 +49,17 @@ except ImportError:
 try:
     from tenant_actions import (
         parse_issues_from_vision_results,
-        generate_action_items_page
+        generate_action_items_page,
+        extract_location
     )
     ACTION_ITEMS_AVAILABLE = True
 except ImportError:
     ACTION_ITEMS_AVAILABLE = False
     print("Warning: tenant_actions.py not found, action items page will be skipped")
+    def extract_location(analysis):
+        import re
+        match = re.search(r'Location:\s*(.+?)(?:\n|$)', analysis, re.IGNORECASE)
+        return match.group(1).strip() if match else "Unknown"
 
 # Directory Configuration
 WORKSPACE = Path(os.environ.get('WORKSPACE_DIR', './workspace'))
@@ -226,6 +231,94 @@ def collect_images(photos_dir: Path) -> List[Path]:
     images.sort(key=lambda p: p.name.lower())
     return images
 
+def normalize_location(location: str) -> str:
+    """Normalize location strings for consistent grouping."""
+    location = location.strip().title()
+
+    # Merge common synonyms
+    synonyms = {
+        'Master Bedroom': 'Main Bedroom',
+        'Master Bath': 'Main Bathroom',
+        'Master Bathroom': 'Main Bathroom',
+        'Half Bath': 'Half Bathroom',
+        'Powder Room': 'Half Bathroom',
+        'Family Room': 'Living Room',
+        'Laundry': 'Laundry Room',
+    }
+
+    for key, canonical in synonyms.items():
+        if location.lower() == key.lower():
+            return canonical
+
+    return location
+
+
+def group_images_by_location(images: List[Path], vision_results: Optional[Dict[str, str]] = None) -> List[Tuple[str, List[Path]]]:
+    """
+    Group images by their location extracted from vision results.
+
+    Returns a list of (location_name, [image_paths]) tuples, ordered
+    alphabetically with "Unknown" last.
+    Falls back to a single group if no vision_results provided.
+    """
+    if not vision_results:
+        return [("All Photos", images)]
+
+    groups: Dict[str, List[Path]] = {}
+
+    for img_path in images:
+        img_path_str = str(img_path)
+        analysis = None
+
+        # Match by full path or by filename
+        if img_path_str in vision_results:
+            analysis = vision_results[img_path_str]
+        else:
+            for key, value in vision_results.items():
+                if Path(key).name == img_path.name:
+                    analysis = value
+                    break
+
+        if analysis:
+            raw_location = extract_location(analysis)
+            location = normalize_location(raw_location)
+        else:
+            location = "Unknown"
+
+        if location not in groups:
+            groups[location] = []
+        groups[location].append(img_path)
+
+    # Sort alphabetically, "Unknown" goes last
+    sorted_locations = sorted(
+        groups.keys(),
+        key=lambda loc: (loc == "Unknown", loc.lower())
+    )
+
+    return [(loc, groups[loc]) for loc in sorted_locations]
+
+
+def calculate_page_layout(grouped_images: List[Tuple[str, List[Path]]], has_action_items: bool) -> List[Tuple[str, int, int]]:
+    """
+    Pre-calculate starting page number for each location section.
+
+    Returns: [(location_name, photo_count, starting_page_number), ...]
+    """
+    current_page = 1  # Cover
+    if has_action_items:
+        current_page += 1  # Action items
+    current_page += 1  # TOC
+
+    sections = []
+    for location_name, location_images in grouped_images:
+        current_page += 1  # Section divider page
+        section_start = current_page
+        sections.append((location_name, len(location_images), section_start))
+        current_page += len(location_images)  # One page per photo (minimum)
+
+    return sections
+
+
 def analyze_images(images: List[Path]) -> Dict[str, str]:
     """Analyze all images using vision AI with concurrent processing"""
     import concurrent.futures
@@ -273,6 +366,166 @@ def analyze_images(images: List[Path]) -> Dict[str, str]:
     return results
 
 # ============== PDF Report Generation ==============
+
+def generate_table_of_contents(c, sections: List[Tuple[str, int, int]], width: float, height: float, has_action_items: bool) -> None:
+    """Generate table of contents page listing all location sections."""
+    from reportlab.lib.colors import HexColor
+
+    primary_color = HexColor('#1a1a2e')
+    accent_color = HexColor('#e74c3c')
+    text_primary = HexColor('#2c3e50')
+    text_secondary = HexColor('#7f8c8d')
+    text_light = HexColor('#95a5a6')
+    gold_accent = HexColor('#d4af37')
+
+    # Header bar
+    c.setStrokeColor(accent_color)
+    c.setLineWidth(2)
+    c.line(0, height - 30, width, height - 30)
+
+    # Title
+    c.setFont("Helvetica", 12)
+    c.setFillColor(text_secondary)
+    subtitle = "INSPECTION REPORT"
+    c.drawCentredString(width / 2, height - 70, subtitle)
+
+    c.setFont("Helvetica-Bold", 26)
+    c.setFillColor(text_primary)
+    c.drawCentredString(width / 2, height - 100, "TABLE OF CONTENTS")
+
+    # Gold underline
+    line_width = 80
+    c.setStrokeColor(gold_accent)
+    c.setLineWidth(2)
+    c.line((width - line_width) / 2, height - 115, (width + line_width) / 2, height - 115)
+
+    # Content entries
+    margin = 60
+    entry_y = height - 160
+    line_height = 35
+
+    # Static entries
+    c.setFont("Helvetica", 11)
+    c.setFillColor(text_primary)
+    c.drawString(margin, entry_y, "Cover Page")
+    c.drawRightString(width - margin, entry_y, "1")
+    entry_y -= line_height * 0.7
+
+    if has_action_items:
+        c.drawString(margin, entry_y, "Action Items")
+        c.drawRightString(width - margin, entry_y, "2")
+        entry_y -= line_height * 0.7
+
+    # Separator
+    entry_y -= 10
+    c.setStrokeColor(HexColor('#e0e0e0'))
+    c.setLineWidth(0.5)
+    c.line(margin, entry_y, width - margin, entry_y)
+    entry_y -= 20
+
+    # Section label
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(accent_color)
+    c.drawString(margin, entry_y, "INSPECTION SECTIONS")
+    entry_y -= line_height
+
+    # Location sections
+    for location_name, photo_count, page_num in sections:
+        if entry_y < 80:
+            break
+
+        # Location name
+        c.setFont("Helvetica-Bold", 12)
+        c.setFillColor(text_primary)
+        display_name = location_name[:40]
+        c.drawString(margin + 10, entry_y, display_name)
+
+        # Photo count
+        c.setFont("Helvetica", 9)
+        c.setFillColor(text_secondary)
+        count_text = f"({photo_count} photo{'s' if photo_count != 1 else ''})"
+        name_width = c.stringWidth(display_name, "Helvetica-Bold", 12)
+        c.drawString(margin + 10 + name_width + 8, entry_y + 1, count_text)
+
+        # Dotted leader line
+        count_width = c.stringWidth(count_text, "Helvetica", 9)
+        leader_start = margin + 10 + name_width + 8 + count_width + 5
+        leader_end = width - margin - 25
+        if leader_start < leader_end:
+            c.setStrokeColor(text_light)
+            c.setLineWidth(0.5)
+            c.setDash(1, 3)
+            c.line(leader_start, entry_y + 3, leader_end, entry_y + 3)
+            c.setDash()
+
+        # Page number
+        c.setFont("Helvetica-Bold", 11)
+        c.setFillColor(text_primary)
+        c.drawRightString(width - margin, entry_y, str(page_num))
+
+        entry_y -= line_height
+
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.setFillColor(text_light)
+    c.drawString(margin, 30, datetime.now().strftime('%Y-%m-%d'))
+    c.drawCentredString(width / 2, 30, f"Page {c.getPageNumber()}")
+
+
+def generate_section_divider(c, location_name: str, photo_count: int, width: float, height: float, section_number: int, total_sections: int) -> None:
+    """Generate a section divider page for a location group."""
+    from reportlab.lib.colors import HexColor
+
+    primary_color = HexColor('#1a1a2e')
+    accent_color = HexColor('#e74c3c')
+    text_primary = HexColor('#2c3e50')
+    text_secondary = HexColor('#7f8c8d')
+    gold_accent = HexColor('#d4af37')
+    bg_accent = HexColor('#ecf0f1')
+
+    # Background
+    c.setFillColor(HexColor('#ffffff'))
+    c.rect(0, 0, width, height, fill=1, stroke=0)
+
+    # Top accent bar
+    c.setFillColor(accent_color)
+    c.rect(0, height - 3, width, 3, fill=1, stroke=0)
+
+    # Section number badge
+    badge_y = height * 0.65
+    c.setFillColor(bg_accent)
+    c.circle(width / 2, badge_y, 40, fill=1, stroke=0)
+    c.setStrokeColor(gold_accent)
+    c.setLineWidth(2)
+    c.circle(width / 2, badge_y, 40, fill=0, stroke=1)
+
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(primary_color)
+    c.drawCentredString(width / 2, badge_y - 8, str(section_number))
+
+    # Location name
+    c.setFont("Helvetica-Bold", 28)
+    c.setFillColor(text_primary)
+    c.drawCentredString(width / 2, height * 0.50, location_name.upper()[:40])
+
+    # Gold decorative line
+    line_width = 100
+    line_y = height * 0.47
+    c.setStrokeColor(gold_accent)
+    c.setLineWidth(1.5)
+    c.line((width - line_width) / 2, line_y, (width + line_width) / 2, line_y)
+
+    # Photo count subtitle
+    c.setFont("Helvetica", 14)
+    c.setFillColor(text_secondary)
+    photo_text = f"{photo_count} photo{'s' if photo_count != 1 else ''} in this section"
+    c.drawCentredString(width / 2, height * 0.42, photo_text)
+
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.setFillColor(text_secondary)
+    c.drawCentredString(width / 2, 30, f"Section {section_number} of {total_sections}")
+
 
 def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "", inspection_type: str = "Quarterly") -> None:
     """Generate executive-quality PDF report with sophisticated design
@@ -599,6 +852,7 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     c.showPage()
 
     # === ACTION ITEMS PAGE (2nd page, after cover) ===
+    has_action_items_page = False
     if ACTION_ITEMS_AVAILABLE and vision_results:
         try:
             # Parse issues from vision results (separates tenant vs owner)
@@ -609,6 +863,7 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             if tenant_count > 0 or owner_count > 0:
                 generate_action_items_page(c, issues, width, height)
                 c.showPage()
+                has_action_items_page = True
                 print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items)")
             else:
                 print("No action items found - skipping action items page")
@@ -617,8 +872,41 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             import traceback
             traceback.print_exc()
 
+    # === GROUP IMAGES BY LOCATION ===
+    grouped_images = group_images_by_location(images, vision_results)
+    use_grouping = vision_results and len(grouped_images) > 1
+
+    if use_grouping:
+        toc_sections = calculate_page_layout(grouped_images, has_action_items_page)
+        generate_table_of_contents(c, toc_sections, width, height, has_action_items_page)
+        c.showPage()
+        print(f"Table of contents added ({len(grouped_images)} sections)")
+
+        # Build flat ordered image list with section break markers
+        ordered_images = []
+        section_breaks = {}  # Maps 0-based photo index to section info
+        photo_idx = 0
+        for section_idx, (section_name, section_images) in enumerate(grouped_images, 1):
+            section_breaks[photo_idx] = (section_name, len(section_images), section_idx, len(grouped_images))
+            ordered_images.extend(section_images)
+            photo_idx += len(section_images)
+        print(f"  Sections: {', '.join(name + f' ({count})' for name, count, _, _ in section_breaks.values())}")
+    else:
+        ordered_images = list(images)
+        section_breaks = {}
+
+    total_photos = len(ordered_images)
+    current_section_name = ""
+
     # Add each image with analysis
-    for i, img_path in enumerate(images, 1):
+    for i, img_path in enumerate(ordered_images, 1):
+        # Insert section divider before first photo in each group
+        if (i - 1) in section_breaks:
+            sec_name, sec_count, sec_idx, sec_total = section_breaks[i - 1]
+            current_section_name = sec_name
+            generate_section_divider(c, sec_name, sec_count, width, height, sec_idx, sec_total)
+            c.showPage()
+
         try:
             # Compress image for smaller PDF size
             with PILImage.open(img_path) as pil_img:
@@ -689,7 +977,10 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             # Page information - clean typography
             c.setFont("Helvetica", 9)
             c.setFillColor(text_secondary)
-            c.drawString(55, height - 22, f"Photo {i} of {len(images)}")
+            if use_grouping and current_section_name:
+                c.drawString(55, height - 22, f"Photo {i} of {total_photos} \u2014 {current_section_name}")
+            else:
+                c.drawString(55, height - 22, f"Photo {i} of {total_photos}")
             
             # Property address (right aligned)
             c.setFont("Helvetica", 8)

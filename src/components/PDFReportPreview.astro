@@ -178,7 +178,106 @@
         <p class="card-caption">Clear breakdown of who fixes what</p>
       </div>
 
-      <!-- Card 3: Photo Analysis -->
+      <!-- Card 3: Table of Contents -->
+      <div class="pdf-preview-card">
+        <div class="card-label">Contents</div>
+        <div class="pdf-page toc-page">
+          <!-- Header bar -->
+          <div class="toc-header-bar"></div>
+
+          <!-- Title -->
+          <div class="toc-title-area">
+            <p class="toc-subtitle">INSPECTION REPORT</p>
+            <h3 class="toc-title">TABLE OF CONTENTS</h3>
+            <div class="toc-gold-line"></div>
+          </div>
+
+          <!-- Static entries -->
+          <div class="toc-entries">
+            <div class="toc-entry">
+              <span class="toc-entry-name">Cover Page</span>
+              <span class="toc-entry-page">1</span>
+            </div>
+            <div class="toc-entry">
+              <span class="toc-entry-name">Action Items</span>
+              <span class="toc-entry-page">2</span>
+            </div>
+
+            <!-- Section label -->
+            <div class="toc-section-label">INSPECTION SECTIONS</div>
+
+            <!-- Location entries -->
+            <div class="toc-entry section-entry">
+              <span class="toc-entry-name bold">Kitchen</span>
+              <span class="toc-entry-count">(5 photos)</span>
+              <span class="toc-leader"></span>
+              <span class="toc-entry-page bold">4</span>
+            </div>
+            <div class="toc-entry section-entry">
+              <span class="toc-entry-name bold">Living Room</span>
+              <span class="toc-entry-count">(4 photos)</span>
+              <span class="toc-leader"></span>
+              <span class="toc-entry-page bold">10</span>
+            </div>
+            <div class="toc-entry section-entry">
+              <span class="toc-entry-name bold">Bathroom</span>
+              <span class="toc-entry-count">(8 photos)</span>
+              <span class="toc-leader"></span>
+              <span class="toc-entry-page bold">15</span>
+            </div>
+            <div class="toc-entry section-entry">
+              <span class="toc-entry-name bold">Main Bedroom</span>
+              <span class="toc-entry-count">(4 photos)</span>
+              <span class="toc-leader"></span>
+              <span class="toc-entry-page bold">24</span>
+            </div>
+            <div class="toc-entry section-entry">
+              <span class="toc-entry-name bold">Garage</span>
+              <span class="toc-entry-count">(3 photos)</span>
+              <span class="toc-leader"></span>
+              <span class="toc-entry-page bold">29</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="toc-footer">
+            <span>2025-01-19</span>
+            <span>Page 3</span>
+          </div>
+        </div>
+        <p class="card-caption">Navigate by room/location</p>
+      </div>
+
+      <!-- Card 4: Section Divider -->
+      <div class="pdf-preview-card">
+        <div class="card-label">Sections</div>
+        <div class="pdf-page divider-page">
+          <!-- Top accent bar -->
+          <div class="divider-accent-bar"></div>
+
+          <!-- Section number badge -->
+          <div class="divider-badge">
+            <span class="divider-badge-number">3</span>
+          </div>
+
+          <!-- Section name -->
+          <h3 class="divider-location">BATHROOM</h3>
+
+          <!-- Gold line -->
+          <div class="divider-gold-line"></div>
+
+          <!-- Photo count -->
+          <p class="divider-photo-count">8 photos in this section</p>
+
+          <!-- Footer -->
+          <div class="divider-footer">
+            Section 3 of 5
+          </div>
+        </div>
+        <p class="card-caption">Clear section dividers by room</p>
+      </div>
+
+      <!-- Card 5: Photo Analysis -->
       <div class="pdf-preview-card">
         <div class="card-label">Photo Pages</div>
         <div class="pdf-page analysis-page">
@@ -189,7 +288,7 @@
                 <div class="mini-house"></div>
                 <div class="mini-badge"></div>
               </div>
-              <span class="photo-count">Photo 3 of 24</span>
+              <span class="photo-count">Photo 3 of 24 &mdash; Bathroom</span>
             </div>
             <span class="header-address">1234 Oak Street, Tampa FL</span>
           </div>
@@ -244,20 +343,194 @@
         <p class="card-caption">Every photo with detailed analysis</p>
       </div>
     </div>
+
+    <div class="scroll-hint">
+      <span class="scroll-hint-text scroll-desktop">Scroll to see all pages</span>
+      <span class="scroll-hint-text scroll-mobile">Swipe to see all pages</span>
+      <span class="scroll-hint-arrow">&rarr;</span>
+    </div>
+
   </div>
 </section>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const cards = document.querySelectorAll('.pdf-preview-card');
+    let activeCard: HTMLElement | null = null;
+    let placeholder: Comment | null = null;
+    let overlay: HTMLElement | null = null;
+
+    function preventTouch(e: TouchEvent) { e.preventDefault(); }
+
+    function createOverlay() {
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:999;opacity:0;transition:opacity 0.25s ease;touch-action:none;';
+      document.body.appendChild(el);
+      // Prevent iOS rubber-band scrolling while overlay is open
+      el.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+      // Force reflow then fade in
+      el.offsetHeight;
+      el.style.opacity = '1';
+      el.addEventListener('click', closeModal);
+      return el;
+    }
+
+    function closeModal() {
+      if (!activeCard || !placeholder) return;
+
+      // Restore label and caption
+      const label = activeCard.querySelector('.card-label') as HTMLElement;
+      const caption = activeCard.querySelector('.card-caption') as HTMLElement;
+      if (label) label.style.display = '';
+      if (caption) caption.style.display = '';
+
+      // Remove glow and restore hover/transition from pdf-page
+      const page = activeCard.querySelector('.pdf-page') as HTMLElement;
+      if (page) {
+        page.style.boxShadow = '';
+        page.style.transform = '';
+        page.style.transition = '';
+      }
+
+      // Remove touch lock and inline positioning styles
+      activeCard.removeEventListener('touchmove', preventTouch);
+      activeCard.style.cssText = 'cursor: pointer;';
+
+      // Move card back to its original spot
+      placeholder.parentNode?.insertBefore(activeCard, placeholder);
+      placeholder.parentNode?.removeChild(placeholder);
+      placeholder = null;
+      activeCard = null;
+
+      // Fade out and remove overlay
+      if (overlay) {
+        overlay.style.opacity = '0';
+        const ov = overlay;
+        setTimeout(() => ov.remove(), 250);
+        overlay = null;
+      }
+
+      document.body.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+      document.documentElement.style.overscrollBehavior = '';
+    }
+
+    cards.forEach((card) => {
+      (card as HTMLElement).style.cursor = 'pointer';
+      card.addEventListener('click', () => {
+        if (activeCard) {
+          closeModal();
+          return;
+        }
+
+        activeCard = card as HTMLElement;
+
+        // Leave a placeholder comment so we can put it back
+        placeholder = document.createComment('card-placeholder');
+        activeCard.parentNode?.insertBefore(placeholder, activeCard);
+
+        // Hide label and caption
+        const label = activeCard.querySelector('.card-label') as HTMLElement;
+        const caption = activeCard.querySelector('.card-caption') as HTMLElement;
+        if (label) label.style.display = 'none';
+        if (caption) caption.style.display = 'none';
+
+        // Move card to body
+        document.body.appendChild(activeCard);
+
+        const isMobile = window.innerWidth <= 768;
+
+        // Add glow shadow and disable hover float/transition on the pdf-page
+        const page = activeCard.querySelector('.pdf-page') as HTMLElement;
+        if (page) {
+          page.style.boxShadow = '0 0 60px rgba(231, 76, 60, 0.15), 0 30px 100px rgba(0, 0, 0, 0.6)';
+          page.style.transform = 'none';
+          page.style.transition = 'none';
+        }
+
+        if (isMobile) {
+          // No animation on mobile — just snap into place
+          activeCard.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            width: 90vw;
+            cursor: pointer;
+            touch-action: none;
+          `;
+          activeCard.addEventListener('touchmove', preventTouch, { passive: false } as any);
+        } else {
+          // Desktop: spring scale-up animation
+          activeCard.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            z-index: 1000;
+            width: min(500px, 90vw);
+            cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          `;
+
+          // Force reflow then scale up
+          activeCard.offsetHeight;
+          activeCard.style.transform = 'translate(-50%, -50%) scale(1)';
+        }
+
+        // Show overlay and lock scroll
+        overlay = createOverlay();
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none';
+        document.documentElement.style.overscrollBehavior = 'none';
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeCard) {
+        closeModal();
+      }
+    });
+  });
+</script>
 
 <style>
   .pdf-showcase-section {
     padding: 100px 20px;
     background: linear-gradient(180deg, #0a0a0a 0%, #0f0f0f 50%, #0a0a0a 100%);
     position: relative;
-    overflow: hidden;
   }
 
   .showcase-container {
     max-width: 1400px;
     margin: 0 auto;
+    position: relative;
+  }
+
+  /* Fade indicators for scroll hint */
+  .showcase-container::before,
+  .showcase-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .showcase-container::after {
+    right: 0;
+    background: linear-gradient(to left, #0a0a0a 0%, rgba(10, 10, 10, 0.8) 40%, transparent 100%);
+  }
+
+  @media (max-width: 1400px) {
+    .showcase-container::after {
+      opacity: 1;
+    }
   }
 
   .section-header {
@@ -290,17 +563,30 @@
     line-height: 1.6;
   }
 
-  /* Preview Grid */
+  /* Preview Grid - Horizontal Scroll Carousel */
   .pdf-preview-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    padding: 10px 20px 30px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    justify-content: center;
+  }
+
+  .pdf-preview-grid::-webkit-scrollbar {
+    display: none;
   }
 
   .pdf-preview-card {
     display: flex;
     flex-direction: column;
     align-items: center;
+    flex: 0 0 240px;
+    scroll-snap-align: center;
   }
 
   .card-label {
@@ -334,9 +620,11 @@
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
-  .pdf-preview-card:hover .pdf-page {
-    transform: translateY(-8px);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  @media (hover: hover) {
+    .pdf-preview-card:hover .pdf-page {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
   }
 
   /* ============================================
@@ -430,7 +718,7 @@
   /* Logo container */
   .cover-logo-container {
     margin-top: 10%;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
     z-index: 2;
   }
 
@@ -442,23 +730,28 @@
 
   .cover-title-section {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
+    overflow: visible;
+    padding: 2px 0;
+    position: relative;
+    z-index: 3;
   }
 
   .cover-subtitle {
-    font-size: 5px;
+    font-size: 6px;
     color: #7f8c8d;
     letter-spacing: 0.15em;
-    margin: 0 0 2px 0;
+    margin: 0 0 4px 0;
   }
 
   .cover-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
     color: #2c3e50;
     margin: 0;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.15em;
     text-shadow: 1px 1px 0 #e0e0e0;
+    line-height: 1.2;
   }
 
   .cover-title-line {
@@ -751,6 +1044,181 @@
   }
 
   /* ============================================
+     TABLE OF CONTENTS PAGE STYLES
+     ============================================ */
+  .toc-page {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .toc-header-bar {
+    height: 2px;
+    background: #e74c3c;
+  }
+
+  .toc-title-area {
+    text-align: center;
+    padding: 16px 12px 10px;
+  }
+
+  .toc-subtitle {
+    font-size: 5px;
+    color: #7f8c8d;
+    letter-spacing: 0.05em;
+    margin: 0 0 4px 0;
+  }
+
+  .toc-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .toc-gold-line {
+    width: 35px;
+    height: 1.5px;
+    background: #d4af37;
+    margin: 6px auto 0;
+  }
+
+  .toc-entries {
+    padding: 0 16px;
+    flex: 1;
+  }
+
+  .toc-entry {
+    display: flex;
+    align-items: center;
+    padding: 3px 0;
+    gap: 4px;
+  }
+
+  .toc-entry-name {
+    font-size: 5px;
+    color: #2c3e50;
+  }
+
+  .toc-entry-name.bold {
+    font-weight: 700;
+    font-size: 5.5px;
+  }
+
+  .toc-entry-count {
+    font-size: 4px;
+    color: #7f8c8d;
+  }
+
+  .toc-leader {
+    flex: 1;
+    border-bottom: 0.5px dotted #95a5a6;
+    margin: 0 3px;
+    min-width: 10px;
+  }
+
+  .toc-entry-page {
+    font-size: 5px;
+    color: #2c3e50;
+  }
+
+  .toc-entry-page.bold {
+    font-weight: 700;
+    font-size: 5.5px;
+  }
+
+  .toc-section-label {
+    font-size: 4.5px;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: 8px 0 4px;
+    padding-top: 6px;
+    border-top: 0.5px solid #e0e0e0;
+  }
+
+  .section-entry {
+    padding: 3.5px 0 3.5px 6px;
+  }
+
+  .toc-footer {
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 4px;
+    color: #95a5a6;
+  }
+
+  /* ============================================
+     SECTION DIVIDER PAGE STYLES
+     ============================================ */
+  .divider-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background: #ffffff;
+  }
+
+  .divider-accent-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e74c3c;
+  }
+
+  .divider-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #ecf0f1;
+    border: 1.5px solid #d4af37;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+
+  .divider-badge-number {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+
+  .divider-location {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2c3e50;
+    margin: 0;
+    letter-spacing: 0.08em;
+  }
+
+  .divider-gold-line {
+    width: 50px;
+    height: 1.5px;
+    background: #d4af37;
+    margin: 8px 0;
+  }
+
+  .divider-photo-count {
+    font-size: 6px;
+    color: #7f8c8d;
+    margin: 0;
+  }
+
+  .divider-footer {
+    position: absolute;
+    bottom: 10px;
+    font-size: 4px;
+    color: #7f8c8d;
+  }
+
+  /* ============================================
      PHOTO ANALYSIS PAGE STYLES
      ============================================ */
   .analysis-page {
@@ -959,31 +1427,70 @@
   }
 
   /* ============================================
-     RESPONSIVE STYLES
+     SCROLL HINT
      ============================================ */
-  @media (max-width: 1024px) {
-    .pdf-preview-grid {
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
+  .scroll-hint {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    opacity: 0.6;
+    animation: nudge 2s ease-in-out infinite;
+  }
+
+  .scroll-hint-text {
+    font-size: 0.85rem;
+    color: #a0a0a0;
+    letter-spacing: 0.02em;
+  }
+
+  .scroll-mobile {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .scroll-desktop {
+      display: none;
+    }
+    .scroll-mobile {
+      display: inline;
     }
   }
 
-  @media (max-width: 900px) {
+  .scroll-hint-arrow {
+    font-size: 1.1rem;
+    color: #e74c3c;
+  }
+
+  @keyframes nudge {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(6px); }
+  }
+
+  @media (max-width: 1400px) {
+    .scroll-hint {
+      display: flex;
+    }
+  }
+
+  /* ============================================
+     RESPONSIVE STYLES
+     ============================================ */
+  @media (max-width: 1400px) {
     .pdf-preview-grid {
-      grid-template-columns: 1fr;
-      max-width: 350px;
-      margin: 0 auto;
-      gap: 40px;
+      justify-content: flex-start;
     }
   }
 
   @media (max-width: 768px) {
     .pdf-showcase-section {
-      padding: 60px 16px;
+      padding: 60px 0;
     }
 
     .section-header {
       margin-bottom: 40px;
+      padding: 0 16px;
     }
 
     .section-subtitle {
@@ -991,17 +1498,23 @@
     }
 
     .pdf-preview-grid {
-      max-width: 300px;
+      gap: 16px;
+      padding: 10px 16px 24px;
+    }
+
+    .pdf-preview-card {
+      flex: 0 0 220px;
     }
   }
 
   @media (max-width: 360px) {
-    .pdf-showcase-section {
-      padding: 50px 12px;
+    .pdf-preview-grid {
+      gap: 12px;
+      padding: 10px 12px 20px;
     }
 
-    .pdf-preview-grid {
-      max-width: 260px;
+    .pdf-preview-card {
+      flex: 0 0 200px;
     }
 
     .card-label {
@@ -1013,4 +1526,5 @@
       font-size: 0.85rem;
     }
   }
+
 </style>

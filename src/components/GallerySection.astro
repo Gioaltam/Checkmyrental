@@ -122,7 +122,7 @@ const includedServices = [
   <!-- What's Included Section -->
   <header class="gallery-head included-header">
     <p class="eyebrow">Our Service</p>
-    <h2>What's Included in Every Quarterly Documentation</h2>
+    <h2>What's Included in Every Documentation</h2>
     <p>Everything you need to protect your investment—delivered every 3 months with same-day reports.</p>
   </header>
 
@@ -476,13 +476,15 @@ const includedServices = [
     background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
   }
 
-  .photo-item:hover {
-    transform: translateY(-12px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-  }
+  @media (hover: hover) {
+    .photo-item:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
 
-  body.light-mode .photo-item:hover {
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    body.light-mode .photo-item:hover {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
   }
 
   .animated-bg {
@@ -2408,11 +2410,11 @@ const includedServices = [
     }
 
     .photo-item {
-      min-height: 380px;
+      min-height: 320px;
     }
 
     .animated-bg {
-      min-height: 220px;
+      min-height: 180px;
     }
 
     .photo-label {
@@ -2440,7 +2442,7 @@ const includedServices = [
     .icon-plumbing,
     .icon-appliances,
     .icon-report {
-      transform: scale(0.75);
+      transform: scale(0.8);
     }
   }
 
@@ -2455,11 +2457,11 @@ const includedServices = [
     }
 
     .photo-item {
-      min-height: 350px;
+      min-height: 280px;
     }
 
     .animated-bg {
-      min-height: 200px;
+      min-height: 150px;
     }
 
     .photo-label {
@@ -2481,7 +2483,7 @@ const includedServices = [
     .icon-plumbing,
     .icon-appliances,
     .icon-report {
-      transform: scale(0.65);
+      transform: scale(0.7);
     }
   }
 

@@ -1,0 +1,230 @@
+---
+// ROI Cost Comparison Section
+---
+
+<section class="roi-section">
+  <div class="roi-container">
+    <p class="section-eyebrow">The Math Is Simple</p>
+    <h2 class="roi-headline">4 visits a year costs less than one emergency repair</h2>
+
+    <div class="roi-comparison">
+      <div class="roi-card prevention">
+        <span class="roi-card-icon">&#10003;</span>
+        <h3>Quarterly Inspections</h3>
+        <p class="roi-price">$70&ndash;$100<span class="roi-price-suffix">/visit</span></p>
+        <p class="roi-desc">Catch problems early</p>
+      </div>
+
+      <div class="roi-vs">vs</div>
+
+      <div class="roi-card repair">
+        <span class="roi-card-icon">&times;</span>
+        <h3>One Emergency Repair</h3>
+        <p class="roi-price">$3,000+</p>
+        <p class="roi-desc">When it's already too late</p>
+      </div>
+    </div>
+
+    <p class="roi-closing">Prevention is always cheaper than repair.</p>
+    <a href="/checkout" class="roi-cta">Start Quarterly Inspections</a>
+  </div>
+</section>
+
+<style>
+  .roi-section {
+    padding: 6rem 3rem;
+    background: rgba(255, 255, 255, 0.02);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+  }
+
+  body.light-mode .roi-section {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  .roi-container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #e74c3c;
+    margin-bottom: 1rem;
+  }
+
+  .roi-headline {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 3rem;
+    line-height: 1.2;
+  }
+
+  body.light-mode .roi-headline {
+    color: #1a1a2e;
+  }
+
+  .roi-comparison {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .roi-card {
+    flex: 1;
+    max-width: 320px;
+    padding: 2.5rem 2rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .roi-card:hover {
+    transform: translateY(-4px);
+  }
+
+  body.light-mode .roi-card {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  }
+
+  .roi-card.prevention {
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  body.light-mode .roi-card.prevention {
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+
+  .roi-card.repair {
+    border-color: rgba(231, 76, 60, 0.3);
+  }
+
+  body.light-mode .roi-card.repair {
+    border-color: rgba(231, 76, 60, 0.4);
+  }
+
+  .roi-card-icon {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .prevention .roi-card-icon {
+    color: #10b981;
+  }
+
+  .repair .roi-card-icon {
+    color: #e74c3c;
+  }
+
+  .roi-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 0.75rem;
+  }
+
+  body.light-mode .roi-card h3 {
+    color: #1a1a2e;
+  }
+
+  .roi-price {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .prevention .roi-price {
+    color: #10b981;
+  }
+
+  .repair .roi-price {
+    color: #e74c3c;
+  }
+
+  .roi-price-suffix {
+    font-size: 1rem;
+    font-weight: 500;
+    opacity: 0.7;
+  }
+
+  .roi-desc {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  body.light-mode .roi-desc {
+    color: #666;
+  }
+
+  .roi-vs {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+  }
+
+  body.light-mode .roi-vs {
+    color: rgba(0, 0, 0, 0.3);
+  }
+
+  .roi-closing {
+    font-size: 1.15rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  body.light-mode .roi-closing {
+    color: #555;
+  }
+
+  .roi-cta {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    background: #e74c3c;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  .roi-cta:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+  }
+
+  @media (max-width: 768px) {
+    .roi-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .roi-comparison {
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .roi-card {
+      max-width: 100%;
+      width: 100%;
+    }
+
+    .roi-vs {
+      font-size: 1.1rem;
+    }
+  }
+</style>

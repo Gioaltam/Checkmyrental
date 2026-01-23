@@ -18,11 +18,11 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
       <!-- Form View -->
       <div id="form-view">
         <div class="checkout-header">
-          <h1>Start Quarterly Inspections</h1>
-          <p>Register your properties and we'll set up recurring quarterly invoices</p>
+          <h1>Start Property Inspections</h1>
+          <p>Register your properties and choose your preferred inspection schedule</p>
           <div class="service-highlight">
             <span class="highlight-icon">🔄</span>
-            <span>Quarterly billing • Cancel anytime • Same-day reports</span>
+            <span>Flexible scheduling • No contracts • Same-day reports</span>
           </div>
         </div>
 
@@ -58,7 +58,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               <!-- Step 2: Properties -->
               <div class="form-section">
                 <h2><span class="step-number">2</span> Properties to Inspect</h2>
-                <p class="section-desc">Add all properties for quarterly inspections. You'll receive one invoice each quarter for all properties.</p>
+                <p class="section-desc">Add all properties you'd like inspected. You'll receive an invoice based on your chosen frequency.</p>
 
                 <div id="properties-container">
                   <!-- Property 1 (default) -->
@@ -114,7 +114,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
               <!-- Step 3: Preferences -->
               <div class="form-section">
-                <h2><span class="step-number">3</span> Preferences</h2>
+                <h2><span class="step-number">3</span> Choose Your Schedule</h2>
                 <div class="form-row-2">
                   <div class="form-group">
                     <label for="preferred-timeframe">Preferred Timeframe <span class="required">*</span></label>
@@ -126,6 +126,19 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                       <option value="this_month">Within this month</option>
                       <option value="flexible">I'm flexible</option>
                     </select>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="inspection-frequency">Inspection Frequency <span class="required">*</span></label>
+                    <select id="inspection-frequency" name="inspection_frequency" required>
+                      <option value="quarterly" selected>Quarterly (Recommended — Industry Standard)</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="bimonthly">Every 2 Months</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="one_time">One Time</option>
+                      <option value="custom">Custom Schedule</option>
+                    </select>
+                    <p class="field-hint">Industry data shows quarterly inspections are the optimal frequency for most rental properties — catching issues early while keeping costs manageable.</p>
                   </div>
 
                   <div class="form-group">
@@ -169,11 +182,11 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               <div class="summary-divider"></div>
 
               <div class="summary-row total">
-                <span>Quarterly Total</span>
+                <span>Per-Visit Total</span>
                 <span id="summary-total">$100.00</span>
               </div>
 
-              <p class="summary-note">You'll receive this invoice every quarter via email.</p>
+              <p class="summary-note">You'll receive invoices based on your selected frequency.</p>
             </div>
 
             <!-- Submit Button -->
@@ -198,12 +211,12 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
         <div class="success-container">
           <div class="success-icon">✓</div>
           <h1>You're All Set!</h1>
-          <p class="success-message">Welcome to CheckMyRental's quarterly inspection service. We'll send your first invoice within 24 hours.</p>
+          <p class="success-message">Welcome to CheckMyRental! Your inspection schedule has been set up. We'll send your first invoice within 24 hours.</p>
 
           <div class="success-details">
             <h3>What happens next?</h3>
             <ol>
-              <li><strong>First invoice</strong> — You'll receive your first quarterly invoice via email within 24 hours</li>
+              <li><strong>First invoice</strong> — You'll receive your first invoice via email within 24 hours</li>
               <li><strong>Payment</strong> — Pay by card directly on the invoice, or via Zelle to save on fees</li>
               <li><strong>Tenant notification</strong> — We'll text your tenant(s) a booking link (required 24-hour notice per FL law)</li>
               <li><strong>Tenant books time</strong> — Your tenant selects an available appointment slot</li>
@@ -353,6 +366,17 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     color: #666;
   }
 
+  .field-hint {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.25rem;
+    line-height: 1.4;
+  }
+
+  body.light-mode .field-hint {
+    color: rgba(0, 0, 0, 0.5);
+  }
+
   .step-number {
     display: inline-flex;
     align-items: center;
@@ -364,6 +388,24 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     border-radius: 50%;
     font-size: 0.9rem;
     font-weight: 700;
+  }
+
+  .popular-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.15);
+    color: #10b981;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+    letter-spacing: 0.02em;
+  }
+
+  body.light-mode .popular-badge {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
   }
 
   /* Property Card */

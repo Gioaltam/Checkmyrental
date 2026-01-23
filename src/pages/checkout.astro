@@ -75,7 +75,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                         <span class="pill-content">
                           <span class="pill-icon">🏢</span>
                           <span class="pill-label">Apartment</span>
-                          <span class="pill-price">$72</span>
+                          <span class="pill-price">$70</span>
                         </span>
                       </label>
                       <label class="type-pill">
@@ -83,7 +83,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                         <span class="pill-content">
                           <span class="pill-icon">🏠</span>
                           <span class="pill-label">House</span>
-                          <span class="pill-price">$103</span>
+                          <span class="pill-price">$100</span>
                         </span>
                       </label>
                       <label class="type-pill">
@@ -91,7 +91,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                         <span class="pill-content">
                           <span class="pill-icon">🏘️</span>
                           <span class="pill-label">Multi</span>
-                          <span class="pill-price">$170</span>
+                          <span class="pill-price">$165</span>
                         </span>
                       </label>
                     </div>
@@ -104,9 +104,6 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                       <input type="text" name="property_1_tenant_name" placeholder="Tenant name" />
                       <input type="tel" name="property_1_tenant_phone" placeholder="Tenant phone (for booking text)" />
                     </div>
-
-                    <!-- Access Notes -->
-                    <textarea class="access-notes" name="property_1_access" rows="1" placeholder="Access notes: gate code, lockbox, etc. (optional)"></textarea>
                   </div>
                 </div>
 
@@ -134,9 +131,9 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                   <div class="form-group">
                     <label for="payment-preference">Invoice Payment Method <span class="required">*</span></label>
                     <select id="payment-preference" name="payment_preference" required>
-                      <option value="">Select payment method...</option>
-                      <option value="card">Credit/Debit Card</option>
+                      <option value="" disabled selected hidden>Select payment method...</option>
                       <option value="zelle">Zelle (save 3% on fees)</option>
+                      <option value="card">Credit/Debit Card (+3% fee)</option>
                     </select>
                   </div>
                 </div>
@@ -165,7 +162,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               <div id="summary-items">
                 <div class="summary-line-item">
                   <span>1× Single Family Home</span>
-                  <span>$103.20</span>
+                  <span>$100.00</span>
                 </div>
               </div>
 
@@ -173,7 +170,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
               <div class="summary-row total">
                 <span>Quarterly Total</span>
-                <span id="summary-total">$103.20</span>
+                <span id="summary-total">$100.00</span>
               </div>
 
               <p class="summary-note">You'll receive this invoice every quarter via email.</p>
@@ -183,7 +180,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
             <button type="submit" form="checkout-form" class="submit-btn">
               <span class="submit-icon">🔄</span>
               <span class="submit-text">
-                <span class="submit-label">Start Quarterly Service</span>
+                <span class="submit-label">Submit Inquiry</span>
                 <span class="submit-sublabel">We'll send your first invoice within 24 hours</span>
               </span>
             </button>
@@ -553,45 +550,6 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
   body.light-mode .tenant-row input:focus {
     background: white;
     border-color: rgba(231, 76, 60, 0.5);
-  }
-
-  /* Access Notes - Minimal */
-  .access-notes {
-    width: 100%;
-    padding: 0.6rem 0.75rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.85rem;
-    resize: none;
-    font-family: inherit;
-    transition: all 0.2s;
-  }
-
-  .access-notes::placeholder {
-    color: rgba(255, 255, 255, 0.35);
-  }
-
-  .access-notes:focus {
-    outline: none;
-    border-color: rgba(231, 76, 60, 0.4);
-    background: rgba(255, 255, 255, 0.04);
-  }
-
-  body.light-mode .access-notes {
-    background: rgba(0, 0, 0, 0.02);
-    border-color: rgba(0, 0, 0, 0.08);
-    color: #555;
-  }
-
-  body.light-mode .access-notes::placeholder {
-    color: rgba(0, 0, 0, 0.35);
-  }
-
-  body.light-mode .access-notes:focus {
-    background: white;
-    border-color: rgba(231, 76, 60, 0.4);
   }
 
   /* Add Property Link */
@@ -1039,11 +997,32 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 </style>
 
 <script is:inline>
-  // Pricing configuration (includes Square processing fee)
-  const PRICES = {
+  // Pricing configuration
+  // Card prices include ~3% Square processing fee
+  const PRICES_CARD = {
     apartment: 72.33,
     single_family: 103.20,
     multifamily: 170.09
+  };
+
+  // Zelle prices (no processing fee - 3% savings)
+  const PRICES_ZELLE = {
+    apartment: 70.00,
+    single_family: 100.00,
+    multifamily: 165.00
+  };
+
+  // Display prices for pills (rounded)
+  const DISPLAY_PRICES_CARD = {
+    apartment: 72,
+    single_family: 103,
+    multifamily: 170
+  };
+
+  const DISPLAY_PRICES_ZELLE = {
+    apartment: 70,
+    single_family: 100,
+    multifamily: 165
   };
 
   const LABELS = {
@@ -1055,8 +1034,40 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
   let propertyCount = 1;
   const maxProperties = 10;
 
+  // Get current payment method
+  function getPaymentMethod() {
+    const paymentSelect = document.getElementById('payment-preference');
+    return paymentSelect ? paymentSelect.value : 'card';
+  }
+
+  // Get prices based on payment method (default to Zelle/no-fee prices)
+  function getCurrentPrices() {
+    return getPaymentMethod() === 'card' ? PRICES_CARD : PRICES_ZELLE;
+  }
+
+  function getDisplayPrices() {
+    return getPaymentMethod() === 'card' ? DISPLAY_PRICES_CARD : DISPLAY_PRICES_ZELLE;
+  }
+
+  // Update all pill prices displayed in the form
+  function updatePillPrices() {
+    const displayPrices = getDisplayPrices();
+    document.querySelectorAll('.property-card').forEach(card => {
+      const pills = card.querySelectorAll('.type-pill');
+      pills.forEach(pill => {
+        const input = pill.querySelector('input');
+        const priceSpan = pill.querySelector('.pill-price');
+        if (input && priceSpan) {
+          const type = input.value;
+          priceSpan.textContent = `$${displayPrices[type]}`;
+        }
+      });
+    });
+  }
+
   // Property card template
   function createPropertyCard(index) {
+    const displayPrices = getDisplayPrices();
     return `
       <div class="property-card" data-property-index="${index}">
         <div class="property-card-header">
@@ -1071,7 +1082,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
             <span class="pill-content">
               <span class="pill-icon">🏢</span>
               <span class="pill-label">Apartment</span>
-              <span class="pill-price">$72</span>
+              <span class="pill-price">$${displayPrices.apartment}</span>
             </span>
           </label>
           <label class="type-pill">
@@ -1079,7 +1090,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
             <span class="pill-content">
               <span class="pill-icon">🏠</span>
               <span class="pill-label">House</span>
-              <span class="pill-price">$103</span>
+              <span class="pill-price">$${displayPrices.single_family}</span>
             </span>
           </label>
           <label class="type-pill">
@@ -1087,7 +1098,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
             <span class="pill-content">
               <span class="pill-icon">🏘️</span>
               <span class="pill-label">Multi</span>
-              <span class="pill-price">$170</span>
+              <span class="pill-price">$${displayPrices.multifamily}</span>
             </span>
           </label>
         </div>
@@ -1100,9 +1111,6 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
           <input type="text" name="property_${index}_tenant_name" placeholder="Tenant name" />
           <input type="tel" name="property_${index}_tenant_phone" placeholder="Tenant phone (for booking text)" />
         </div>
-
-        <!-- Access Notes -->
-        <textarea class="access-notes" name="property_${index}_access" rows="1" placeholder="Access notes: gate code, lockbox, etc. (optional)"></textarea>
       </div>
     `;
   }
@@ -1112,6 +1120,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     const summaryItems = document.getElementById('summary-items');
     const summaryTotal = document.getElementById('summary-total');
     const hiddenTotal = document.getElementById('hidden-total');
+    const prices = getCurrentPrices();
 
     let total = 0;
     const items = {};
@@ -1123,14 +1132,14 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
       if (typeInput) {
         const type = typeInput.value;
         items[type] = (items[type] || 0) + 1;
-        total += PRICES[type];
+        total += prices[type];
       }
     });
 
     // Build summary HTML
     let html = '';
     for (const [type, count] of Object.entries(items)) {
-      const subtotal = (PRICES[type] * count).toFixed(2);
+      const subtotal = (prices[type] * count).toFixed(2);
       html += `
         <div class="summary-line-item">
           <span>${count}× ${LABELS[type]}</span>
@@ -1142,6 +1151,9 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     summaryItems.innerHTML = html;
     summaryTotal.textContent = `$${total.toFixed(2)}`;
     hiddenTotal.value = `$${total.toFixed(2)}`;
+
+    // Update pill prices when summary updates
+    updatePillPrices();
   }
 
   // Update property numbers after removal
@@ -1169,6 +1181,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
   // Add property
   function addProperty() {
+    console.log('addProperty called, current count:', propertyCount);
     if (propertyCount >= maxProperties) {
       alert(`Maximum ${maxProperties} properties allowed. Contact us for larger portfolios.`);
       return;
@@ -1197,13 +1210,22 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
   // Initialize
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, initializing checkout form...');
+
     // Add property button
-    document.getElementById('add-property-btn').addEventListener('click', addProperty);
+    const addBtn = document.getElementById('add-property-btn');
+    console.log('Add property button found:', addBtn);
+    if (addBtn) {
+      addBtn.addEventListener('click', addProperty);
+    }
 
     // Initial property type change listeners
     document.querySelectorAll('input[name="property_1_type"]').forEach(radio => {
       radio.addEventListener('change', updateSummary);
     });
+
+    // Payment method change listener - updates prices
+    document.getElementById('payment-preference').addEventListener('change', updateSummary);
 
     // Form submission - show success view
     document.getElementById('checkout-form').addEventListener('submit', function(e) {

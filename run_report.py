@@ -266,7 +266,7 @@ def normalize_location(location: str) -> str:
     # Step 2: Canonical room categories
     canonical_rooms = [
         'Kitchen', 'Living Room', 'Dining Room',
-        'Main Bedroom', 'Bedroom 2', 'Bedroom 3', 'Bedroom',
+        'Main Bedroom', 'Bedroom 2', 'Bedroom 3', 'Bedrooms',
         'Main Bathroom', 'Bathroom', 'Half Bathroom',
         'Laundry Room', 'Garage', 'Exterior',
         'Patio', 'Porch', 'Attic', 'Basement',
@@ -304,7 +304,7 @@ def normalize_location(location: str) -> str:
     if 'bedroom 3' in location_lower or 'third bed' in location_lower:
         return 'Bedroom 3'
     if 'bedroom' in location_lower or 'bed room' in location_lower:
-        return 'Bedroom'
+        return 'Bedrooms'
 
     # Dining consolidation
     if 'dining' in location_lower:
@@ -418,6 +418,27 @@ def calculate_page_layout(grouped_images: List[Tuple[str, List[Path]]], has_acti
         current_page += len(location_images)  # One page per photo (minimum)
 
     return sections
+
+
+def calculate_image_page_map(grouped_images: List[Tuple[str, List[Path]]], has_action_items: bool) -> Dict[str, int]:
+    """
+    Map each image path to its page number in the PDF.
+
+    Returns: {image_path_str: page_number, ...}
+    """
+    page_map = {}
+    current_page = 1  # Cover
+    if has_action_items:
+        current_page += 1  # Action items page
+    current_page += 1  # TOC
+
+    for location_name, location_images in grouped_images:
+        current_page += 1  # Section divider page
+        for img_path in location_images:
+            page_map[str(img_path)] = current_page
+            current_page += 1
+
+    return page_map
 
 
 def analyze_images(images: List[Path]) -> Dict[str, str]:
@@ -956,6 +977,10 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     
     c.showPage()
 
+    # === GROUP IMAGES BY LOCATION (needed for page number calculation) ===
+    grouped_images = group_images_by_location(images, vision_results)
+    use_grouping = vision_results and len(grouped_images) > 1
+
     # === ACTION ITEMS PAGE (2nd page, after cover) ===
     has_action_items_page = False
     print(f"[DEBUG] ACTION_ITEMS_AVAILABLE={ACTION_ITEMS_AVAILABLE}, inspector_notes count={len(inspector_notes)}")
@@ -970,7 +995,9 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             notes_count = len(inspector_notes)
 
             if tenant_count > 0 or owner_count > 0 or notes_count > 0:
-                generate_action_items_page(c, issues, width, height, inspector_notes)
+                # Calculate image page map so action items can show page references
+                image_page_map = calculate_image_page_map(grouped_images, True)  # True = will have action items page
+                generate_action_items_page(c, issues, width, height, inspector_notes, image_page_map)
                 c.showPage()
                 has_action_items_page = True
                 print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items, {notes_count} inspector notes)")
@@ -980,10 +1007,6 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
             print(f"Warning: Could not generate action items page: {e}")
             import traceback
             traceback.print_exc()
-
-    # === GROUP IMAGES BY LOCATION ===
-    grouped_images = group_images_by_location(images, vision_results)
-    use_grouping = vision_results and len(grouped_images) > 1
 
     if use_grouping:
         toc_sections = calculate_page_layout(grouped_images, has_action_items_page)

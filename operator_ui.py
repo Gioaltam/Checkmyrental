@@ -282,6 +282,21 @@ class ReportGeneratorApp(tk.Tk):
                                       font=(FONT_FAMILY, 10))
         priority_combo.pack(side="left", padx=(8, 0))
 
+        # Property/folder selector row (to associate note with specific report)
+        property_row = tk.Frame(notes_card, bg=BG_CARD)
+        property_row.pack(fill="x", pady=(0, 8))
+
+        tk.Label(property_row, text="For property:",
+                font=(FONT_FAMILY, 10),
+                fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
+
+        self.note_property_var = tk.StringVar(value="(Add a folder first)")
+        self.note_property_combo = ttk.Combobox(property_row, textvariable=self.note_property_var,
+                                                 values=["(Add a folder first)"],
+                                                 state="readonly", width=40,
+                                                 font=(FONT_FAMILY, 10))
+        self.note_property_combo.pack(side="left", padx=(8, 0), fill="x", expand=True)
+
         # Note text entry
         note_entry_frame = tk.Frame(notes_card, bg=BG_SECONDARY)
         note_entry_frame.pack(fill="x", pady=(0, 8))
@@ -438,10 +453,17 @@ class ReportGeneratorApp(tk.Tk):
             messagebox.showwarning("Empty Note", "Please enter a note before adding.")
             return
 
+        # Check that a property is selected
+        property_name = self.note_property_var.get()
+        if property_name == "(Add a folder first)" or not self.sources:
+            messagebox.showwarning("No Property", "Please add a photo folder first, then select which property this note is for.")
+            return
+
         note = {
             "text": text,
             "responsibility": self.responsibility_var.get(),
-            "priority": self.priority_var.get()
+            "priority": self.priority_var.get(),
+            "property": property_name  # Associate note with specific property/folder
         }
         self.inspector_notes.append(note)
         print(f"[DEBUG UI] Added note: {note}")
@@ -495,6 +517,13 @@ class ReportGeneratorApp(tk.Tk):
                     font=(FONT_FAMILY, 9),
                     fg=priority_color, bg=BG_SECONDARY).pack(side="left")
 
+            # Property name (which folder this note belongs to)
+            property_name = note.get("property", "")
+            if property_name:
+                tk.Label(content_row, text=f"  📁 {property_name}",
+                        font=(FONT_FAMILY, 9),
+                        fg=TEXT_MUTED, bg=BG_SECONDARY).pack(side="left")
+
             # Delete button
             delete_btn = tk.Label(content_row, text="×",
                                  font=(FONT_FAMILY, 12, 'bold'),
@@ -537,6 +566,7 @@ class ReportGeneratorApp(tk.Tk):
             if count > 0:
                 self.sources.append((folder, 'folder'))
                 self._update_file_count()
+                self._update_property_dropdown()  # Update property selector for notes
             else:
                 messagebox.showwarning("No Photos", "No image files found in folder.")
 
@@ -547,9 +577,28 @@ class ReportGeneratorApp(tk.Tk):
             count += len(list(Path(folder).rglob(f"*{ext.upper()}")))
         return count
 
+    def _update_property_dropdown(self):
+        """Update the property/folder selector dropdown for notes"""
+        if not self.sources:
+            self.note_property_combo['values'] = ["(Add a folder first)"]
+            self.note_property_var.set("(Add a folder first)")
+            return
+
+        options = []
+        for source_path, source_type in self.sources:
+            # Show folder name for display
+            name = Path(source_path).name
+            options.append(name)
+
+        self.note_property_combo['values'] = options
+        # Select first option by default
+        if options:
+            self.note_property_var.set(options[0])
+
     def _clear_sources(self):
         self.sources = []
         self._update_file_count()
+        self._update_property_dropdown()  # Reset property selector
 
     def _update_file_count(self):
         count = len(self.sources)
@@ -635,9 +684,15 @@ class ReportGeneratorApp(tk.Tk):
         self.progress_fill.place(x=0, y=0, relheight=1, relwidth=value / 100)
         self.progress_percent.config(text=f"{int(value)}%")
 
-    def _run_reports(self, sources, inspector, notes_json):
+    def _run_reports(self, sources, inspector, all_notes_json):
         total = len(sources)
         generated = []
+
+        # Parse the full notes list once
+        try:
+            all_notes = json.loads(all_notes_json) if all_notes_json else []
+        except json.JSONDecodeError:
+            all_notes = []
 
         for i, (source_path, source_type) in enumerate(sources, 1):
             name = Path(source_path).name
@@ -650,10 +705,12 @@ class ReportGeneratorApp(tk.Tk):
                 else:
                     cmd = [sys.executable, "run_report.py", "--dir", source_path, "--client", inspector]
 
-                # Add inspector notes if any
-                if notes_json and notes_json != "[]":
+                # Filter notes for this specific property (folder name)
+                property_notes = [n for n in all_notes if n.get("property") == name]
+                if property_notes:
+                    notes_json = json.dumps(property_notes)
                     cmd.extend(["--notes", notes_json])
-                    print(f"[DEBUG UI] Passing {len(self.inspector_notes)} notes: {notes_json}")
+                    print(f"[DEBUG UI] Passing {len(property_notes)} notes for {name}: {notes_json}")
 
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                           text=True, cwd=str(Path(__file__).parent),

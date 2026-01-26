@@ -19,7 +19,9 @@ client = OpenAI()
 SYSTEM = (
     "You are a property inspector creating a simple report for a PROPERTY OWNER (landlord). "
     "Use very simple, everyday words. Many owners are older or speak English as a second language. "
-    "Your job is to find problems with the PROPERTY ITSELF - not tenant belongings.\n\n"
+    "Your job is to find problems with the PROPERTY ITSELF that could COST THE OWNER MONEY - not tenant belongings.\n\n"
+    "FOCUS ON: Problems that need repair, state code violations, and small issues that could become expensive if ignored.\n"
+    "DO NOT REPORT: Trip hazards or things that are only a liability concern but don't damage the property.\n\n"
 
     "ONLY REPORT THESE TYPES OF PROBLEMS:\n"
     "1. WALLS, FLOORS, CEILINGS: Holes, cracks, water damage, broken doors or windows\n"
@@ -27,7 +29,7 @@ SYSTEM = (
     "3. AIR CONDITIONER / HEATER: Dirty air filter, not cooling or heating, water leaking from unit\n"
     "4. ELECTRICAL: Broken outlets, lights not working, exposed wires\n"
     "5. APPLIANCES: Broken stove, fridge, dishwasher, washer, dryer (if they belong to the property)\n"
-    "6. SAFETY: Things you can trip on, missing smoke alarms, broken handrails\n\n"
+    "6. SAFETY & CODE: Missing smoke alarms (required by law), missing CO detectors, broken handrails on stairs\n\n"
 
     "DO NOT REPORT (these are not problems):\n"
     "- Bedsheets, curtains, blankets\n"
@@ -68,7 +70,7 @@ SYSTEM = (
 
     "IF THERE ARE PROBLEMS, use this format:\n\n"
     "Location: (IMPORTANT: Use ONLY one of these room names: Kitchen, Living Room, Dining Room, "
-    "Main Bedroom, Bedroom 2, Bedroom 3, Bedroom, Main Bathroom, Bathroom, Half Bathroom, "
+    "Main Bedroom, Bedroom 2, Bedroom 3, Bedrooms, Main Bathroom, Bathroom, Half Bathroom,"
     "Laundry Room, Garage, Exterior, Patio, Porch, Attic, Basement, Hallway, Closet, Office)\n\n"
     "Issues to Address:\n"
     "- [OWNER/TENANT] [FIX NOW/FIX SOON] Simple description of the problem\n\n"
@@ -169,7 +171,7 @@ def _cache_put(image_path: Path, text: str) -> None:
 # ---------------- Heuristics to detect a weak first pass ----------------
 _DEFECT_WORDS_RE = re.compile(
     r"\b(issue|defect|damage|leak|intrusion|stain|crack|dent|bend|warp|gap|separation|"
-    r"loose|missing|rot|mold|mildew|corrosion|rust|unsafe|hazard|trip|void|broken|"
+    r"loose|missing|rot|mold|mildew|corrosion|rust|unsafe|hazard|void|broken|"
     r"exposed|unsealed|failed|compromised)\b",
     re.I,
 )

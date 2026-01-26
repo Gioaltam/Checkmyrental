@@ -104,6 +104,7 @@ def parse_issues_from_vision_results(vision_results: Dict[str, str]) -> Dict[str
                     'location': location,
                     'priority': priority,
                     'action': default_action,
+                    'image_path': image_path,  # Track which image this issue came from
                 }
 
                 if responsibility == 'TENANT':
@@ -184,7 +185,7 @@ def get_tenant_action_suggestion(description: str) -> str:
 # PDF PAGE RENDERING
 # ============================================================================
 
-def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], width: float, height: float, inspector_notes: List[Dict] = None) -> None:
+def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], width: float, height: float, inspector_notes: List[Dict] = None, image_page_map: Dict[str, int] = None) -> None:
     """
     Generate the Tenant Action Items page using ReportLab.
     Shows items the owner should request from the tenant.
@@ -195,6 +196,7 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
         width: Page width
         height: Page height
         inspector_notes: List of inspector notes (text, responsibility, priority)
+        image_page_map: Dict mapping image paths to their page numbers in the PDF
     """
     if inspector_notes is None:
         inspector_notes = []
@@ -289,6 +291,10 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
     tenant_issues = issues.get('tenant', [])
     owner_issues = issues.get('owner', [])
 
+    # Sort so inspector notes appear FIRST (they're manually added and important)
+    tenant_issues = sorted(tenant_issues, key=lambda x: (0 if x.get('is_inspector_note') else 1))
+    owner_issues = sorted(owner_issues, key=lambda x: (0 if x.get('is_inspector_note') else 1))
+
     print(f"[DEBUG tenant_actions] Ready to render - tenant_issues: {len(tenant_issues)}, owner_issues: {len(owner_issues)}")
     if owner_issues:
         for idx, issue in enumerate(owner_issues):
@@ -312,7 +318,7 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
         current_y -= 40
 
         # List tenant issues with text wrapping
-        for i, issue in enumerate(tenant_issues[:6]):  # Limit to 6 items
+        for i, issue in enumerate(tenant_issues):  # Show all items (will stop if page runs out of space)
             if current_y < 200:
                 break
 
@@ -350,10 +356,21 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
                 c.setFillColor(text_secondary)
                 c.drawString(card_margin + 12, current_y + 5, location)
 
+            # Page reference (if available)
+            page_num = None
+            if image_page_map and issue.get('image_path'):
+                page_num = image_page_map.get(issue['image_path'])
+
             # Priority badge
             c.setFont("Helvetica-Bold", 7)
             c.setFillColor(priority_colors.get(priority, text_secondary))
             c.drawRightString(width - card_margin - 10, current_y + 5, f"[{priority}]")
+
+            # Page number to the left of priority badge
+            if page_num:
+                c.setFont("Helvetica", 7)
+                c.setFillColor(text_secondary)
+                c.drawRightString(width - card_margin - 55, current_y + 5, f"p.{page_num}")
 
             # Issue description - wrapped lines
             c.setFont("Helvetica", 9)
@@ -391,7 +408,7 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
         current_y -= 40
 
         # List owner issues - stacked layout with text wrapping
-        for i, issue in enumerate(owner_issues[:5]):  # Limit to 5 items
+        for i, issue in enumerate(owner_issues):  # Show all items (will stop if page runs out of space)
             if current_y < 120:
                 break
 
@@ -427,10 +444,21 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
                 c.setFillColor(text_secondary)
                 c.drawString(card_margin + 12, current_y + 5, loc)
 
+            # Page reference (if available)
+            page_num = None
+            if image_page_map and issue.get('image_path'):
+                page_num = image_page_map.get(issue['image_path'])
+
             # Priority badge on same line as location, but at the end
             c.setFont("Helvetica-Bold", 7)
             c.setFillColor(priority_colors.get(priority, text_secondary))
             c.drawRightString(width - card_margin - 10, current_y + 5, f"[{priority}]")
+
+            # Page number to the left of priority badge
+            if page_num:
+                c.setFont("Helvetica", 7)
+                c.setFillColor(text_secondary)
+                c.drawRightString(width - card_margin - 55, current_y + 5, f"p.{page_num}")
 
             # Description - wrapped lines below location
             c.setFont("Helvetica", 9)

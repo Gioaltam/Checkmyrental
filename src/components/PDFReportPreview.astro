@@ -587,7 +587,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 0 0 200px;
+    flex: 0 0 clamp(180px, 14vw, 260px);
     scroll-snap-align: center;
   }
 
@@ -1473,13 +1473,6 @@
   @media (max-width: 1024px) {
     .scroll-hint {
       display: flex;
-    }
-  }
-
-  /* Laptop screens - fit all 5 cards without scrolling */
-  @media (min-width: 1024px) and (max-width: 1400px) {
-    .pdf-preview-card {
-      flex: 0 0 180px;
     }
   }
 

@@ -389,6 +389,7 @@
       if (page) {
         page.style.boxShadow = '';
         page.style.transform = '';
+        page.style.transformOrigin = '';
         page.style.transition = '';
       }
 
@@ -440,11 +441,12 @@
 
         const isMobile = window.innerWidth <= 768;
 
-        // Add glow shadow and disable hover float/transition on the pdf-page
+        // Add glow shadow, scale up content, and disable hover float/transition on the pdf-page
         const page = activeCard.querySelector('.pdf-page') as HTMLElement;
         if (page) {
           page.style.boxShadow = '0 0 60px rgba(231, 76, 60, 0.15), 0 30px 100px rgba(0, 0, 0, 0.6)';
-          page.style.transform = 'none';
+          page.style.transform = 'scale(2)';
+          page.style.transformOrigin = 'top center';
           page.style.transition = 'none';
         }
 
@@ -456,7 +458,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 1000;
-            width: 90vw;
+            width: 48vw;
             cursor: pointer;
             touch-action: none;
           `;
@@ -469,7 +471,7 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.85);
             z-index: 1000;
-            width: min(500px, 90vw);
+            width: min(260px, 45vw);
             cursor: pointer;
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
           `;
@@ -585,7 +587,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    flex: 0 0 240px;
+    flex: 0 0 200px;
     scroll-snap-align: center;
   }
 
@@ -1468,9 +1470,16 @@
     50% { transform: translateX(6px); }
   }
 
-  @media (max-width: 1400px) {
+  @media (max-width: 1024px) {
     .scroll-hint {
       display: flex;
+    }
+  }
+
+  /* Laptop screens - fit all 5 cards without scrolling */
+  @media (min-width: 1024px) and (max-width: 1400px) {
+    .pdf-preview-card {
+      flex: 0 0 180px;
     }
   }
 

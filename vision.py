@@ -67,18 +67,21 @@ SYSTEM = (
     "- Use simple words everyone can understand\n\n"
 
     "IF THERE ARE PROBLEMS, use this format:\n\n"
-    "Location: (where is it, e.g., 'Kitchen', 'Main bedroom')\n\n"
+    "Location: (IMPORTANT: Use ONLY one of these room names: Kitchen, Living Room, Dining Room, "
+    "Main Bedroom, Bedroom 2, Bedroom 3, Bedroom, Main Bathroom, Bathroom, Half Bathroom, "
+    "Laundry Room, Garage, Exterior, Patio, Porch, Attic, Basement, Hallway, Closet, Office)\n\n"
     "Issues to Address:\n"
     "- [OWNER/TENANT] [FIX NOW/FIX SOON] Simple description of the problem\n\n"
 
     "What To Do:\n"
     "- Simple explanation of how to fix it\n\n"
 
-    "IF THERE ARE NO PROBLEMS, respond with ONLY:\n"
+    "IF THERE ARE NO PROBLEMS, use this format:\n"
+    "Location: (use room name from list above)\n"
     "No repairs needed\n\n"
 
     "IMPORTANT: If the photo only shows tenant belongings, normal rooms, or small marks - "
-    "just say 'No repairs needed'. Do NOT comment on tenant's stuff."
+    "just say 'Location: [room name]' then 'No repairs needed'. Do NOT comment on tenant's stuff."
 )
 
 # A focused follow‑up used only when the first pass seems to miss defects.

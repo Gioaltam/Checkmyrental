@@ -232,10 +232,13 @@ def collect_images(photos_dir: Path) -> List[Path]:
     return images
 
 def normalize_location(location: str) -> str:
-    """Normalize location strings for consistent grouping."""
+    """
+    Normalize location strings for consistent grouping.
+    Maps granular sub-locations to their parent room category.
+    """
     location = location.strip().title()
 
-    # Merge common synonyms
+    # Step 1: Exact synonym mapping
     synonyms = {
         'Master Bedroom': 'Main Bedroom',
         'Master Bath': 'Main Bathroom',
@@ -244,12 +247,110 @@ def normalize_location(location: str) -> str:
         'Powder Room': 'Half Bathroom',
         'Family Room': 'Living Room',
         'Laundry': 'Laundry Room',
+        'Den': 'Office',
+        'Study': 'Office',
+        'Front Yard': 'Exterior',
+        'Back Yard': 'Exterior',
+        'Backyard': 'Exterior',
+        'Yard': 'Exterior',
+        'Driveway': 'Exterior',
+        'Carport': 'Garage',
+        'Deck': 'Patio',
+        'Balcony': 'Patio',
     }
 
     for key, canonical in synonyms.items():
         if location.lower() == key.lower():
             return canonical
 
+    # Step 2: Canonical room categories
+    canonical_rooms = [
+        'Kitchen', 'Living Room', 'Dining Room',
+        'Main Bedroom', 'Bedroom 2', 'Bedroom 3', 'Bedroom',
+        'Main Bathroom', 'Bathroom', 'Half Bathroom',
+        'Laundry Room', 'Garage', 'Exterior',
+        'Patio', 'Porch', 'Attic', 'Basement',
+        'Hallway', 'Closet', 'Office', 'Unknown'
+    ]
+
+    for room in canonical_rooms:
+        if location.lower() == room.lower():
+            return room
+
+    # Step 3: Keyword-based consolidation for granular locations
+    location_lower = location.lower()
+
+    # Bathroom consolidation (preserve Half/Main distinction)
+    if 'half bath' in location_lower or 'powder' in location_lower:
+        return 'Half Bathroom'
+    if 'main bath' in location_lower or 'master bath' in location_lower:
+        return 'Main Bathroom'
+    if 'bathroom' in location_lower or 'bath ' in location_lower or location_lower.endswith(' bath'):
+        return 'Bathroom'
+
+    # Kitchen consolidation
+    if 'kitchen' in location_lower:
+        return 'Kitchen'
+
+    # Living Room consolidation
+    if 'living' in location_lower or 'family room' in location_lower:
+        return 'Living Room'
+
+    # Bedroom consolidation
+    if 'main bed' in location_lower or 'master bed' in location_lower:
+        return 'Main Bedroom'
+    if 'bedroom 2' in location_lower or 'second bed' in location_lower:
+        return 'Bedroom 2'
+    if 'bedroom 3' in location_lower or 'third bed' in location_lower:
+        return 'Bedroom 3'
+    if 'bedroom' in location_lower or 'bed room' in location_lower:
+        return 'Bedroom'
+
+    # Dining consolidation
+    if 'dining' in location_lower:
+        return 'Dining Room'
+
+    # Garage consolidation
+    if 'garage' in location_lower or 'carport' in location_lower:
+        return 'Garage'
+
+    # Exterior consolidation
+    if any(word in location_lower for word in ['exterior', 'outside', 'outdoor', 'yard', 'driveway', 'sidewalk', 'roof', 'gutter', 'siding', 'fence']):
+        return 'Exterior'
+
+    # Patio/Porch consolidation
+    if any(word in location_lower for word in ['patio', 'deck', 'balcony']):
+        return 'Patio'
+    if 'porch' in location_lower:
+        return 'Porch'
+
+    # Laundry consolidation
+    if 'laundry' in location_lower or 'utility room' in location_lower:
+        return 'Laundry Room'
+
+    # Hallway consolidation
+    if any(word in location_lower for word in ['hall', 'corridor', 'foyer', 'entry']):
+        return 'Hallway'
+
+    # Closet consolidation
+    if 'closet' in location_lower or 'storage' in location_lower:
+        return 'Closet'
+
+    # Attic/Basement
+    if 'attic' in location_lower:
+        return 'Attic'
+    if 'basement' in location_lower:
+        return 'Basement'
+
+    # Office consolidation
+    if any(word in location_lower for word in ['office', 'den', 'study']):
+        return 'Office'
+
+    # Map Unknown to Other
+    if location_lower == 'unknown' or not location.strip():
+        return 'Other'
+
+    # If nothing matches, return as-is
     return location
 
 
@@ -283,16 +384,16 @@ def group_images_by_location(images: List[Path], vision_results: Optional[Dict[s
             raw_location = extract_location(analysis)
             location = normalize_location(raw_location)
         else:
-            location = "Unknown"
+            location = "Other"
 
         if location not in groups:
             groups[location] = []
         groups[location].append(img_path)
 
-    # Sort alphabetically, "Unknown" goes last
+    # Sort alphabetically, "Other" goes last
     sorted_locations = sorted(
         groups.keys(),
-        key=lambda loc: (loc == "Unknown", loc.lower())
+        key=lambda loc: (loc == "Other", loc.lower())
     )
 
     return [(loc, groups[loc]) for loc in sorted_locations]
@@ -527,7 +628,7 @@ def generate_section_divider(c, location_name: str, photo_count: int, width: flo
     c.drawCentredString(width / 2, 30, f"Section {section_number} of {total_sections}")
 
 
-def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "", inspection_type: str = "Quarterly") -> None:
+def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results: Optional[Dict[str, str]] = None, client_name: str = "", inspection_type: str = "Quarterly", inspector_notes: List[Dict] = None) -> None:
     """Generate executive-quality PDF report with sophisticated design
 
     Args:
@@ -536,7 +637,11 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
         out_pdf: Output PDF path
         vision_results: Vision analysis results
         client_name: Client name for report
+        inspection_type: Type of inspection
+        inspector_notes: List of inspector notes
     """
+    if inspector_notes is None:
+        inspector_notes = []
     from PIL import Image as PILImage, ImageOps
     from reportlab.lib.colors import HexColor
 
@@ -853,18 +958,22 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
 
     # === ACTION ITEMS PAGE (2nd page, after cover) ===
     has_action_items_page = False
-    if ACTION_ITEMS_AVAILABLE and vision_results:
+    print(f"[DEBUG] ACTION_ITEMS_AVAILABLE={ACTION_ITEMS_AVAILABLE}, inspector_notes count={len(inspector_notes)}")
+    if inspector_notes:
+        print(f"[DEBUG] Inspector notes: {inspector_notes}")
+    if ACTION_ITEMS_AVAILABLE:
         try:
             # Parse issues from vision results (separates tenant vs owner)
-            issues = parse_issues_from_vision_results(vision_results)
+            issues = parse_issues_from_vision_results(vision_results) if vision_results else {'tenant': [], 'owner': []}
             tenant_count = len(issues.get('tenant', []))
             owner_count = len(issues.get('owner', []))
+            notes_count = len(inspector_notes)
 
-            if tenant_count > 0 or owner_count > 0:
-                generate_action_items_page(c, issues, width, height)
+            if tenant_count > 0 or owner_count > 0 or notes_count > 0:
+                generate_action_items_page(c, issues, width, height, inspector_notes)
                 c.showPage()
                 has_action_items_page = True
-                print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items)")
+                print(f"Action items page added ({tenant_count} tenant, {owner_count} owner items, {notes_count} inspector notes)")
             else:
                 print("No action items found - skipping action items page")
         except Exception as e:
@@ -1295,7 +1404,7 @@ def generate_pdf(address: str, images: List[Path], out_pdf: Path, vision_results
     c.save()
     print(f"PDF generated: {out_pdf}")
 
-def build_reports(source_path: Path, client_name: str, property_address: str, gallery_name: str = None, inspection_type: str = "Quarterly") -> Dict[str, Any]:
+def build_reports(source_path: Path, client_name: str, property_address: str, gallery_name: str = None, inspection_type: str = "Quarterly", inspector_notes: List[Dict] = None) -> Dict[str, Any]:
     """
     Main function to build inspection reports from source (ZIP or directory)
     Returns artifacts dictionary with path to generated PDF
@@ -1306,7 +1415,14 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
         property_address: Property address
         gallery_name: Optional gallery name
         inspection_type: Type of inspection (Quarterly, Move-In, Move-Out, Annual)
+        inspector_notes: List of inspector notes (text, responsibility, priority)
     """
+    if inspector_notes is None:
+        inspector_notes = []
+
+    if inspector_notes:
+        print(f"[DEBUG] Received {len(inspector_notes)} inspector notes")
+
     try:
         print(f"\n{'='*60}")
         print(f"Building report for: {property_address}")
@@ -1349,7 +1465,7 @@ def build_reports(source_path: Path, client_name: str, property_address: str, ga
 
         # Generate PDF report directly in outputs folder
         try:
-            generate_pdf(property_address, images, pdf_path, vision_results, client_name, inspection_type)
+            generate_pdf(property_address, images, pdf_path, vision_results, client_name, inspection_type, inspector_notes)
             print(f"\nPDF report saved: {pdf_path}")
         except Exception as e:
             print(f"ERROR generating PDF: {e}")
@@ -1385,8 +1501,19 @@ def main():
     parser.add_argument('--property', type=str, default='Property Address', help='Property address')
     parser.add_argument('--type', type=str, default='Quarterly',
                         help='Inspection type (Quarterly, Move-In, Move-Out, Annual)')
+    parser.add_argument('--notes', type=str, default='[]',
+                        help='JSON array of inspector notes')
 
     args = parser.parse_args()
+
+    # Parse inspector notes
+    print(f"[DEBUG run_report] Raw --notes arg: {args.notes}")
+    try:
+        inspector_notes = json.loads(args.notes)
+        print(f"[DEBUG run_report] Parsed {len(inspector_notes)} inspector notes: {inspector_notes}")
+    except json.JSONDecodeError as e:
+        print(f"[DEBUG run_report] JSON parse error: {e}")
+        inspector_notes = []
 
     # Determine source
     if args.zip:
@@ -1415,7 +1542,8 @@ def main():
 
     try:
         # Generate PDF report only
-        artifacts = build_reports(source, args.client, property_address, inspection_type=args.type)
+        artifacts = build_reports(source, args.client, property_address, inspection_type=args.type,
+                                  inspector_notes=inspector_notes)
         print("\nReport generation complete!")
         print(f"PDF saved to: {artifacts['pdf_path']}")
 

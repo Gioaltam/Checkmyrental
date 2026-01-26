@@ -1,3 +1,5 @@
+
+
 # operator_ui.py - CheckMyRental Inspection Report Generator
 # Premium, polished design with modern aesthetics
 # Uses vision.py for AI analysis and run_report.py for PDF generation
@@ -7,6 +9,7 @@ import sys
 import threading
 import queue
 import re
+import json
 from pathlib import Path
 import platform
 import subprocess
@@ -36,6 +39,14 @@ except Exception:
 # ============ BRANDING ============
 COMPANY_NAME = "CheckMyRental"
 APP_TITLE = "Inspection Report Generator"
+
+# Platform-aware font selection
+if platform.system() == 'Darwin':  # macOS
+    FONT_FAMILY = 'Helvetica Neue'
+elif platform.system() == 'Windows':
+    FONT_FAMILY = 'Segoe UI'
+else:  # Linux
+    FONT_FAMILY = 'DejaVu Sans'
 
 # Colors - Premium dark theme with gradients feel
 BG_DARK = "#0f0f1a"          # Deep dark background
@@ -68,12 +79,13 @@ class ReportGeneratorApp(tk.Tk):
 
         self.title(f"{COMPANY_NAME} — {APP_TITLE}")
         self.configure(bg=BG_DARK)
-        self.geometry("600x720")
-        self.minsize(600, 720)
+        self.geometry("600x750")
+        self.minsize(600, 700)
         self.resizable(True, True)
 
         # State
         self.sources = []
+        self.inspector_notes = []  # List of note dicts: {text, responsibility, priority}
         self.is_running = False
         self.output_queue = queue.Queue()
 
@@ -81,11 +93,12 @@ class ReportGeneratorApp(tk.Tk):
         self.after(500, self._check_api_key)
         self._poll_output()
 
+
     def _build_ui(self):
         """Build premium, polished UI"""
 
         # Main container with padding
-        main = tk.Frame(self, bg=BG_DARK, padx=35, pady=30)
+        main = tk.Frame(self, bg=BG_DARK, padx=35, pady=20)
         main.pack(fill="both", expand=True)
 
         # ===== HEADER =====
@@ -97,18 +110,18 @@ class ReportGeneratorApp(tk.Tk):
         logo_frame.pack(side="left")
 
         # Checkmark icon
-        tk.Label(logo_frame, text="✓", font=('Segoe UI', 28, 'bold'),
+        tk.Label(logo_frame, text="✓", font=(FONT_FAMILY, 28, 'bold'),
                 fg=ACCENT, bg=BG_DARK).pack(side="left")
 
         # Company name
         tk.Label(logo_frame, text=f"  {COMPANY_NAME}",
-                font=('Segoe UI', 20, 'bold'),
+                font=(FONT_FAMILY, 20, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_DARK).pack(side="left")
 
         # Open folder button (top right)
         open_btn = tk.Label(header, text="📂 Open Reports",
-                           font=('Segoe UI', 10),
-                           fg=TEXT_MUTED, bg=BG_DARK, cursor="hand2")
+                           font=(FONT_FAMILY, 10),
+                           fg=TEXT_MUTED, bg=BG_DARK, cursor="hand2", takefocus=False)
         open_btn.pack(side="right", padx=(10, 0))
         open_btn.bind("<Button-1>", lambda e: self._open_output())
         open_btn.bind("<Enter>", lambda e: open_btn.config(fg=TEXT_SECONDARY))
@@ -116,33 +129,33 @@ class ReportGeneratorApp(tk.Tk):
 
         # API Status badge (top right)
         self.api_status = tk.Label(header, text="",
-                                  font=('Segoe UI', 9), bg=BG_DARK)
+                                  font=(FONT_FAMILY, 9), bg=BG_DARK)
         self.api_status.pack(side="right", padx=(10, 0))
 
         # Subtitle
         tk.Label(main, text="Professional Property Inspection Reports",
-                font=('Segoe UI', 11),
+                font=(FONT_FAMILY, 11),
                 fg=TEXT_MUTED, bg=BG_DARK).pack(anchor="w", pady=(0, 12))
 
         # ===== FILE SELECTION CARD =====
         card = self._create_card(main)
-        card.pack(fill="x", pady=(0, 12))
+        card.pack(fill="x", pady=(0, 8))
 
         # Card header
         card_header = tk.Frame(card, bg=BG_CARD)
-        card_header.pack(fill="x", pady=(0, 12))
+        card_header.pack(fill="x", pady=(0, 8))
 
         tk.Label(card_header, text="Photo Sources",
-                font=('Segoe UI', 13, 'bold'),
+                font=(FONT_FAMILY, 13, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_CARD).pack(side="left")
 
         self.file_count_label = tk.Label(card_header, text="No files selected",
-                                        font=('Segoe UI', 11),
+                                        font=(FONT_FAMILY, 11),
                                         fg=TEXT_SECONDARY, bg=BG_CARD)
         self.file_count_label.pack(side="right")
 
         # Separator
-        tk.Frame(card, bg=BORDER, height=1).pack(fill="x", pady=(0, 12))
+        tk.Frame(card, bg=BORDER, height=1).pack(fill="x", pady=(0, 8))
 
         # Add files buttons row
         btn_row = tk.Frame(card, bg=BG_CARD)
@@ -154,8 +167,8 @@ class ReportGeneratorApp(tk.Tk):
 
         # Clear button (muted)
         clear_btn = tk.Label(btn_row, text="Clear",
-                            font=('Segoe UI', 10),
-                            fg=TEXT_MUTED, bg=BG_CARD, cursor="hand2")
+                            font=(FONT_FAMILY, 10),
+                            fg=TEXT_MUTED, bg=BG_CARD, cursor="hand2", takefocus=False)
         clear_btn.pack(side="right")
         clear_btn.bind("<Button-1>", lambda e: self._clear_sources())
         clear_btn.bind("<Enter>", lambda e: clear_btn.config(fg=ERROR))
@@ -168,7 +181,7 @@ class ReportGeneratorApp(tk.Tk):
 
         # Canvas for scrolling
         self.preview_canvas = tk.Canvas(self.file_preview_frame, bg=BG_SECONDARY,
-                                        highlightthickness=0, height=120)
+                                        highlightthickness=0, height=60)
         self.preview_canvas.pack(side="left", fill="both", expand=True)
 
         # Scrollbar
@@ -193,15 +206,15 @@ class ReportGeneratorApp(tk.Tk):
 
         # ===== CLIENT NAME CARD =====
         name_card = self._create_card(main)
-        name_card.pack(fill="x", pady=(0, 12))
+        name_card.pack(fill="x", pady=(0, 8))
 
         tk.Label(name_card, text="Client Name",
-                font=('Segoe UI', 13, 'bold'),
-                fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 10))
+                font=(FONT_FAMILY, 13, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_CARD).pack(anchor="w", pady=(0, 6))
 
         # Entry with styled frame - using ttk.Entry for better Mac compatibility
         entry_frame = tk.Frame(name_card, bg=BG_SECONDARY)
-        entry_frame.pack(fill="x", padx=15, pady=12)
+        entry_frame.pack(fill="x", padx=10, pady=8)
 
         # Configure ttk style for the entry
         style = ttk.Style()
@@ -213,17 +226,117 @@ class ReportGeneratorApp(tk.Tk):
 
         self.inspector_var = tk.StringVar()
         self.name_entry = ttk.Entry(entry_frame, textvariable=self.inspector_var,
-                                    font=('Segoe UI', 12),
+                                    font=(FONT_FAMILY, 12),
                                     style="Dark.TEntry")
         self.name_entry.pack(fill="x")
 
+        # ===== INSPECTOR NOTES CARD =====
+        notes_card = self._create_card(main)
+        notes_card.pack(fill="x", pady=(0, 8))
+
+        # Card header
+        notes_header = tk.Frame(notes_card, bg=BG_CARD)
+        notes_header.pack(fill="x", pady=(0, 6))
+
+        tk.Label(notes_header, text="Inspector Notes",
+                font=(FONT_FAMILY, 13, 'bold'),
+                fg=TEXT_PRIMARY, bg=BG_CARD).pack(side="left")
+
+        tk.Label(notes_header, text="(issues photos can't show)",
+                font=(FONT_FAMILY, 10),
+                fg=TEXT_MUTED, bg=BG_CARD).pack(side="left", padx=(8, 0))
+
+        self.notes_count_label = tk.Label(notes_header, text="",
+                                          font=(FONT_FAMILY, 11),
+                                          fg=TEXT_SECONDARY, bg=BG_CARD)
+        self.notes_count_label.pack(side="right")
+
+        # Separator
+        tk.Frame(notes_card, bg=BORDER, height=1).pack(fill="x", pady=(0, 8))
+
+        # Dropdowns row
+        dropdowns_row = tk.Frame(notes_card, bg=BG_CARD)
+        dropdowns_row.pack(fill="x", pady=(0, 8))
+
+        # Responsibility dropdown
+        tk.Label(dropdowns_row, text="Assign to:",
+                font=(FONT_FAMILY, 10),
+                fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
+
+        self.responsibility_var = tk.StringVar(value="OWNER")
+        responsibility_combo = ttk.Combobox(dropdowns_row, textvariable=self.responsibility_var,
+                                            values=["OWNER", "TENANT"],
+                                            state="readonly", width=10,
+                                            font=(FONT_FAMILY, 10))
+        responsibility_combo.pack(side="left", padx=(8, 20))
+
+        # Priority dropdown
+        tk.Label(dropdowns_row, text="Priority:",
+                font=(FONT_FAMILY, 10),
+                fg=TEXT_SECONDARY, bg=BG_CARD).pack(side="left")
+
+        self.priority_var = tk.StringVar(value="FIX SOON")
+        priority_combo = ttk.Combobox(dropdowns_row, textvariable=self.priority_var,
+                                      values=["FIX NOW", "FIX SOON"],
+                                      state="readonly", width=10,
+                                      font=(FONT_FAMILY, 10))
+        priority_combo.pack(side="left", padx=(8, 0))
+
+        # Note text entry
+        note_entry_frame = tk.Frame(notes_card, bg=BG_SECONDARY)
+        note_entry_frame.pack(fill="x", pady=(0, 8))
+
+        self.note_text = tk.Text(note_entry_frame, height=2,
+                                 font=(FONT_FAMILY, 11),
+                                 bg=BG_SECONDARY, fg=TEXT_PRIMARY,
+                                 insertbackground=TEXT_PRIMARY,
+                                 relief="flat", padx=8, pady=8,
+                                 wrap="word")
+        self.note_text.pack(fill="x")
+
+        # Visual focus indicators
+        self.note_text.bind("<FocusIn>", lambda e: self.note_text.config(relief="solid"))
+        self.note_text.bind("<FocusOut>", lambda e: self.note_text.config(relief="flat"))
+
+        # Add Note button
+        add_note_btn = self._create_action_button(notes_card, "+ Add Note", self._add_note)
+        add_note_btn.pack(anchor="w", pady=(0, 8))
+
+        # Notes list display area (hidden initially)
+        self.notes_list_frame = tk.Frame(notes_card, bg=BG_CARD)
+        self.notes_list_frame.pack(fill="x")
+        self.notes_list_frame.pack_forget()
+
+        # Canvas for scrolling notes
+        self.notes_canvas = tk.Canvas(self.notes_list_frame, bg=BG_SECONDARY,
+                                      highlightthickness=0, height=60)
+        self.notes_canvas.pack(side="left", fill="both", expand=True)
+
+        # Scrollbar
+        self.notes_scrollbar = tk.Scrollbar(self.notes_list_frame, orient="vertical",
+                                            command=self.notes_canvas.yview)
+        self.notes_scrollbar.pack(side="right", fill="y")
+        self.notes_canvas.configure(yscrollcommand=self.notes_scrollbar.set)
+
+        # Inner frame for notes content
+        self.notes_inner_frame = tk.Frame(self.notes_canvas, bg=BG_SECONDARY)
+        self.notes_canvas_window = self.notes_canvas.create_window((0, 0),
+                                                                    window=self.notes_inner_frame,
+                                                                    anchor="nw")
+
+        # Bind canvas resize for notes
+        self.notes_inner_frame.bind("<Configure>", self._on_notes_configure)
+        self.notes_canvas.bind("<Configure>", self._on_notes_canvas_configure)
+        self.notes_canvas.bind("<MouseWheel>", self._on_notes_mousewheel)
+        self.notes_inner_frame.bind("<MouseWheel>", self._on_notes_mousewheel)
+
         # ===== GENERATE BUTTON =====
-        self.generate_btn = tk.Frame(main, bg=ACCENT, cursor="hand2")
-        self.generate_btn.pack(fill="x", pady=(12, 12), ipady=14)
+        self.generate_btn = tk.Frame(main, bg=ACCENT, cursor="hand2", takefocus=False)
+        self.generate_btn.pack(fill="x", pady=(8, 8), ipady=12)
 
         self.generate_label = tk.Label(self.generate_btn, text="Generate Reports",
-                                       font=('Segoe UI', 14, 'bold'),
-                                       fg=TEXT_PRIMARY, bg=ACCENT)
+                                       font=(FONT_FAMILY, 14, 'bold'),
+                                       fg=TEXT_PRIMARY, bg=ACCENT, takefocus=False)
         self.generate_label.pack()
 
         # Bind click and hover
@@ -234,24 +347,24 @@ class ReportGeneratorApp(tk.Tk):
 
         # ===== PROGRESS SECTION =====
         progress_card = self._create_card(main)
-        progress_card.pack(fill="x", pady=(0, 12))
+        progress_card.pack(fill="x", pady=(0, 8))
 
         # Progress header
         progress_header = tk.Frame(progress_card, bg=BG_CARD)
-        progress_header.pack(fill="x", pady=(0, 10))
+        progress_header.pack(fill="x", pady=(0, 6))
 
         tk.Label(progress_header, text="Progress",
-                font=('Segoe UI', 13, 'bold'),
+                font=(FONT_FAMILY, 13, 'bold'),
                 fg=TEXT_PRIMARY, bg=BG_CARD).pack(side="left")
 
         self.progress_percent = tk.Label(progress_header, text="0%",
-                                        font=('Segoe UI', 12, 'bold'),
+                                        font=(FONT_FAMILY, 12, 'bold'),
                                         fg=ACCENT, bg=BG_CARD)
         self.progress_percent.pack(side="right")
 
         # Custom progress bar frame
         progress_bg = tk.Frame(progress_card, bg=BG_SECONDARY, height=6)
-        progress_bg.pack(fill="x", pady=(0, 10))
+        progress_bg.pack(fill="x", pady=(0, 6))
         progress_bg.pack_propagate(False)
 
         self.progress_fill = tk.Frame(progress_bg, bg=ACCENT, height=6)
@@ -259,13 +372,13 @@ class ReportGeneratorApp(tk.Tk):
 
         # Status label
         self.status_label = tk.Label(progress_card, text="Ready",
-                                    font=('Segoe UI', 11),
+                                    font=(FONT_FAMILY, 11),
                                     fg=SUCCESS, bg=BG_CARD, anchor="w")
         self.status_label.pack(fill="x")
 
         # Log label
         self.log_label = tk.Label(progress_card, text="Add files to begin",
-                                 font=('Segoe UI', 10),
+                                 font=(FONT_FAMILY, 10),
                                  fg=TEXT_MUTED, bg=BG_CARD,
                                  anchor="w")
         self.log_label.pack(fill="x", pady=(4, 0))
@@ -280,15 +393,15 @@ class ReportGeneratorApp(tk.Tk):
 
     def _create_card(self, parent):
         """Create a styled card frame"""
-        card = tk.Frame(parent, bg=BG_CARD, padx=20, pady=16)
+        card = tk.Frame(parent, bg=BG_CARD, padx=20, pady=12)
         return card
 
     def _create_action_button(self, parent, text, command):
         """Create an action button"""
         btn = tk.Label(parent, text=text,
-                      font=('Segoe UI', 10, 'bold'),
+                      font=(FONT_FAMILY, 10, 'bold'),
                       fg=ACCENT, bg=BG_CARD,
-                      cursor="hand2", padx=8, pady=4)
+                      cursor="hand2", padx=8, pady=4, takefocus=False)
         btn.bind("<Button-1>", lambda e: command())
         btn.bind("<Enter>", lambda e: btn.config(fg=ACCENT_HOVER))
         btn.bind("<Leave>", lambda e: btn.config(fg=ACCENT))
@@ -305,6 +418,102 @@ class ReportGeneratorApp(tk.Tk):
     def _on_preview_mousewheel(self, event):
         """Handle mouse wheel scrolling on the preview list"""
         self.preview_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _on_notes_configure(self, event):
+        """Update scroll region when notes content changes"""
+        self.notes_canvas.configure(scrollregion=self.notes_canvas.bbox("all"))
+
+    def _on_notes_canvas_configure(self, event):
+        """Update inner frame width when notes canvas resizes"""
+        self.notes_canvas.itemconfig(self.notes_canvas_window, width=event.width)
+
+    def _on_notes_mousewheel(self, event):
+        """Handle mouse wheel scrolling on the notes list"""
+        self.notes_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def _add_note(self):
+        """Add an inspector note to the list"""
+        text = self.note_text.get("1.0", "end-1c").strip()
+        if not text:
+            messagebox.showwarning("Empty Note", "Please enter a note before adding.")
+            return
+
+        note = {
+            "text": text,
+            "responsibility": self.responsibility_var.get(),
+            "priority": self.priority_var.get()
+        }
+        self.inspector_notes.append(note)
+        print(f"[DEBUG UI] Added note: {note}")
+        print(f"[DEBUG UI] Total notes: {len(self.inspector_notes)}")
+
+        # Clear the text entry
+        self.note_text.delete("1.0", "end")
+
+        # Update the display
+        self._update_notes_list()
+
+    def _delete_note(self, index):
+        """Delete a note from the list"""
+        if 0 <= index < len(self.inspector_notes):
+            del self.inspector_notes[index]
+            self._update_notes_list()
+
+    def _update_notes_list(self):
+        """Update the notes list display"""
+        # Clear existing notes
+        for widget in self.notes_inner_frame.winfo_children():
+            widget.destroy()
+
+        if not self.inspector_notes:
+            self.notes_list_frame.pack_forget()
+            self.notes_count_label.config(text="")
+            return
+
+        # Show the notes list
+        self.notes_list_frame.pack(fill="x")
+        self.notes_count_label.config(text=f"{len(self.inspector_notes)} note{'s' if len(self.inspector_notes) != 1 else ''}")
+
+        # Add each note
+        for i, note in enumerate(self.inspector_notes):
+            note_frame = tk.Frame(self.notes_inner_frame, bg=BG_SECONDARY)
+            note_frame.pack(fill="x", padx=8, pady=(4 if i == 0 else 2, 4 if i == len(self.inspector_notes) - 1 else 0))
+
+            # Note content row
+            content_row = tk.Frame(note_frame, bg=BG_SECONDARY)
+            content_row.pack(fill="x")
+
+            # Tags
+            resp_color = ACCENT if note["responsibility"] == "OWNER" else SUCCESS
+            priority_color = ERROR if note["priority"] == "FIX NOW" else TEXT_SECONDARY
+
+            tk.Label(content_row, text=f"[{note['responsibility']}]",
+                    font=(FONT_FAMILY, 9, 'bold'),
+                    fg=resp_color, bg=BG_SECONDARY).pack(side="left")
+
+            tk.Label(content_row, text=f" [{note['priority']}]",
+                    font=(FONT_FAMILY, 9),
+                    fg=priority_color, bg=BG_SECONDARY).pack(side="left")
+
+            # Delete button
+            delete_btn = tk.Label(content_row, text="×",
+                                 font=(FONT_FAMILY, 12, 'bold'),
+                                 fg=TEXT_MUTED, bg=BG_SECONDARY, cursor="hand2", takefocus=False)
+            delete_btn.pack(side="right", padx=(8, 0))
+            # Use default argument to capture current index
+            delete_btn.bind("<Button-1>", lambda e, idx=i: self._delete_note(idx))
+            delete_btn.bind("<Enter>", lambda e, btn=delete_btn: btn.config(fg=ERROR))
+            delete_btn.bind("<Leave>", lambda e, btn=delete_btn: btn.config(fg=TEXT_MUTED))
+
+            # Note text (truncated if too long)
+            text_display = note["text"]
+            if len(text_display) > 60:
+                text_display = text_display[:57] + "..."
+
+            tk.Label(note_frame, text=text_display,
+                    font=(FONT_FAMILY, 10),
+                    fg=TEXT_SECONDARY, bg=BG_SECONDARY,
+                    anchor="w").pack(fill="x", pady=(2, 0))
 
     def _on_button_click(self, event):
         """Handle big button click"""
@@ -385,7 +594,7 @@ class ReportGeneratorApp(tk.Tk):
                 count_text = ""
 
             tk.Label(item_frame, text=f"{icon}  {name}{count_text}",
-                    font=('Segoe UI', 10),
+                    font=(FONT_FAMILY, 10),
                     fg=TEXT_SECONDARY, bg=BG_SECONDARY,
                     anchor="w").pack(side="left", fill="x")
 
@@ -402,8 +611,13 @@ class ReportGeneratorApp(tk.Tk):
         self._set_progress(0)
         self.log_label.config(text="Starting...")
 
+        # Serialize notes to JSON for passing to subprocess
+        notes_json = json.dumps(self.inspector_notes) if self.inspector_notes else "[]"
+        print(f"[DEBUG UI] inspector_notes list has {len(self.inspector_notes)} items")
+        print(f"[DEBUG UI] notes_json = {notes_json}")
+
         thread = threading.Thread(target=self._run_reports,
-                                 args=(self.sources.copy(), inspector))
+                                 args=(self.sources.copy(), inspector, notes_json))
         thread.daemon = True
         thread.start()
 
@@ -421,7 +635,7 @@ class ReportGeneratorApp(tk.Tk):
         self.progress_fill.place(x=0, y=0, relheight=1, relwidth=value / 100)
         self.progress_percent.config(text=f"{int(value)}%")
 
-    def _run_reports(self, sources, inspector):
+    def _run_reports(self, sources, inspector, notes_json):
         total = len(sources)
         generated = []
 
@@ -436,6 +650,11 @@ class ReportGeneratorApp(tk.Tk):
                 else:
                     cmd = [sys.executable, "run_report.py", "--dir", source_path, "--client", inspector]
 
+                # Add inspector notes if any
+                if notes_json and notes_json != "[]":
+                    cmd.extend(["--notes", notes_json])
+                    print(f"[DEBUG UI] Passing {len(self.inspector_notes)} notes: {notes_json}")
+
                 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                           text=True, cwd=str(Path(__file__).parent),
                                           encoding='utf-8', errors='replace')
@@ -443,6 +662,9 @@ class ReportGeneratorApp(tk.Tk):
                 for line in iter(process.stdout.readline, ''):
                     line = line.strip()
                     if line:
+                        # Print debug lines to terminal for troubleshooting
+                        if "[DEBUG" in line:
+                            print(line)
                         match = PROGRESS_RE.search(line)
                         if match:
                             current, total_img = int(match.group(1)), int(match.group(2))

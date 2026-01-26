@@ -21,7 +21,7 @@ def extract_location(analysis: str) -> str:
     match = re.search(r'Location:\s*(.+?)(?:\n|$)', analysis, re.IGNORECASE)
     if match:
         return match.group(1).strip()
-    return "Unknown"
+    return "Other"
 
 
 def parse_issues_from_vision_results(vision_results: Dict[str, str]) -> Dict[str, List[Dict]]:
@@ -184,11 +184,44 @@ def get_tenant_action_suggestion(description: str) -> str:
 # PDF PAGE RENDERING
 # ============================================================================
 
-def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], width: float, height: float) -> None:
+def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], width: float, height: float, inspector_notes: List[Dict] = None) -> None:
     """
     Generate the Tenant Action Items page using ReportLab.
     Shows items the owner should request from the tenant.
+
+    Args:
+        c: ReportLab canvas
+        issues: Dict with 'tenant' and 'owner' lists of issues
+        width: Page width
+        height: Page height
+        inspector_notes: List of inspector notes (text, responsibility, priority)
     """
+    if inspector_notes is None:
+        inspector_notes = []
+
+    print(f"[DEBUG tenant_actions] Received {len(inspector_notes)} inspector notes")
+    print(f"[DEBUG tenant_actions] Issues before merge - tenant: {len(issues.get('tenant', []))}, owner: {len(issues.get('owner', []))}")
+
+    # Merge inspector notes into issues
+    for note in inspector_notes:
+        print(f"[DEBUG tenant_actions] Processing note: {note}")
+        issue = {
+            'description': note.get('text', ''),
+            'location': 'Inspector Note',  # Special location marker
+            'priority': note.get('priority', 'FIX SOON'),
+            'action': '',
+            'is_inspector_note': True,  # Flag for special rendering
+        }
+        responsibility = note.get('responsibility', 'OWNER')
+        if responsibility == 'TENANT':
+            issues.setdefault('tenant', []).append(issue)
+            print(f"[DEBUG tenant_actions] Added note to TENANT list")
+        else:
+            issues.setdefault('owner', []).append(issue)
+            print(f"[DEBUG tenant_actions] Added note to OWNER list")
+
+    print(f"[DEBUG tenant_actions] Issues after merge - tenant: {len(issues.get('tenant', []))}, owner: {len(issues.get('owner', []))}")
+
     # Executive color palette
     primary_color = HexColor('#1a1a2e')
     accent_color = HexColor('#e74c3c')
@@ -256,6 +289,11 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
     tenant_issues = issues.get('tenant', [])
     owner_issues = issues.get('owner', [])
 
+    print(f"[DEBUG tenant_actions] Ready to render - tenant_issues: {len(tenant_issues)}, owner_issues: {len(owner_issues)}")
+    if owner_issues:
+        for idx, issue in enumerate(owner_issues):
+            print(f"[DEBUG tenant_actions] Owner issue {idx}: {issue.get('description', 'NO DESC')[:50]}...")
+
     current_y = height - 145
 
     # === TENANT ACTIONS SECTION ===
@@ -302,10 +340,15 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
             c.setFillColor(priority_colors.get(priority, text_secondary))
             c.roundRect(card_margin, current_y - card_height + 15, 4, card_height, 2, fill=1, stroke=0)
 
-            # Location header
+            # Location header with optional Inspector Note badge
             c.setFont("Helvetica-Bold", 8)
-            c.setFillColor(text_secondary)
-            c.drawString(card_margin + 12, current_y + 5, location)
+            if issue.get('is_inspector_note'):
+                # Draw Inspector Note badge
+                c.setFillColor(HexColor('#8b5cf6'))  # Purple for inspector notes
+                c.drawString(card_margin + 12, current_y + 5, "INSPECTOR NOTE")
+            else:
+                c.setFillColor(text_secondary)
+                c.drawString(card_margin + 12, current_y + 5, location)
 
             # Priority badge
             c.setFont("Helvetica-Bold", 7)
@@ -374,10 +417,15 @@ def generate_action_items_page(c: canvas.Canvas, issues: Dict[str, List[Dict]], 
             c.setFillColor(priority_colors.get(priority, text_secondary))
             c.roundRect(card_margin, current_y - card_height + 15, 4, card_height, 2, fill=1, stroke=0)
 
-            # Location header line
+            # Location header line with optional Inspector Note badge
             c.setFont("Helvetica-Bold", 8)
-            c.setFillColor(text_secondary)
-            c.drawString(card_margin + 12, current_y + 5, loc)
+            if issue.get('is_inspector_note'):
+                # Draw Inspector Note badge
+                c.setFillColor(HexColor('#8b5cf6'))  # Purple for inspector notes
+                c.drawString(card_margin + 12, current_y + 5, "INSPECTOR NOTE")
+            else:
+                c.setFillColor(text_secondary)
+                c.drawString(card_margin + 12, current_y + 5, loc)
 
             # Priority badge on same line as location, but at the end
             c.setFont("Helvetica-Bold", 7)

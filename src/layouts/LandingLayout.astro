@@ -10,8 +10,8 @@ interface Props {
 }
 
 const {
-  title = "Quarterly Maintenance Property Inspections | Same-Day Reports | CheckMyRental",
-  description = "Professional rental property inspections with photo‑rich same-day reports. Our signature Quarterly Maintenance Inspections help you catch issues early and protect your investment.",
+  title = "Property Documentation Services | Same-Day Reports | CheckMyRental",
+  description = "Professional rental property inspections with photo‑rich same-day reports. Regular property inspections help you catch issues early and protect your investment.",
   ogImage = "/og-image.jpg", // Default Open Graph image
   ogType = "website"
 } = Astro.props;
@@ -32,7 +32,7 @@ const ogImageURL = new URL(ogImage, Astro.site);
   <title>{title}</title>
   <meta name="title" content={title}>
   <meta name="description" content={description}>
-  <meta name="keywords" content="property inspection, rental inspection, quarterly maintenance, HVAC inspection, move-in inspection, move-out inspection, Tampa Bay, St Petersburg, Clearwater, Florida">
+  <meta name="keywords" content="property inspection, rental inspection, property maintenance, HVAC inspection, move-in inspection, move-out inspection, Tampa Bay, St Petersburg, Clearwater, Florida">
   <link rel="canonical" href={canonicalURL}>
 
   <!-- Open Graph / Facebook -->

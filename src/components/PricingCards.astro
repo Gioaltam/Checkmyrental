@@ -56,16 +56,6 @@ const quarterlyPlan = {
   featured: true
 };
 
-// Payment link placeholders - replace with actual Square Payment Links
-const SQUARE_LINKS = {
-  house100: "SQUARE_PAYMENT_LINK_HOUSE_100",
-  apt70: "SQUARE_PAYMENT_LINK_APT_70",
-  moveInOut200: "SQUARE_PAYMENT_LINK_MOVEINOUT_200",
-  annual200: "SQUARE_PAYMENT_LINK_ANNUAL_200"
-};
-
-const ZELLE_EMAIL = "giovannigomes11@gmail.com";
-
 ---
 
 <section class="pricing-cards-section">
@@ -128,28 +118,9 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
         ))}
       </ul>
 
-      <div class="payment-options">
-        <a
-          href={SQUARE_LINKS.house100}
-          class="add-to-cart-btn featured-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          Pay with Card - $100 (House)
-        </a>
-        <a
-          href={SQUARE_LINKS.apt70}
-          class="add-to-cart-btn featured-btn secondary-btn"
-          target="_blank"
-          rel="noopener"
-        >
-          Pay with Card - $70 (Apartment)
-        </a>
-        <div class="zelle-option">
-          <span class="zelle-label">Or pay with Zelle (no fees):</span>
-          <span class="zelle-email">{ZELLE_EMAIL}</span>
-        </div>
-      </div>
+      <a href="/checkout" class="add-to-cart-btn featured-btn">
+        Get Started
+      </a>
 
       <p class="volume-discount-note">Managing 6+ properties? Contact us for custom pricing.</p>
     </div>
@@ -165,22 +136,14 @@ const ZELLE_EMAIL = "giovannigomes11@gmail.com";
         <h4>Move-In / Move-Out</h4>
         <div class="addon-price">$200</div>
         <p class="addon-description">Comprehensive documentation at tenant transitions to protect your security deposit decisions</p>
-        <a href={SQUARE_LINKS.moveInOut200} class="add-to-cart-btn" target="_blank" rel="noopener">Pay with Card - $200</a>
-        <div class="zelle-option addon-zelle">
-          <span class="zelle-label">Or Zelle:</span>
-          <span class="zelle-email">{ZELLE_EMAIL}</span>
-        </div>
+        <a href="/checkout" class="add-to-cart-btn">Book Now</a>
       </div>
       <div class="pricing-card addon">
         <span class="addon-badge">One-Time</span>
         <h4>Annual Inspection</h4>
         <div class="addon-price">$200</div>
         <p class="addon-description">Thorough yearly property assessment for long-term maintenance planning</p>
-        <a href={SQUARE_LINKS.annual200} class="add-to-cart-btn" target="_blank" rel="noopener">Pay with Card - $200</a>
-        <div class="zelle-option addon-zelle">
-          <span class="zelle-label">Or Zelle:</span>
-          <span class="zelle-email">{ZELLE_EMAIL}</span>
-        </div>
+        <a href="/checkout" class="add-to-cart-btn">Book Now</a>
       </div>
     </div>
   </div>

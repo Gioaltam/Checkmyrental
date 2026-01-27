@@ -5,6 +5,7 @@ Thumbs.db
 
 # Python
 __pycache__/
+*.py
 *.pyc
 venv/
 .venv/
@@ -12,6 +13,9 @@ venv/
 .env*/
 requirements.txt
 scripts/
+
+# Backend backups
+_api_backup/
 
 # Node.js
 node_modules/

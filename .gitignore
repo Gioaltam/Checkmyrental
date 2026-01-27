@@ -10,6 +10,8 @@ venv/
 .venv/
 .env
 .env*/
+requirements.txt
+scripts/
 
 # Node.js
 node_modules/

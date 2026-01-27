@@ -455,7 +455,7 @@
         }
 
         if (isMobile) {
-          // No animation on mobile — just snap into place
+          // No animation on mobile — just snap into place, always centered
           activeCard.style.cssText = `
             position: fixed;
             top: 50%;
@@ -465,7 +465,10 @@
             width: 48vw;
             cursor: pointer;
             touch-action: none;
+            margin: 0;
           `;
+          // Ensure scroll position doesn't affect centering
+          window.scrollTo(0, window.scrollY);
           activeCard.addEventListener('touchmove', preventTouch, { passive: false } as any);
         } else {
           // Desktop: spring scale-up animation

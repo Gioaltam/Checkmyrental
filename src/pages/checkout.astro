@@ -2,9 +2,6 @@
 import LandingLayout from '../layouts/LandingLayout.astro';
 import Header from '../components/Header.astro';
 import LandingFooter from '../components/LandingFooter.astro';
-
-// Formspree endpoint - UPDATE WITH YOUR FORM ID
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 ---
 
 <LandingLayout
@@ -39,9 +36,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               </p>
             </div>
 
-            <form id="checkout-form" action={FORMSPREE_ENDPOINT} method="POST">
-              <!-- Hidden fields for Formspree -->
-              <input type="hidden" name="_subject" value="New Inspection Request" />
+            <form id="checkout-form" action="/api/submit-inquiry" method="POST">
               <input type="hidden" name="calculated_total" id="hidden-total" value="$0.00" />
 
               <!-- Step 1: Contact Information -->
@@ -117,8 +112,9 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                   </div>
                 </div>
 
-                <button type="button" id="add-property-btn" class="add-property-link">
-                  + Add property
+                <button type="button" id="add-property-btn" class="add-property-btn">
+                  <span class="add-property-icon">+</span>
+                  <span class="add-property-text">Add Another Property</span>
                 </button>
               </div>
 
@@ -626,24 +622,93 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     border-color: rgba(231, 76, 60, 0.5);
   }
 
-  /* Add Property Link */
-  .add-property-link {
-    display: inline-flex;
+  /* Add Property Button */
+  .add-property-btn {
+    display: flex;
     align-items: center;
-    background: none;
-    border: none;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 1rem 1.5rem;
+    margin-top: 0.5rem;
+    background: rgba(231, 76, 60, 0.08);
+    border: 2px dashed rgba(231, 76, 60, 0.3);
+    border-radius: 12px;
     color: #e74c3c;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 1rem;
     cursor: pointer;
-    padding: 0.5rem 0;
-    margin-top: 0.25rem;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
   }
 
-  .add-property-link:hover {
-    color: #c0392b;
-    text-decoration: underline;
+  .add-property-btn:hover {
+    background: rgba(231, 76, 60, 0.15);
+    border-color: #e74c3c;
+    transform: translateY(-2px);
+  }
+
+  .add-property-btn:active {
+    transform: translateY(0);
+  }
+
+  .add-property-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: rgba(231, 76, 60, 0.15);
+    border-radius: 50%;
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+
+  .add-property-btn:hover .add-property-icon {
+    background: #e74c3c;
+    color: white;
+    transform: rotate(90deg);
+  }
+
+  body.light-mode .add-property-btn {
+    background: rgba(231, 76, 60, 0.05);
+    border-color: rgba(231, 76, 60, 0.25);
+  }
+
+  body.light-mode .add-property-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: #e74c3c;
+  }
+
+  /* Property card animation */
+  .property-card {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  .property-card.removing {
+    animation: slideOut 0.3s ease-out forwards;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
   }
 
   /* Form Fields */
@@ -1066,6 +1131,31 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
     .form-row-2 {
       grid-template-columns: 1fr;
+    }
+
+    /* Mobile input fixes - ensure inputs are tappable and don't zoom */
+    .form-group input,
+    .form-group textarea,
+    .form-group select,
+    .property-address,
+    .tenant-row input {
+      font-size: 16px; /* Prevents iOS zoom on focus */
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    .property-card {
+      touch-action: pan-y;
+    }
+
+    .add-property-btn {
+      padding: 1.25rem;
+      -webkit-tap-highlight-color: rgba(231, 76, 60, 0.2);
+    }
+
+    .add-property-btn:active {
+      background: rgba(231, 76, 60, 0.2);
     }
   }
 
@@ -1579,9 +1669,13 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     // Add event listeners to new card
     const newCard = container.lastElementChild;
     newCard.querySelector('.remove-property-btn').addEventListener('click', function() {
-      newCard.remove();
-      updatePropertyNumbers();
-      updateSummary();
+      // Animate removal
+      newCard.classList.add('removing');
+      setTimeout(() => {
+        newCard.remove();
+        updatePropertyNumbers();
+        updateSummary();
+      }, 280);
     });
 
     newCard.querySelectorAll('input[type="radio"]').forEach(radio => {
@@ -1608,6 +1702,22 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     document.querySelectorAll('input[name="property_1_type"]').forEach(radio => {
       radio.addEventListener('change', updateSummary);
     });
+
+    // Add remove listener to first property card
+    const firstCard = document.querySelector('.property-card');
+    if (firstCard) {
+      const removeBtn = firstCard.querySelector('.remove-property-btn');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+          firstCard.classList.add('removing');
+          setTimeout(() => {
+            firstCard.remove();
+            updatePropertyNumbers();
+            updateSummary();
+          }, 280);
+        });
+      }
+    }
 
     // Payment method change listener - updates prices
     document.getElementById('payment-preference').addEventListener('change', updateSummary);

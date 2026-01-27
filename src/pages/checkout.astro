@@ -29,13 +29,23 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
         <div class="checkout-content">
           <!-- Left: Form -->
           <div class="checkout-form-section">
+            <!-- Mobile Wizard Progress (hidden on desktop) -->
+            <div class="wizard-progress" aria-label="Form progress">
+              <div class="wizard-progress-bar">
+                <div class="wizard-progress-fill" id="wizard-progress-fill"></div>
+              </div>
+              <p class="wizard-step-indicator">
+                Step <span id="wizard-current-step">1</span> of 3
+              </p>
+            </div>
+
             <form id="checkout-form" action={FORMSPREE_ENDPOINT} method="POST">
               <!-- Hidden fields for Formspree -->
               <input type="hidden" name="_subject" value="New Inspection Request" />
               <input type="hidden" name="calculated_total" id="hidden-total" value="$0.00" />
 
               <!-- Step 1: Contact Information -->
-              <div class="form-section">
+              <div class="form-section" data-wizard-step="1">
                 <h2><span class="step-number">1</span> Contact Information</h2>
                 <div class="form-grid">
                   <div class="form-group">
@@ -56,7 +66,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               </div>
 
               <!-- Step 2: Properties -->
-              <div class="form-section">
+              <div class="form-section" data-wizard-step="2">
                 <h2><span class="step-number">2</span> Properties to Inspect</h2>
                 <p class="section-desc">Add all properties you'd like inspected. You'll receive an invoice based on your chosen frequency.</p>
 
@@ -113,7 +123,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
               </div>
 
               <!-- Step 3: Preferences -->
-              <div class="form-section">
+              <div class="form-section" data-wizard-step="3">
                 <h2><span class="step-number">3</span> Choose Your Schedule</h2>
                 <div class="form-row-2">
                   <div class="form-group">
@@ -164,11 +174,33 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
                   <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
                 </label>
               </div>
+
+              <!-- Mobile Wizard Navigation (hidden on desktop) -->
+              <div class="wizard-nav">
+                <button type="button" id="wizard-back-btn" class="wizard-btn wizard-btn-back" disabled>
+                  Back
+                </button>
+                <button type="button" id="wizard-next-btn" class="wizard-btn wizard-btn-next">
+                  Next
+                </button>
+              </div>
             </form>
           </div>
 
           <!-- Right: Order Summary & Submit -->
           <div class="order-summary-section">
+            <!-- Mobile Order Summary Toggle (hidden on desktop) -->
+            <div class="mobile-order-summary-toggle" id="mobile-summary-toggle">
+              <button type="button" class="mobile-summary-btn" id="toggle-summary-btn" aria-expanded="false">
+                <span class="mobile-summary-label">Order Summary</span>
+                <span class="mobile-summary-total" id="mobile-summary-total">$100.00</span>
+                <span class="mobile-summary-chevron">▼</span>
+              </button>
+              <div class="mobile-summary-content" id="mobile-summary-content">
+                <!-- Content cloned from desktop summary via JS -->
+              </div>
+            </div>
+
             <div class="order-summary-card">
               <h3>Order Summary</h3>
 
@@ -1036,6 +1068,303 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
       grid-template-columns: 1fr;
     }
   }
+
+  /* ============================================
+     MOBILE WIZARD STYLES
+     ============================================ */
+
+  /* Hide wizard elements on desktop */
+  .wizard-progress,
+  .wizard-nav,
+  .mobile-order-summary-toggle {
+    display: none;
+  }
+
+  /* Mobile Wizard Styles */
+  @media (max-width: 600px) {
+    /* Show wizard elements on mobile */
+    .wizard-progress {
+      display: block;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .wizard-progress-bar {
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+
+    body.light-mode .wizard-progress-bar {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .wizard-progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border-radius: 2px;
+      transition: width 0.3s ease-out;
+      width: 33.33%;
+    }
+
+    .wizard-step-indicator {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+      font-weight: 500;
+    }
+
+    body.light-mode .wizard-step-indicator {
+      color: rgba(0, 0, 0, 0.6);
+    }
+
+    /* Hide all steps except the active one */
+    .form-section[data-wizard-step] {
+      display: none;
+    }
+
+    .form-section[data-wizard-step].wizard-active {
+      display: block;
+      animation: wizardFadeSlideIn 0.3s ease-out forwards;
+    }
+
+    .form-section[data-wizard-step].wizard-active-reverse {
+      display: block;
+      animation: wizardFadeSlideInReverse 0.3s ease-out forwards;
+    }
+
+    @keyframes wizardFadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes wizardFadeSlideInReverse {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* Hide terms checkbox on steps 1-2 */
+    .checkbox-group {
+      display: none;
+    }
+
+    .form-section[data-wizard-step="3"].wizard-active ~ .checkbox-group,
+    .form-section[data-wizard-step="3"].wizard-active-reverse ~ .checkbox-group {
+      display: block;
+    }
+
+    /* Wizard Navigation */
+    .wizard-nav {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    body.light-mode .wizard-nav {
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .wizard-btn {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-height: 48px;
+    }
+
+    .wizard-btn-back {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    body.light-mode .wizard-btn-back {
+      background: rgba(0, 0, 0, 0.03);
+      border-color: rgba(0, 0, 0, 0.15);
+      color: #333;
+    }
+
+    .wizard-btn-back:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .wizard-btn-back:not(:disabled):hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .wizard-btn-next {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: none;
+      color: white;
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+    }
+
+    .wizard-btn-next:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+    }
+
+    .wizard-btn-submit {
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+    }
+
+    .wizard-btn-submit:hover {
+      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+    }
+
+    /* Shake animation for validation errors */
+    @keyframes wizardShake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+      20%, 40%, 60%, 80% { transform: translateX(4px); }
+    }
+
+    .wizard-btn.shake {
+      animation: wizardShake 0.5s ease-in-out;
+    }
+
+    /* Validation error styles */
+    .form-group input.validation-error,
+    .form-group select.validation-error,
+    .property-address.validation-error {
+      border-color: #e74c3c !important;
+      background: rgba(231, 76, 60, 0.05) !important;
+    }
+
+    /* Mobile Order Summary - Fixed Bottom Bar */
+    .mobile-order-summary-toggle {
+      display: block;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(20, 20, 30, 0.98);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    body.light-mode .mobile-order-summary-toggle {
+      background: rgba(255, 255, 255, 0.98);
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+
+    .mobile-summary-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    body.light-mode .mobile-summary-btn {
+      color: #1a1a1a;
+    }
+
+    .mobile-summary-label {
+      flex: 1;
+      text-align: left;
+    }
+
+    .mobile-summary-total {
+      color: #e74c3c;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-right: 0.75rem;
+    }
+
+    .mobile-summary-chevron {
+      font-size: 0.75rem;
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-summary-btn[aria-expanded="true"] .mobile-summary-chevron {
+      transform: rotate(180deg);
+    }
+
+    .mobile-summary-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+      padding: 0 1.25rem;
+    }
+
+    .mobile-summary-content.expanded {
+      max-height: 300px;
+      padding: 0 1.25rem 1rem;
+    }
+
+    /* Hide desktop order summary card on mobile */
+    .order-summary-card {
+      display: none;
+    }
+
+    /* Hide desktop submit button on mobile (wizard has its own) */
+    .order-summary-section .submit-btn {
+      display: none;
+    }
+
+    .order-summary-section .contact-help {
+      display: none;
+    }
+
+    /* Add bottom padding to form to account for fixed summary */
+    .checkout-form-section {
+      padding-bottom: 80px;
+    }
+
+    /* Ensure order summary section doesn't affect layout on mobile */
+    .order-summary-section {
+      position: static;
+      padding: 0;
+      margin: 0;
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .form-section[data-wizard-step].wizard-active,
+    .form-section[data-wizard-step].wizard-active-reverse {
+      animation: none;
+    }
+
+    .wizard-progress-fill {
+      transition: none;
+    }
+
+    .wizard-btn.shake {
+      animation: none;
+    }
+  }
 </style>
 
 <script is:inline>
@@ -1304,5 +1633,315 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
 
     // Initial summary
     updateSummary();
+
+    // ============================================
+    // MOBILE WIZARD FUNCTIONALITY
+    // ============================================
+
+    const WIZARD_CONFIG = {
+      totalSteps: 3,
+      currentStep: 1,
+      isMobile: false
+    };
+
+    // Check if mobile
+    function checkMobileWizard() {
+      WIZARD_CONFIG.isMobile = window.matchMedia('(max-width: 600px)').matches;
+      return WIZARD_CONFIG.isMobile;
+    }
+
+    // Initialize wizard on mobile
+    function initMobileWizard() {
+      if (!checkMobileWizard()) {
+        resetWizardForDesktop();
+        return;
+      }
+
+      setupWizardSteps();
+      setupWizardNavigation();
+      setupMobileOrderSummary();
+      updateWizardUI();
+    }
+
+    // Setup wizard steps - show first step only
+    function setupWizardSteps() {
+      const steps = document.querySelectorAll('.form-section[data-wizard-step]');
+      steps.forEach((step, index) => {
+        step.classList.remove('wizard-active', 'wizard-active-reverse');
+        if (index === 0) {
+          step.classList.add('wizard-active');
+        }
+      });
+      WIZARD_CONFIG.currentStep = 1;
+    }
+
+    // Show specific step with animation
+    function showStep(stepNumber, direction = 'forward') {
+      const currentStepEl = document.querySelector('.form-section[data-wizard-step].wizard-active, .form-section[data-wizard-step].wizard-active-reverse');
+      const targetStepEl = document.querySelector(`[data-wizard-step="${stepNumber}"]`);
+
+      if (!targetStepEl || targetStepEl === currentStepEl) return;
+
+      // Remove classes from current step
+      if (currentStepEl) {
+        currentStepEl.classList.remove('wizard-active', 'wizard-active-reverse');
+      }
+
+      // Add appropriate animation class to new step
+      const animationClass = direction === 'forward' ? 'wizard-active' : 'wizard-active-reverse';
+      targetStepEl.classList.add(animationClass);
+
+      // Update state
+      WIZARD_CONFIG.currentStep = stepNumber;
+
+      // Scroll to top of form
+      const formSection = document.querySelector('.checkout-form-section');
+      if (formSection) {
+        formSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    // Setup navigation button listeners
+    function setupWizardNavigation() {
+      const backBtn = document.getElementById('wizard-back-btn');
+      const nextBtn = document.getElementById('wizard-next-btn');
+
+      if (!backBtn || !nextBtn) return;
+
+      backBtn.addEventListener('click', goToPreviousStep);
+      nextBtn.addEventListener('click', goToNextStep);
+    }
+
+    // Go to previous step
+    function goToPreviousStep() {
+      if (WIZARD_CONFIG.currentStep <= 1) return;
+
+      showStep(WIZARD_CONFIG.currentStep - 1, 'backward');
+      updateWizardUI();
+    }
+
+    // Go to next step or submit
+    function goToNextStep() {
+      // Validate current step first
+      if (!validateCurrentStep()) {
+        shakeNextButton();
+        return;
+      }
+
+      if (WIZARD_CONFIG.currentStep >= WIZARD_CONFIG.totalSteps) {
+        // Submit the form
+        submitWizardForm();
+        return;
+      }
+
+      showStep(WIZARD_CONFIG.currentStep + 1, 'forward');
+      updateWizardUI();
+    }
+
+    // Validate current step
+    function validateCurrentStep() {
+      const currentStepEl = document.querySelector(`[data-wizard-step="${WIZARD_CONFIG.currentStep}"]`);
+      if (!currentStepEl) return true;
+
+      let isValid = true;
+      let firstInvalidField = null;
+
+      // Clear previous validation states
+      currentStepEl.querySelectorAll('.validation-error').forEach(el => {
+        el.classList.remove('validation-error');
+      });
+
+      // Check required text/email/tel/select inputs
+      const requiredInputs = currentStepEl.querySelectorAll('input[required]:not([type="radio"]):not([type="checkbox"]), select[required], textarea[required]');
+      requiredInputs.forEach(field => {
+        if (!field.value.trim() || !field.checkValidity()) {
+          isValid = false;
+          field.classList.add('validation-error');
+          if (!firstInvalidField) firstInvalidField = field;
+        }
+      });
+
+      // Check required radio buttons (property type) in step 2
+      if (WIZARD_CONFIG.currentStep === 2) {
+        const propertyCards = currentStepEl.querySelectorAll('.property-card');
+        propertyCards.forEach(card => {
+          const index = card.dataset.propertyIndex;
+          const radioGroup = card.querySelectorAll(`input[name="property_${index}_type"]`);
+          const anyChecked = Array.from(radioGroup).some(r => r.checked);
+          if (!anyChecked && radioGroup.length > 0) {
+            isValid = false;
+            // Highlight the pills container
+            const pillsContainer = card.querySelector('.property-type-pills');
+            if (pillsContainer) pillsContainer.classList.add('validation-error');
+          }
+
+          // Check required address
+          const addressInput = card.querySelector('.property-address');
+          if (addressInput && !addressInput.value.trim()) {
+            isValid = false;
+            addressInput.classList.add('validation-error');
+            if (!firstInvalidField) firstInvalidField = addressInput;
+          }
+        });
+      }
+
+      // Step 3: Also validate terms checkbox
+      if (WIZARD_CONFIG.currentStep === 3) {
+        const termsCheckbox = document.getElementById('terms');
+        if (termsCheckbox && !termsCheckbox.checked) {
+          isValid = false;
+          if (!firstInvalidField) firstInvalidField = termsCheckbox;
+        }
+      }
+
+      // Focus first invalid field
+      if (firstInvalidField) {
+        firstInvalidField.focus();
+      }
+
+      return isValid;
+    }
+
+    // Shake the next button on validation error
+    function shakeNextButton() {
+      const nextBtn = document.getElementById('wizard-next-btn');
+      if (!nextBtn) return;
+
+      nextBtn.classList.add('shake');
+      setTimeout(() => {
+        nextBtn.classList.remove('shake');
+      }, 500);
+    }
+
+    // Update all wizard UI elements
+    function updateWizardUI() {
+      updateProgressBar();
+      updateStepIndicator();
+      updateNavigationButtons();
+      updateMobileSummaryTotal();
+    }
+
+    // Update progress bar width
+    function updateProgressBar() {
+      const progressFill = document.getElementById('wizard-progress-fill');
+      if (!progressFill) return;
+
+      const percentage = (WIZARD_CONFIG.currentStep / WIZARD_CONFIG.totalSteps) * 100;
+      progressFill.style.width = `${percentage}%`;
+    }
+
+    // Update step indicator text
+    function updateStepIndicator() {
+      const stepIndicator = document.getElementById('wizard-current-step');
+      if (!stepIndicator) return;
+
+      stepIndicator.textContent = WIZARD_CONFIG.currentStep;
+    }
+
+    // Update navigation buttons state
+    function updateNavigationButtons() {
+      const backBtn = document.getElementById('wizard-back-btn');
+      const nextBtn = document.getElementById('wizard-next-btn');
+
+      if (!backBtn || !nextBtn) return;
+
+      // Back button state
+      backBtn.disabled = WIZARD_CONFIG.currentStep <= 1;
+
+      // Next button state and text
+      if (WIZARD_CONFIG.currentStep >= WIZARD_CONFIG.totalSteps) {
+        nextBtn.textContent = 'Submit Inquiry';
+        nextBtn.classList.add('wizard-btn-submit');
+        nextBtn.classList.remove('wizard-btn-next');
+      } else {
+        nextBtn.textContent = 'Next';
+        nextBtn.classList.remove('wizard-btn-submit');
+        nextBtn.classList.add('wizard-btn-next');
+      }
+    }
+
+    // Update mobile summary total
+    function updateMobileSummaryTotal() {
+      const summaryTotal = document.getElementById('summary-total');
+      const mobileSummaryTotal = document.getElementById('mobile-summary-total');
+
+      if (summaryTotal && mobileSummaryTotal) {
+        mobileSummaryTotal.textContent = summaryTotal.textContent;
+      }
+
+      // Also update mobile summary content
+      const desktopSummaryItems = document.getElementById('summary-items');
+      const mobileSummaryContent = document.getElementById('mobile-summary-content');
+      if (desktopSummaryItems && mobileSummaryContent) {
+        mobileSummaryContent.innerHTML = desktopSummaryItems.innerHTML;
+      }
+    }
+
+    // Setup mobile order summary toggle
+    function setupMobileOrderSummary() {
+      const toggleBtn = document.getElementById('toggle-summary-btn');
+      const summaryContent = document.getElementById('mobile-summary-content');
+
+      if (!toggleBtn || !summaryContent) return;
+
+      toggleBtn.addEventListener('click', () => {
+        const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+        toggleBtn.setAttribute('aria-expanded', !isExpanded);
+        summaryContent.classList.toggle('expanded', !isExpanded);
+      });
+
+      // Initial content sync
+      updateMobileSummaryTotal();
+    }
+
+    // Submit form via wizard
+    function submitWizardForm() {
+      const form = document.getElementById('checkout-form');
+      if (!form) return;
+
+      // Trigger the existing form submission
+      form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    }
+
+    // Reset wizard for desktop view
+    function resetWizardForDesktop() {
+      const steps = document.querySelectorAll('.form-section[data-wizard-step]');
+      steps.forEach(step => {
+        step.classList.remove('wizard-active', 'wizard-active-reverse');
+      });
+    }
+
+    // Initialize mobile wizard
+    initMobileWizard();
+
+    // Re-check on resize (debounced)
+    let wizardResizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(wizardResizeTimeout);
+      wizardResizeTimeout = setTimeout(() => {
+        const wasMobile = WIZARD_CONFIG.isMobile;
+        const isMobileNow = checkMobileWizard();
+
+        if (wasMobile !== isMobileNow) {
+          if (isMobileNow) {
+            initMobileWizard();
+          } else {
+            resetWizardForDesktop();
+          }
+        }
+      }, 150);
+    });
+
+    // Update mobile summary when order summary updates
+    const summaryObserver = new MutationObserver(() => {
+      if (WIZARD_CONFIG.isMobile) {
+        updateMobileSummaryTotal();
+      }
+    });
+
+    const summaryItemsEl = document.getElementById('summary-items');
+    if (summaryItemsEl) {
+      summaryObserver.observe(summaryItemsEl, { childList: true, subtree: true, characterData: true });
+    }
   });
 </script>

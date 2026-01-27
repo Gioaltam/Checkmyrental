@@ -236,6 +236,8 @@ const ogImageURL = new URL(ogImage, Astro.site);
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 80px;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
   }
 
   body {
@@ -246,6 +248,7 @@ const ogImageURL = new URL(ogImage, Astro.site);
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     min-height: 100vh;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     position: relative;
     opacity: 0;
     animation: bodyFadeIn 0.6s ease-out forwards;
@@ -764,6 +767,16 @@ const ogImageURL = new URL(ogImage, Astro.site);
 
   /* Mobile adjustments */
   @media (max-width: 768px) {
+    /* Lock horizontal scrolling on mobile - only allow vertical panning */
+    html, body {
+      touch-action: pan-y pinch-zoom;
+    }
+
+    /* Allow horizontal scroll ONLY on PDF preview carousel */
+    .pdf-preview-grid {
+      touch-action: pan-x pan-y pinch-zoom;
+    }
+
     .entrance-logo-wrapper {
       flex-direction: column;
       gap: 1.5rem;

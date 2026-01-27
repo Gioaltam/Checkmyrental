@@ -12,8 +12,9 @@
       </p>
     </div>
 
-    <div class="pdf-preview-grid">
-      <!-- Card 1: Cover Page -->
+    <div class="pdf-grid-wrapper">
+      <div class="pdf-preview-grid">
+        <!-- Card 1: Cover Page -->
       <div class="pdf-preview-card">
         <div class="card-label">Cover Page</div>
         <div class="pdf-page cover-page">
@@ -344,6 +345,7 @@
         </div>
         <p class="card-caption">Every photo with detailed analysis</p>
       </div>
+      </div>
     </div>
 
     <div class="scroll-hint">
@@ -509,30 +511,29 @@
   .showcase-container {
     max-width: 1400px;
     margin: 0 auto;
+  }
+
+  /* Wrapper for fade effect - only on cards area */
+  .pdf-grid-wrapper {
     position: relative;
   }
 
-  /* Fade indicators for scroll hint */
-  .showcase-container::before,
-  .showcase-container::after {
+  .pdf-grid-wrapper::after {
     content: '';
     position: absolute;
     top: 0;
     bottom: 0;
+    right: 0;
     width: 80px;
+    background: linear-gradient(to left, #0a0a0a 0%, rgba(10, 10, 10, 0.8) 40%, transparent 100%);
     pointer-events: none;
     z-index: 10;
     opacity: 0;
     transition: opacity 0.3s;
   }
 
-  .showcase-container::after {
-    right: 0;
-    background: linear-gradient(to left, #0a0a0a 0%, rgba(10, 10, 10, 0.8) 40%, transparent 100%);
-  }
-
   @media (max-width: 1400px) {
-    .showcase-container::after {
+    .pdf-grid-wrapper::after {
       opacity: 1;
     }
   }

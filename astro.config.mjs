@@ -5,7 +5,7 @@ import vercel from '@astrojs/vercel';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://checkmyrental.io', // Production domain for canonical URLs
-  output: 'static',
+  output: 'server', // Server mode for API routes
   adapter: vercel(),
   integrations: [
     sitemap({

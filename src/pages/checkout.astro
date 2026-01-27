@@ -1070,189 +1070,203 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
   }
 
   /* ============================================
-     MOBILE WIZARD STYLES
+     WIZARD STYLES (All Screen Sizes)
      ============================================ */
 
-  /* Hide wizard elements on desktop */
-  .wizard-progress,
-  .wizard-nav,
+  /* Hide mobile-only elements on desktop */
   .mobile-order-summary-toggle {
     display: none;
   }
 
-  /* Mobile Wizard Styles */
-  @media (max-width: 600px) {
-    /* Show wizard elements on mobile */
-    .wizard-progress {
-      display: block;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
+  /* Progress Bar */
+  .wizard-progress {
+    display: block;
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
 
-    .wizard-progress-bar {
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
+  .wizard-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+  }
 
-    body.light-mode .wizard-progress-bar {
-      background: rgba(0, 0, 0, 0.1);
-    }
+  body.light-mode .wizard-progress-bar {
+    background: rgba(0, 0, 0, 0.1);
+  }
 
-    .wizard-progress-fill {
-      height: 100%;
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      border-radius: 2px;
-      transition: width 0.3s ease-out;
-      width: 33.33%;
-    }
+  .wizard-progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-radius: 2px;
+    transition: width 0.3s ease-out;
+    width: 33.33%;
+  }
 
-    .wizard-step-indicator {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.7);
-      margin: 0;
-      font-weight: 500;
-    }
+  .wizard-step-indicator {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    font-weight: 500;
+  }
 
-    body.light-mode .wizard-step-indicator {
-      color: rgba(0, 0, 0, 0.6);
-    }
+  body.light-mode .wizard-step-indicator {
+    color: rgba(0, 0, 0, 0.6);
+  }
 
-    /* Hide all steps except the active one */
-    .form-section[data-wizard-step] {
-      display: none;
-    }
+  /* Hide all steps except the active one */
+  .form-section[data-wizard-step] {
+    display: none;
+  }
 
-    .form-section[data-wizard-step].wizard-active {
-      display: block;
-      animation: wizardFadeSlideIn 0.3s ease-out forwards;
-    }
+  .form-section[data-wizard-step].wizard-active {
+    display: block;
+    animation: wizardFadeSlideIn 0.3s ease-out forwards;
+  }
 
-    .form-section[data-wizard-step].wizard-active-reverse {
-      display: block;
-      animation: wizardFadeSlideInReverse 0.3s ease-out forwards;
-    }
+  .form-section[data-wizard-step].wizard-active-reverse {
+    display: block;
+    animation: wizardFadeSlideInReverse 0.3s ease-out forwards;
+  }
 
-    @keyframes wizardFadeSlideIn {
-      from {
-        opacity: 0;
-        transform: translateX(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+  @keyframes wizardFadeSlideIn {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
     }
-
-    @keyframes wizardFadeSlideInReverse {
-      from {
-        opacity: 0;
-        transform: translateX(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+    to {
+      opacity: 1;
+      transform: translateX(0);
     }
+  }
 
-    /* Hide terms checkbox on steps 1-2 */
-    .checkbox-group {
-      display: none;
+  @keyframes wizardFadeSlideInReverse {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
     }
-
-    .form-section[data-wizard-step="3"].wizard-active ~ .checkbox-group,
-    .form-section[data-wizard-step="3"].wizard-active-reverse ~ .checkbox-group {
-      display: block;
+    to {
+      opacity: 1;
+      transform: translateX(0);
     }
+  }
 
-    /* Wizard Navigation */
+  /* Hide terms checkbox on steps 1-2 */
+  .checkbox-group {
+    display: none;
+  }
+
+  .form-section[data-wizard-step="3"].wizard-active ~ .checkbox-group,
+  .form-section[data-wizard-step="3"].wizard-active-reverse ~ .checkbox-group {
+    display: block;
+  }
+
+  /* Wizard Navigation */
+  .wizard-nav {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  body.light-mode .wizard-nav {
+    border-top-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .wizard-btn {
+    flex: 1;
+    padding: 1rem;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 48px;
+  }
+
+  .wizard-btn-back {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  body.light-mode .wizard-btn-back {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: #333;
+  }
+
+  .wizard-btn-back:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .wizard-btn-back:not(:disabled):hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .wizard-btn-next {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border: none;
+    color: white;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  }
+
+  .wizard-btn-next:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+  }
+
+  .wizard-btn-submit {
+    background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+  }
+
+  .wizard-btn-submit:hover {
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+  }
+
+  /* Shake animation for validation errors */
+  @keyframes wizardShake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+    20%, 40%, 60%, 80% { transform: translateX(4px); }
+  }
+
+  .wizard-btn.shake {
+    animation: wizardShake 0.5s ease-in-out;
+  }
+
+  /* Validation error styles */
+  .form-group input.validation-error,
+  .form-group select.validation-error,
+  .property-address.validation-error {
+    border-color: #e74c3c !important;
+    background: rgba(231, 76, 60, 0.05) !important;
+  }
+
+  /* Desktop wizard layout adjustments */
+  @media (min-width: 601px) {
     .wizard-nav {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    body.light-mode .wizard-nav {
-      border-top-color: rgba(0, 0, 0, 0.1);
+      justify-content: flex-end;
     }
 
     .wizard-btn {
-      flex: 1;
-      padding: 1rem;
-      border-radius: 12px;
-      font-weight: 600;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      min-height: 48px;
+      flex: 0 0 auto;
+      min-width: 140px;
     }
 
     .wizard-btn-back {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      color: rgba(255, 255, 255, 0.9);
+      min-width: 100px;
     }
+  }
 
-    body.light-mode .wizard-btn-back {
-      background: rgba(0, 0, 0, 0.03);
-      border-color: rgba(0, 0, 0, 0.15);
-      color: #333;
-    }
-
-    .wizard-btn-back:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .wizard-btn-back:not(:disabled):hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
-
-    .wizard-btn-next {
-      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-      border: none;
-      color: white;
-      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-    }
-
-    .wizard-btn-next:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-    }
-
-    .wizard-btn-submit {
-      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-      box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-    }
-
-    .wizard-btn-submit:hover {
-      box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-    }
-
-    /* Shake animation for validation errors */
-    @keyframes wizardShake {
-      0%, 100% { transform: translateX(0); }
-      10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-      20%, 40%, 60%, 80% { transform: translateX(4px); }
-    }
-
-    .wizard-btn.shake {
-      animation: wizardShake 0.5s ease-in-out;
-    }
-
-    /* Validation error styles */
-    .form-group input.validation-error,
-    .form-group select.validation-error,
-    .property-address.validation-error {
-      border-color: #e74c3c !important;
-      background: rgba(231, 76, 60, 0.05) !important;
-    }
-
+  /* Mobile-specific wizard styles */
+  @media (max-width: 600px) {
     /* Mobile Order Summary - Fixed Bottom Bar */
     .mobile-order-summary-toggle {
       display: block;
@@ -1635,7 +1649,7 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
     updateSummary();
 
     // ============================================
-    // MOBILE WIZARD FUNCTIONALITY
+    // WIZARD FUNCTIONALITY (All Screen Sizes)
     // ============================================
 
     const WIZARD_CONFIG = {
@@ -1644,23 +1658,24 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
       isMobile: false
     };
 
-    // Check if mobile
-    function checkMobileWizard() {
+    // Check if mobile (for mobile-specific features only)
+    function checkIsMobile() {
       WIZARD_CONFIG.isMobile = window.matchMedia('(max-width: 600px)').matches;
       return WIZARD_CONFIG.isMobile;
     }
 
-    // Initialize wizard on mobile
-    function initMobileWizard() {
-      if (!checkMobileWizard()) {
-        resetWizardForDesktop();
-        return;
-      }
+    // Initialize wizard on all screen sizes
+    function initWizard() {
+      checkIsMobile();
 
       setupWizardSteps();
       setupWizardNavigation();
-      setupMobileOrderSummary();
       updateWizardUI();
+
+      // Only setup mobile order summary on small screens
+      if (WIZARD_CONFIG.isMobile) {
+        setupMobileOrderSummary();
+      }
     }
 
     // Setup wizard steps - show first step only
@@ -1903,31 +1918,21 @@ const FORMSPREE_ENDPOINT = "https://formspree.io/f/xdaekzkl";
       form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
     }
 
-    // Reset wizard for desktop view
-    function resetWizardForDesktop() {
-      const steps = document.querySelectorAll('.form-section[data-wizard-step]');
-      steps.forEach(step => {
-        step.classList.remove('wizard-active', 'wizard-active-reverse');
-      });
-    }
+    // Initialize wizard on all screen sizes
+    initWizard();
 
-    // Initialize mobile wizard
-    initMobileWizard();
-
-    // Re-check on resize (debounced)
+    // Handle resize - toggle mobile summary, wizard stays active
     let wizardResizeTimeout;
     window.addEventListener('resize', () => {
       clearTimeout(wizardResizeTimeout);
       wizardResizeTimeout = setTimeout(() => {
         const wasMobile = WIZARD_CONFIG.isMobile;
-        const isMobileNow = checkMobileWizard();
+        const isMobileNow = checkIsMobile();
 
-        if (wasMobile !== isMobileNow) {
-          if (isMobileNow) {
-            initMobileWizard();
-          } else {
-            resetWizardForDesktop();
-          }
+        // If switching to mobile, setup mobile summary
+        if (!wasMobile && isMobileNow) {
+          setupMobileOrderSummary();
+          updateMobileSummaryTotal();
         }
       }, 150);
     });

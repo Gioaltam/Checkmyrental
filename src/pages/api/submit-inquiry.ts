@@ -151,10 +151,12 @@ export const POST: APIRoute = async ({ request }) => {
     if (!RESEND_API_KEY) {
       console.error('RESEND_API_KEY not configured. Available env keys:', Object.keys(process.env).filter(k => k.includes('RESEND') || k.includes('API')));
       return new Response(
-        JSON.stringify({ error: 'Email service not configured' }),
+        JSON.stringify({ error: 'Email service not configured', message: 'Please contact support - the email service is not properly configured.' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('Sending email via Resend...', { fullName, email, propertiesCount: properties.length });
 
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -173,9 +175,9 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (!resendResponse.ok) {
       const errorData = await resendResponse.text();
-      console.error('Resend API error:', errorData);
+      console.error('Resend API error:', resendResponse.status, errorData);
       return new Response(
-        JSON.stringify({ error: 'Failed to send email' }),
+        JSON.stringify({ error: 'Failed to send email', message: 'There was a problem sending your request. Please try again or contact us directly at info@checkmyrental.io' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }
       );
     }
@@ -191,7 +193,7 @@ export const POST: APIRoute = async ({ request }) => {
   } catch (error) {
     console.error('Submit inquiry error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', message: 'An unexpected error occurred. Please try again or contact us directly at info@checkmyrental.io' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

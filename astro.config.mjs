@@ -6,7 +6,9 @@ import vercel from '@astrojs/vercel/serverless';
 export default defineConfig({
   site: 'https://checkmyrental.io', // Production domain for canonical URLs
   output: 'hybrid',
-  adapter: vercel(),
+  adapter: vercel({
+    runtime: 'nodejs20.x'
+  }),
   integrations: [
     sitemap({
       changefreq: 'weekly',

@@ -145,10 +145,11 @@ export const POST: APIRoute = async ({ request }) => {
     `;
 
     // Send via Resend
-    const RESEND_API_KEY = (import.meta as any).env?.RESEND_API_KEY || process.env.RESEND_API_KEY;
+    // In Astro 5 with Vercel, use process.env for runtime environment variables
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
     if (!RESEND_API_KEY) {
-      console.error('RESEND_API_KEY not configured');
+      console.error('RESEND_API_KEY not configured. Available env keys:', Object.keys(process.env).filter(k => k.includes('RESEND') || k.includes('API')));
       return new Response(
         JSON.stringify({ error: 'Email service not configured' }),
         { status: 500, headers: { 'Content-Type': 'application/json' } }

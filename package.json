@@ -12,6 +12,9 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.0",
     "@astrojs/vercel": "^9.0.4",
-    "astro": "^5.16.15"
+    "@upstash/redis": "^1.36.1",
+    "astro": "^5.16.15",
+    "jspdf": "^4.0.0",
+    "square": "^44.0.0"
   }
 }

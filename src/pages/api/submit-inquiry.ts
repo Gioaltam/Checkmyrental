@@ -1,4 +1,7 @@
 import type { APIRoute } from 'astro';
+import { createInquiry } from '../../lib/db';
+import { PRICES } from '../../lib/types';
+import type { Property } from '../../lib/types';
 
 // Ensure this route is server-rendered (not prerendered)
 export const prerender = false;
@@ -184,6 +187,36 @@ export const POST: APIRoute = async ({ request }) => {
 
     const result = await resendResponse.json();
     console.log('Email sent successfully:', result);
+
+    // Store inquiry in database for admin dashboard
+    try {
+      const priceKey = paymentPreference === 'zelle' ? 'zelle' : 'card';
+      const dbProperties: Property[] = properties.map(p => ({
+        type: p.type as Property['type'],
+        address: p.address,
+        tenantName: p.tenantName || undefined,
+        tenantPhone: p.tenantPhone || undefined,
+        price: PRICES[priceKey][p.type as keyof typeof PRICES.card] || 100,
+      }));
+
+      const total = dbProperties.reduce((sum, p) => sum + p.price, 0);
+
+      await createInquiry({
+        customerName: fullName,
+        customerEmail: email,
+        customerPhone: phone,
+        properties: dbProperties,
+        preferredTimeframe,
+        inspectionFrequency,
+        paymentPreference: paymentPreference as 'zelle' | 'card',
+        notes: notes || undefined,
+        total,
+      });
+      console.log('Inquiry stored in database');
+    } catch (dbError) {
+      // Log but don't fail - email was already sent
+      console.error('Failed to store inquiry in database:', dbError);
+    }
 
     return new Response(
       JSON.stringify({ success: true, id: result.id }),

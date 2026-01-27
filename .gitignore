@@ -17,6 +17,11 @@ scripts/
 # Backend backups
 _api_backup/
 
+# Docker/deployment (not used for Vercel)
+Dockerfile
+docker-compose*.yml
+nginx/
+
 # Node.js
 node_modules/
 

@@ -636,7 +636,7 @@ export const prerender = false;
               <span>Subtotal:</span>
               <span id="modal-subtotal">$0.00</span>
             </div>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;" id="fee-row" style="display: none;">
+            <div style="display: none; justify-content: space-between; margin-bottom: 8px;" id="fee-row">
               <span>Processing Fee (3%):</span>
               <span id="modal-fee">$0.00</span>
             </div>
@@ -654,7 +654,7 @@ export const prerender = false;
     </div>
   </div>
 
-  <script>
+  <script is:inline>
     // Auth check
     const token = localStorage.getItem('adminToken');
     if (!token) {

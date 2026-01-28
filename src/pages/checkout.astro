@@ -764,11 +764,21 @@ import LandingFooter from '../components/LandingFooter.astro';
     font-family: inherit;
   }
 
+  .form-group select option {
+    background-color: #1e293b;
+    color: white;
+  }
+
   body.light-mode .form-group input,
   body.light-mode .form-group textarea,
   body.light-mode .form-group select {
     background: rgba(0, 0, 0, 0.03);
     border-color: rgba(0, 0, 0, 0.15);
+    color: #1a1a1a;
+  }
+
+  body.light-mode .form-group select option {
+    background-color: #fff;
     color: #1a1a1a;
   }
 

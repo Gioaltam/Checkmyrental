@@ -121,6 +121,69 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       }
       await updateInvoice(id, { status: 'cancelled' });
       invoice.status = 'cancelled';
+    } else if (action === 'retry_send') {
+      // Retry sending a draft invoice
+      if (invoice.paymentMethod === 'square') {
+        const { createSquareInvoice } = await import('../../../lib/square');
+        const { squareInvoiceId, paymentUrl } = await createSquareInvoice(invoice);
+        await updateInvoice(id, { status: 'sent', squareInvoiceId, squarePaymentUrl: paymentUrl });
+        invoice.status = 'sent';
+      } else {
+        // Zelle — generate PDF and send email
+        const { generateInvoicePDF, generateInvoiceEmailHTML } = await import('../../../lib/invoice-pdf');
+        const pdfBuffer = generateInvoicePDF(invoice);
+        const emailHtml = generateInvoiceEmailHTML(invoice);
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (!RESEND_API_KEY) {
+          throw new Error('RESEND_API_KEY not configured');
+        }
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'CheckMyRental <send@checkmyrental.io>',
+            to: [String(invoice.customerEmail)],
+            subject: `Invoice ${invoice.invoiceNumber} from CheckMyRental`,
+            html: emailHtml,
+            attachments: [{
+              filename: `${invoice.invoiceNumber}.pdf`,
+              content: pdfBuffer.toString('base64'),
+            }],
+          }),
+        });
+
+        if (!resendResponse.ok) {
+          const errorData = await resendResponse.text();
+          throw new Error(`Resend API error: ${errorData}`);
+        }
+
+        await updateInvoice(id, { status: 'sent' });
+        invoice.status = 'sent';
+
+        // Send copy to admin
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'CheckMyRental <send@checkmyrental.io>',
+            to: ['info@checkmyrental.io'],
+            subject: `[Copy] Invoice ${invoice.invoiceNumber} sent to ${invoice.customerName}`,
+            html: `<p>A copy of the invoice sent to ${invoice.customerName} (${invoice.customerEmail})</p>${emailHtml}`,
+            attachments: [{
+              filename: `${invoice.invoiceNumber}.pdf`,
+              content: pdfBuffer.toString('base64'),
+            }],
+          }),
+        });
+      }
     } else if (status) {
       // Direct status update
       await updateInvoice(id, { status });

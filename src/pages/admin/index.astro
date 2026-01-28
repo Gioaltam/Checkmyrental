@@ -197,6 +197,11 @@ export const prerender = false;
       font-weight: 600;
     }
 
+    .badge-draft {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
     .badge-new {
       background: #dbeafe;
       color: #1d4ed8;
@@ -755,7 +760,7 @@ export const prerender = false;
       let filtered = invoices;
 
       if (filter === 'pending') {
-        filtered = invoices.filter(i => ['sent', 'viewed', 'overdue'].includes(i.status));
+        filtered = invoices.filter(i => ['draft', 'sent', 'viewed', 'overdue'].includes(i.status));
       } else if (filter === 'paid') {
         filtered = invoices.filter(i => i.status === 'paid');
       }
@@ -784,6 +789,11 @@ export const prerender = false;
           <td><span class="badge badge-${invoice.status}">${invoice.status}</span></td>
           <td>
             <div class="table-actions">
+              ${invoice.status === 'draft' ? `
+                <button class="table-btn table-btn-primary" onclick="retrySendInvoice('${invoice.id}')">
+                  Retry Send
+                </button>
+              ` : ''}
               ${invoice.status !== 'paid' && invoice.status !== 'cancelled' ? `
                 <button class="table-btn table-btn-primary" onclick="markPaid('${invoice.id}')">
                   Mark Paid
@@ -991,6 +1001,39 @@ export const prerender = false;
           fetchData();
         } else {
           alert('Failed to update invoice');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Retry sending a draft invoice
+    async function retrySendInvoice(invoiceId) {
+      if (!confirm('Retry sending this invoice?')) return;
+
+      try {
+        const response = await fetch(`/api/invoices/${invoiceId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'retry_send' })
+        });
+
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { error: text || `Server error (${response.status})` };
+        }
+
+        if (response.ok) {
+          alert('Invoice sent successfully!');
+          fetchData();
+        } else {
+          alert('Error: ' + (result.error || 'Failed to send invoice') + (result.details ? '\n' + result.details : ''));
         }
       } catch (error) {
         alert('Error: ' + error.message);

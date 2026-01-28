@@ -185,7 +185,7 @@ export async function getStats(): Promise<{
     totalInvoices: validInvoices.length,
     paidInvoices: validInvoices.filter(i => i.status === 'paid').length,
     pendingAmount: validInvoices
-      .filter(i => i.status === 'sent' || i.status === 'viewed' || i.status === 'overdue')
+      .filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'viewed' || i.status === 'overdue')
       .reduce((sum, i) => sum + i.total, 0),
   };
 }

@@ -14,6 +14,13 @@ function getRedis(): Redis {
   return new Redis({ url, token });
 }
 
+// Strip null/undefined values before storing in Redis (hset doesn't support them)
+function stripNulls(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== null && v !== undefined)
+  );
+}
+
 // Generate unique ID
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -45,7 +52,7 @@ export async function createInquiry(data: Omit<Inquiry, 'id' | 'createdAt' | 'st
     status: 'new',
   };
 
-  await redis.hset(`inquiry:${id}`, inquiry as Record<string, unknown>);
+  await redis.hset(`inquiry:${id}`, stripNulls(inquiry as Record<string, unknown>));
   await redis.lpush('inquiries:list', id);
 
   return inquiry;
@@ -98,7 +105,7 @@ export async function createInvoice(
     createdAt: new Date().toISOString(),
   };
 
-  await redis.hset(`invoice:${id}`, invoice as Record<string, unknown>);
+  await redis.hset(`invoice:${id}`, stripNulls(invoice as Record<string, unknown>));
   await redis.lpush('invoices:list', id);
 
   // If linked to inquiry, update inquiry status
@@ -149,7 +156,7 @@ export async function updateInvoice(
   updates: Partial<Pick<Invoice, 'status' | 'paidAt' | 'squareInvoiceId' | 'squarePaymentUrl'>>
 ): Promise<void> {
   const redis = getRedis();
-  await redis.hset(`invoice:${id}`, updates as Record<string, unknown>);
+  await redis.hset(`invoice:${id}`, stripNulls(updates as Record<string, unknown>));
 }
 
 // ==================== STATS ====================

@@ -319,6 +319,7 @@ export function generateInvoiceEmailHTML(invoice: Invoice): string {
         <!-- Header -->
         <tr>
           <td style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 30px; text-align: center;">
+            <img src="https://checkmyrental.io/logo-icon.png" alt="CheckMyRental" width="60" height="60" style="display: block; margin: 0 auto 12px auto; border-radius: 12px;" />
             <h1 style="color: #ffffff; margin: 0; font-size: 28px;">
               CheckMy<span style="color: #e74c3c;">Rental</span>
             </h1>

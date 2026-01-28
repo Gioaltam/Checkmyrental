@@ -74,7 +74,7 @@ export function generateInvoicePDF(invoice: Invoice): Buffer {
   // Invoice number (right aligned)
   doc.setFontSize(11);
   setColor(COLORS.gray);
-  doc.text(invoice.invoiceNumber, pageWidth - margin, y, { align: 'right' });
+  doc.text(String(invoice.invoiceNumber), pageWidth - margin, y, { align: 'right' });
 
   y += 15;
 
@@ -105,13 +105,13 @@ export function generateInvoicePDF(invoice: Invoice): Buffer {
   setColor(COLORS.dark);
 
   // Customer info
-  doc.text(invoice.customerName, col1X, y);
+  doc.text(String(invoice.customerName), col1X, y);
   y += 5;
   setColor(COLORS.gray);
   doc.setFontSize(10);
-  doc.text(invoice.customerEmail, col1X, y);
+  doc.text(String(invoice.customerEmail), col1X, y);
   y += 5;
-  doc.text(invoice.customerPhone, col1X, y);
+  doc.text(String(invoice.customerPhone), col1X, y);
 
   // Invoice details (right column)
   let detailY = y - 10;
@@ -165,16 +165,16 @@ export function generateInvoicePDF(invoice: Invoice): Buffer {
 
     setColor(COLORS.dark);
     doc.setFont('helvetica', 'bold');
-    doc.text(PROPERTY_LABELS[property.type] || property.type, margin + 3, y);
+    doc.text(String(PROPERTY_LABELS[property.type] || property.type), margin + 3, y);
 
     doc.setFont('helvetica', 'normal');
     setColor(COLORS.gray);
     doc.setFontSize(9);
-    doc.text(property.address, margin + 3, y + 5);
+    doc.text(String(property.address), margin + 3, y + 5);
 
     doc.setFontSize(10);
     setColor(COLORS.dark);
-    doc.text(`$${property.price.toFixed(2)}`, pageWidth - margin - 3, y + 2, { align: 'right' });
+    doc.text(`$${Number(property.price).toFixed(2)}`, pageWidth - margin - 3, y + 2, { align: 'right' });
 
     y += 14;
   });
@@ -190,7 +190,7 @@ export function generateInvoicePDF(invoice: Invoice): Buffer {
   setColor(COLORS.gray);
   doc.text('Subtotal:', totalsX, y);
   setColor(COLORS.dark);
-  doc.text(`$${invoice.subtotal.toFixed(2)}`, pageWidth - margin - 3, y, { align: 'right' });
+  doc.text(`$${Number(invoice.subtotal).toFixed(2)}`, pageWidth - margin - 3, y, { align: 'right' });
 
   y += 8;
 
@@ -204,7 +204,7 @@ export function generateInvoicePDF(invoice: Invoice): Buffer {
   setColor(COLORS.dark);
   doc.text('Total Due:', totalsX, y + 3);
   setColor(COLORS.primary);
-  doc.text(`$${invoice.total.toFixed(2)}`, pageWidth - margin - 3, y + 3, { align: 'right' });
+  doc.text(`$${Number(invoice.total).toFixed(2)}`, pageWidth - margin - 3, y + 3, { align: 'right' });
 
   y += 25;
 
@@ -302,7 +302,7 @@ export function generateInvoiceEmailHTML(invoice: Invoice): string {
         <span style="color: #64748b; font-size: 14px;">${p.address}</span>
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">
-        $${p.price.toFixed(2)}
+        $${Number(p.price).toFixed(2)}
       </td>
     </tr>
   `).join('');
@@ -368,7 +368,7 @@ export function generateInvoiceEmailHTML(invoice: Invoice): string {
                   Total Due
                 </td>
                 <td style="padding: 15px; text-align: right; font-weight: 700; color: #e74c3c; font-size: 24px;">
-                  $${invoice.total.toFixed(2)}
+                  $${Number(invoice.total).toFixed(2)}
                 </td>
               </tr>
             </table>

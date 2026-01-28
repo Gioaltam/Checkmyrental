@@ -950,14 +950,20 @@ export const prerender = false;
           body: JSON.stringify(data)
         });
 
-        const result = await response.json();
+        const text = await response.text();
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { error: text || `Server error (${response.status})` };
+        }
 
         if (response.ok) {
           alert('Invoice sent successfully!');
           closeModal();
           fetchData(); // Refresh data
         } else {
-          alert('Error: ' + (result.error || 'Failed to create invoice'));
+          alert('Error: ' + (result.error || 'Failed to create invoice') + (result.details ? '\n' + result.details : ''));
         }
       } catch (error) {
         alert('Error: ' + error.message);

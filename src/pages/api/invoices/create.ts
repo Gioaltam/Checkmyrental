@@ -1,7 +1,5 @@
 import type { APIRoute } from 'astro';
 import { createInvoice, getInquiry, updateInquiryStatus } from '../../../lib/db';
-import { createSquareInvoice } from '../../../lib/square';
-import { generateInvoicePDF, generateInvoiceEmailHTML } from '../../../lib/invoice-pdf';
 import type { Invoice, Property } from '../../../lib/types';
 
 export const prerender = false;
@@ -100,6 +98,7 @@ export const POST: APIRoute = async ({ request }) => {
     if (body.paymentMethod === 'square') {
       // Create and send via Square
       try {
+        const { createSquareInvoice } = await import('../../../lib/square');
         const { squareInvoiceId, paymentUrl } = await createSquareInvoice(invoice);
 
         // Update invoice with Square details
@@ -127,6 +126,7 @@ export const POST: APIRoute = async ({ request }) => {
     } else {
       // Send Zelle invoice via email with PDF attachment
       try {
+        const { generateInvoicePDF, generateInvoiceEmailHTML } = await import('../../../lib/invoice-pdf');
         const pdfBuffer = generateInvoicePDF(invoice);
         const emailHtml = generateInvoiceEmailHTML(invoice);
 

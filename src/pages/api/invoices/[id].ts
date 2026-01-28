@@ -1,6 +1,5 @@
 import type { APIRoute } from 'astro';
 import { getInvoice, updateInvoice } from '../../../lib/db';
-import { getSquareInvoiceStatus, cancelSquareInvoice } from '../../../lib/square';
 
 export const prerender = false;
 
@@ -36,6 +35,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     // If Square invoice, sync status
     if (invoice.squareInvoiceId && invoice.status !== 'paid' && invoice.status !== 'cancelled') {
       try {
+        const { getSquareInvoiceStatus } = await import('../../../lib/square');
         const squareStatus = await getSquareInvoiceStatus(invoice.squareInvoiceId);
 
         let newStatus = invoice.status;
@@ -112,6 +112,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       // If Square invoice, cancel in Square too
       if (invoice.squareInvoiceId) {
         try {
+          const { cancelSquareInvoice } = await import('../../../lib/square');
           await cancelSquareInvoice(invoice.squareInvoiceId);
         } catch (squareError) {
           console.error('Error canceling Square invoice:', squareError);

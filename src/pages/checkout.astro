@@ -1455,7 +1455,33 @@ import LandingFooter from '../components/LandingFooter.astro';
 
     /* Add bottom padding to form to account for fixed summary */
     .checkout-form-section {
-      padding-bottom: 80px;
+      padding-bottom: 120px;
+    }
+
+    /* Make checkbox easier to tap on mobile */
+    .checkbox-group {
+      padding: 1rem;
+      margin: 1rem 0;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+    }
+
+    .checkbox-label {
+      min-height: 44px; /* Apple recommended touch target */
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: rgba(231, 76, 60, 0.2);
+    }
+
+    /* Ensure checkbox label is fully tappable */
+    .checkbox-label span {
+      flex: 1;
     }
 
     /* Ensure order summary section doesn't affect layout on mobile */

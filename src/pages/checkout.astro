@@ -163,14 +163,14 @@ import LandingFooter from '../components/LandingFooter.astro';
                   <label for="notes">Additional Notes</label>
                   <textarea id="notes" name="notes" rows="2" placeholder="Any special requests or scheduling constraints?"></textarea>
                 </div>
-              </div>
 
-              <!-- Terms -->
-              <div class="form-group checkbox-group">
-                <label class="checkbox-label">
+                <!-- Terms (inside step 3 for reliable mobile display) -->
+                <div class="form-group checkbox-group-inline">
                   <input type="checkbox" id="terms" name="terms" required />
-                  <span>I agree to the <a href="/terms" target="_blank">Terms of Service</a> and <a href="/privacy" target="_blank">Privacy Policy</a></span>
-                </label>
+                  <label for="terms" class="terms-label">
+                    I agree to the <a href="/terms" target="_blank" onclick="event.stopPropagation()">Terms of Service</a> and <a href="/privacy" target="_blank" onclick="event.stopPropagation()">Privacy Policy</a>
+                  </label>
+                </div>
               </div>
 
               <!-- Mobile Wizard Navigation (hidden on desktop) -->
@@ -798,31 +798,87 @@ import LandingFooter from '../components/LandingFooter.astro';
     border-color: #e74c3c;
   }
 
-  .checkbox-group {
-    margin-top: 1rem;
-  }
-
-  .checkbox-label {
+  /* Terms Checkbox - Inline Style */
+  .checkbox-group-inline {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    cursor: pointer;
-    color: rgba(255, 255, 255, 0.8);
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-top: 1.5rem;
   }
 
-  body.light-mode .checkbox-label {
+  body.light-mode .checkbox-group-inline {
+    background: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.1);
+  }
+
+  .checkbox-group-inline input[type="checkbox"] {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    min-height: 24px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    position: relative;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+
+  body.light-mode .checkbox-group-inline input[type="checkbox"] {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .checkbox-group-inline input[type="checkbox"]:checked {
+    background: #e74c3c;
+    border-color: #e74c3c;
+  }
+
+  .checkbox-group-inline input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .checkbox-group-inline input[type="checkbox"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.3);
+  }
+
+  .terms-label {
+    flex: 1;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+    cursor: pointer;
+    padding-top: 2px;
+  }
+
+  body.light-mode .terms-label {
     color: rgba(0, 0, 0, 0.7);
   }
 
-  .checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-  }
-
-  .checkbox-label a {
+  .terms-label a {
     color: #e74c3c;
     text-decoration: underline;
+  }
+
+  .terms-label a:hover {
+    text-decoration: none;
   }
 
   /* Order Summary Section */
@@ -1255,16 +1311,6 @@ import LandingFooter from '../components/LandingFooter.astro';
     }
   }
 
-  /* Hide terms checkbox on steps 1-2 */
-  .checkbox-group {
-    display: none;
-  }
-
-  .form-section[data-wizard-step="3"].wizard-active ~ .checkbox-group,
-  .form-section[data-wizard-step="3"].wizard-active-reverse ~ .checkbox-group {
-    display: block;
-  }
-
   /* Wizard Navigation */
   .wizard-nav {
     display: flex;
@@ -1459,29 +1505,31 @@ import LandingFooter from '../components/LandingFooter.astro';
     }
 
     /* Make checkbox easier to tap on mobile */
-    .checkbox-group {
-      padding: 1rem;
-      margin: 1rem 0;
-      background: rgba(255, 255, 255, 0.02);
-      border-radius: 12px;
+    .checkbox-group-inline {
+      padding: 20px 16px;
+      gap: 14px;
+      margin-top: 1.5rem;
     }
 
-    .checkbox-label {
-      min-height: 44px; /* Apple recommended touch target */
-    }
-
-    .checkbox-label input[type="checkbox"] {
-      width: 24px;
-      height: 24px;
-      min-width: 24px;
-      min-height: 24px;
+    .checkbox-group-inline input[type="checkbox"] {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      min-height: 28px;
       touch-action: manipulation;
       -webkit-tap-highlight-color: rgba(231, 76, 60, 0.2);
     }
 
-    /* Ensure checkbox label is fully tappable */
-    .checkbox-label span {
-      flex: 1;
+    .checkbox-group-inline input[type="checkbox"]:checked::after {
+      font-size: 16px;
+    }
+
+    .terms-label {
+      min-height: 44px; /* Apple recommended touch target */
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
     }
 
     /* Ensure order summary section doesn't affect layout on mobile */

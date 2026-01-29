@@ -262,6 +262,100 @@ export const prerender = false;
       color: #dc2626;
     }
 
+    /* Zone badges */
+    .zone-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .zone-badge.TAMPA { background: #fef3c7; color: #92400e; }
+    .zone-badge.NORTH { background: #dbeafe; color: #1e40af; }
+    .zone-badge.CENTRAL { background: #dcfce7; color: #166534; }
+    .zone-badge.SOUTH { background: #fce7f3; color: #9d174d; }
+    .zone-badge.EAST { background: #f3e8ff; color: #6b21a8; }
+    .zone-badge.UNKNOWN { background: #f1f5f9; color: #64748b; }
+
+    /* Route card */
+    .route-card {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 8px;
+      background: #f8fafc;
+      margin-bottom: 12px;
+    }
+
+    .route-time {
+      font-weight: 600;
+      color: #1e293b;
+      min-width: 70px;
+    }
+
+    .route-details {
+      flex: 1;
+    }
+
+    .route-address {
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .route-tenant {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .route-summary {
+      display: flex;
+      gap: 24px;
+      padding: 16px;
+      background: #f0fdf4;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .route-summary.fair {
+      background: #fefce8;
+    }
+
+    .route-summary.poor {
+      background: #fef2f2;
+    }
+
+    .route-stat {
+      text-align: center;
+    }
+
+    .route-stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #059669;
+    }
+
+    .route-summary.fair .route-stat-value {
+      color: #ca8a04;
+    }
+
+    .route-summary.poor .route-stat-value {
+      color: #dc2626;
+    }
+
+    .route-stat-label {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .no-route {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+
     /* Action buttons in table */
     .table-actions {
       display: flex;
@@ -543,6 +637,21 @@ export const prerender = false;
       </div>
     </div>
 
+    <!-- Today's Route Section -->
+    <section class="section" id="route-section" style="display: none;">
+      <div class="section-header">
+        <h2>Today's Route</h2>
+        <div class="tabs" id="route-date-tabs">
+          <button class="tab active" data-date="today">Today</button>
+          <button class="tab" data-date="tomorrow">Tomorrow</button>
+        </div>
+      </div>
+      <div class="section-content">
+        <div id="route-summary"></div>
+        <div id="route-list"></div>
+      </div>
+    </section>
+
     <!-- Inquiries Section -->
     <section class="section">
       <div class="section-header">
@@ -788,6 +897,7 @@ export const prerender = false;
           }
 
           renderBookings();
+          renderRoute(0); // Render today's route
         }
       } catch (error) {
         console.error('Fetch error:', error);
@@ -929,10 +1039,13 @@ export const prerender = false;
           ? `${new Date(booking.scheduledDate + 'T12:00:00').toLocaleDateString()}<br><small>${formatTime(booking.scheduledTime)}</small>`
           : '<span style="color: #94a3b8;">Not scheduled</span>';
 
+        const zone = booking.serviceZone || '';
+        const zoneBadge = zone ? `<span class="zone-badge ${zone}">${zone}</span>` : '';
+
         return `
           <tr>
             <td>${dateTime}</td>
-            <td>${booking.propertyAddress}</td>
+            <td>${booking.propertyAddress}${zoneBadge}</td>
             <td>
               <strong>${booking.tenantName}</strong><br>
               <small style="color: #64748b;">${booking.tenantPhone}</small>
@@ -970,6 +1083,122 @@ export const prerender = false;
       const period = hour >= 12 ? 'PM' : 'AM';
       const displayHour = hour % 12 || 12;
       return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+    }
+
+    // Zone travel time matrix (same as backend)
+    const ZONE_TRAVEL_MATRIX = {
+      TAMPA: { TAMPA: 20, NORTH: 45, CENTRAL: 35, SOUTH: 45, EAST: 40, UNKNOWN: 60 },
+      NORTH: { TAMPA: 45, NORTH: 15, CENTRAL: 25, SOUTH: 45, EAST: 30, UNKNOWN: 45 },
+      CENTRAL: { TAMPA: 35, NORTH: 25, CENTRAL: 15, SOUTH: 30, EAST: 20, UNKNOWN: 35 },
+      SOUTH: { TAMPA: 45, NORTH: 45, CENTRAL: 30, SOUTH: 15, EAST: 25, UNKNOWN: 40 },
+      EAST: { TAMPA: 40, NORTH: 30, CENTRAL: 20, SOUTH: 25, EAST: 15, UNKNOWN: 35 },
+      UNKNOWN: { TAMPA: 60, NORTH: 45, CENTRAL: 35, SOUTH: 40, EAST: 35, UNKNOWN: 30 }
+    };
+
+    const ZONE_NAMES = {
+      TAMPA: 'Tampa / Hillsborough',
+      NORTH: 'North Pinellas',
+      CENTRAL: 'Central Pinellas',
+      SOUTH: 'South Pinellas',
+      EAST: 'Mid Pinellas',
+      UNKNOWN: 'Unknown Area'
+    };
+
+    // Render today's route
+    function renderRoute(dateOffset = 0) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + dateOffset);
+      const targetDateStr = targetDate.toISOString().split('T')[0];
+
+      // Filter scheduled bookings for target date
+      const todayBookings = bookings.filter(b =>
+        b.status === 'scheduled' &&
+        b.scheduledDate === targetDateStr
+      ).sort((a, b) => {
+        // Sort by time
+        const timeA = a.scheduledTime.split(':').map(Number);
+        const timeB = b.scheduledTime.split(':').map(Number);
+        return (timeA[0] * 60 + timeA[1]) - (timeB[0] * 60 + timeB[1]);
+      });
+
+      const routeSection = document.getElementById('route-section');
+      const summaryEl = document.getElementById('route-summary');
+      const listEl = document.getElementById('route-list');
+
+      if (todayBookings.length === 0) {
+        routeSection.style.display = 'block';
+        summaryEl.innerHTML = '';
+        listEl.innerHTML = `
+          <div class="no-route">
+            <p>No inspections scheduled for ${dateOffset === 0 ? 'today' : 'tomorrow'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      routeSection.style.display = 'block';
+
+      // Calculate route statistics
+      let totalTravel = 0;
+      let currentZone = todayBookings[0].serviceZone || 'UNKNOWN';
+
+      for (let i = 0; i < todayBookings.length; i++) {
+        const booking = todayBookings[i];
+        const zone = booking.serviceZone || 'UNKNOWN';
+        if (i > 0) {
+          totalTravel += ZONE_TRAVEL_MATRIX[currentZone]?.[zone] || 30;
+        }
+        currentZone = zone;
+      }
+
+      const totalInspectionTime = todayBookings.length * 60; // Assume 60 min per inspection
+      const ratio = totalTravel / totalInspectionTime;
+      let efficiency = 'good';
+      if (ratio >= 1.0) efficiency = 'poor';
+      else if (ratio >= 0.5) efficiency = 'fair';
+
+      // Render summary
+      summaryEl.innerHTML = `
+        <div class="route-summary ${efficiency}">
+          <div class="route-stat">
+            <div class="route-stat-value">${todayBookings.length}</div>
+            <div class="route-stat-label">Inspections</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-value">${totalTravel}</div>
+            <div class="route-stat-label">Travel (min)</div>
+          </div>
+          <div class="route-stat">
+            <div class="route-stat-value">${efficiency.charAt(0).toUpperCase() + efficiency.slice(1)}</div>
+            <div class="route-stat-label">Efficiency</div>
+          </div>
+        </div>
+      `;
+
+      // Render route list
+      listEl.innerHTML = todayBookings.map((booking, i) => {
+        const zone = booking.serviceZone || 'UNKNOWN';
+        const zoneName = ZONE_NAMES[zone] || zone;
+        const travelFromPrev = i > 0
+          ? ZONE_TRAVEL_MATRIX[todayBookings[i-1].serviceZone || 'UNKNOWN']?.[zone] || 30
+          : 0;
+
+        return `
+          <div class="route-card">
+            <div class="route-time">${formatTime(booking.scheduledTime)}</div>
+            <div class="route-details">
+              <div class="route-address">
+                ${booking.propertyAddress}
+                <span class="zone-badge ${zone}">${zone}</span>
+              </div>
+              <div class="route-tenant">
+                ${booking.tenantName} - ${booking.tenantPhone}
+                ${travelFromPrev > 0 ? `<span style="margin-left: 10px; color: #94a3b8;">↑ ${travelFromPrev} min drive</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     // Send booking links for an invoice
@@ -1322,12 +1551,16 @@ export const prerender = false;
         this.classList.add('active');
 
         const filter = this.dataset.filter;
+        const date = this.dataset.date;
         const section = this.closest('.section');
 
         if (section.querySelector('#inquiries-table')) {
           renderInquiries(filter);
         } else if (section.querySelector('#bookings-table')) {
           renderBookings(filter);
+        } else if (section.querySelector('#route-list')) {
+          // Route date tabs
+          renderRoute(date === 'tomorrow' ? 1 : 0);
         } else {
           renderInvoices(filter);
         }

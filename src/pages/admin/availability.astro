@@ -309,6 +309,96 @@ export const prerender = false;
       color: #dc2626;
     }
 
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: 0.3s;
+      border-radius: 26px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #10b981;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Zone Info */
+    .zone-info {
+      margin-top: 20px;
+      padding: 16px;
+      background: #f8fafc;
+      border-radius: 8px;
+    }
+
+    .zone-info-header {
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .zone-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .zone-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .zone-badge {
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .zone-badge.tampa { background: #fef3c7; color: #92400e; }
+    .zone-badge.north { background: #dbeafe; color: #1e40af; }
+    .zone-badge.central { background: #dcfce7; color: #166534; }
+    .zone-badge.south { background: #fce7f3; color: #9d174d; }
+    .zone-badge.east { background: #f3e8ff; color: #6b21a8; }
+
     /* Loading */
     .loading {
       text-align: center;
@@ -407,6 +497,50 @@ export const prerender = false;
             <div class="setting-input">
               <input type="number" id="max-advance" min="7" max="60" value="14">
               <span>days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone Settings -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Zone-Based Scheduling</h3>
+          <p>Optimize routes by considering travel time between service areas</p>
+        </div>
+        <div class="section-content">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Enable Zone Filtering</div>
+              <div class="setting-desc">Automatically block time slots that would create impossible routes</div>
+            </div>
+            <div class="setting-input">
+              <label class="toggle-switch">
+                <input type="checkbox" id="enable-zone-filtering" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Extra Travel Buffer</div>
+              <div class="setting-desc">Additional buffer time on top of estimated travel (0 = use travel time only)</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="travel-buffer" min="0" max="60" step="5" value="0">
+              <span>minutes</span>
+            </div>
+          </div>
+
+          <div class="zone-info">
+            <div class="zone-info-header">Service Zones</div>
+            <div class="zone-list">
+              <div class="zone-item"><span class="zone-badge tampa">TAMPA</span> Tampa, Brandon, Temple Terrace</div>
+              <div class="zone-item"><span class="zone-badge north">NORTH</span> Palm Harbor, Tarpon Springs, Dunedin</div>
+              <div class="zone-item"><span class="zone-badge central">CENTRAL</span> Clearwater, Safety Harbor</div>
+              <div class="zone-item"><span class="zone-badge south">SOUTH</span> St. Petersburg, Gulfport</div>
+              <div class="zone-item"><span class="zone-badge east">EAST</span> Largo, Seminole, Pinellas Park</div>
             </div>
           </div>
         </div>
@@ -525,6 +659,9 @@ export const prerender = false;
       document.getElementById('slot-duration').value = currentSchedule.slotDuration || 60;
       document.getElementById('min-advance').value = currentSchedule.minAdvanceHours || 24;
       document.getElementById('max-advance').value = currentSchedule.maxAdvanceDays || 14;
+      // Zone settings
+      document.getElementById('enable-zone-filtering').checked = currentSchedule.enableZoneFiltering !== false;
+      document.getElementById('travel-buffer').value = currentSchedule.travelBufferMinutes || 0;
     }
 
     function renderBlockedDates() {
@@ -597,7 +734,9 @@ export const prerender = false;
         blockedDates: currentSchedule.blockedDates || [],
         slotDuration: parseInt(document.getElementById('slot-duration').value),
         minAdvanceHours: parseInt(document.getElementById('min-advance').value),
-        maxAdvanceDays: parseInt(document.getElementById('max-advance').value)
+        maxAdvanceDays: parseInt(document.getElementById('max-advance').value),
+        enableZoneFiltering: document.getElementById('enable-zone-filtering').checked,
+        travelBufferMinutes: parseInt(document.getElementById('travel-buffer').value) || 0
       };
 
       try {

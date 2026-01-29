@@ -84,6 +84,8 @@ export const FREQUENCY_LABELS: Record<string, string> = {
 
 // ==================== BOOKING TYPES ====================
 
+export type ServiceZone = 'TAMPA' | 'NORTH' | 'CENTRAL' | 'SOUTH' | 'EAST' | 'UNKNOWN';
+
 export interface Booking {
   id: string;
   createdAt: string;
@@ -91,6 +93,9 @@ export interface Booking {
   invoiceId: string;
   propertyIndex: number;  // Which property in the invoice (0-based)
   propertyAddress: string;
+  // Location zone for route optimization
+  zipcode?: string;
+  serviceZone?: ServiceZone;
   // Tenant info
   tenantName: string;
   tenantPhone: string;
@@ -126,6 +131,9 @@ export interface AvailabilitySchedule {
   // Advance booking window
   minAdvanceHours: number;  // Default 24 for FL law
   maxAdvanceDays: number;   // Default 14
+  // Zone-based scheduling settings
+  enableZoneFiltering?: boolean;  // Default true - filter slots by travel time
+  travelBufferMinutes?: number;   // Default 0 - extra buffer on top of travel time
 }
 
 export interface TimeSlot {

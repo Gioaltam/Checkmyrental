@@ -1,7 +1,8 @@
 // Get available booking time slots for a specific date
 import type { APIRoute } from 'astro';
-import { getBookingByToken, getAvailability, getBookedSlotsForDate } from '../../../lib/db';
-import type { TimeSlot } from '../../../lib/types';
+import { getBookingByToken, getAvailability, getBookedSlotsForDate, getBookingsForDate } from '../../../lib/db';
+import type { TimeSlot, Booking } from '../../../lib/types';
+import { filterSlotsWithTravel } from '../../../lib/scheduling';
 
 export const prerender = false;
 
@@ -11,7 +12,9 @@ function generateTimeSlots(
   dayOfWeek: number,
   schedule: Awaited<ReturnType<typeof getAvailability>>,
   bookedSlots: string[],
-  minAdvanceHours: number
+  minAdvanceHours: number,
+  propertyAddress?: string,
+  existingBookings?: Booking[]
 ): TimeSlot[] {
   const slots: TimeSlot[] = [];
   const now = new Date();
@@ -35,7 +38,8 @@ function generateTimeSlots(
   const [endHour, endMin] = daySchedule.endTime.split(':').map(Number);
   const slotDuration = schedule.slotDuration || 60;
 
-  // Generate slots
+  // Generate all potential slot times first
+  const potentialSlots: string[] = [];
   let currentHour = startHour;
   let currentMin = startMin;
 
@@ -55,22 +59,7 @@ function generateTimeSlots(
       break;
     }
 
-    const endTime = `${String(endSlotHour).padStart(2, '0')}:${String(endSlotMin).padStart(2, '0')}`;
-
-    // Check if slot is within minimum advance time
-    const slotDateTime = new Date(`${date}T${startTime}:00`);
-    const hoursUntilSlot = (slotDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-    const isWithinMinAdvance = hoursUntilSlot >= minAdvanceHours;
-
-    // Check if slot is already booked
-    const isBooked = bookedSlots.includes(startTime);
-
-    slots.push({
-      date,
-      startTime,
-      endTime,
-      available: isWithinMinAdvance && !isBooked,
-    });
+    potentialSlots.push(startTime);
 
     // Move to next slot
     currentMin += slotDuration;
@@ -78,6 +67,54 @@ function generateTimeSlots(
       currentMin -= 60;
       currentHour++;
     }
+  }
+
+  // Apply zone-aware filtering if enabled and we have the necessary data
+  const enableZoneFiltering = schedule.enableZoneFiltering !== false; // Default to true
+  let zoneFilteredSlots: Map<string, { available: boolean; reason?: string }> = new Map();
+
+  if (enableZoneFiltering && propertyAddress && existingBookings && existingBookings.length > 0) {
+    const filtered = filterSlotsWithTravel(
+      potentialSlots,
+      slotDuration,
+      propertyAddress,
+      existingBookings
+    );
+    filtered.forEach(slot => {
+      zoneFilteredSlots.set(slot.time, { available: slot.available, reason: slot.reason });
+    });
+  }
+
+  // Build final slots array
+  for (const startTime of potentialSlots) {
+    // Calculate end time
+    const [sh, sm] = startTime.split(':').map(Number);
+    let endSlotMin = sm + slotDuration;
+    let endSlotHour = sh;
+    while (endSlotMin >= 60) {
+      endSlotMin -= 60;
+      endSlotHour++;
+    }
+    const endTime = `${String(endSlotHour).padStart(2, '0')}:${String(endSlotMin).padStart(2, '0')}`;
+
+    // Check if slot is within minimum advance time
+    const slotDateTime = new Date(`${date}T${startTime}:00`);
+    const hoursUntilSlot = (slotDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const isWithinMinAdvance = hoursUntilSlot >= minAdvanceHours;
+
+    // Check if slot is already booked (direct time conflict)
+    const isBooked = bookedSlots.includes(startTime);
+
+    // Check zone-based availability
+    const zoneFilter = zoneFilteredSlots.get(startTime);
+    const isZoneAvailable = !zoneFilter || zoneFilter.available;
+
+    slots.push({
+      date,
+      startTime,
+      endTime,
+      available: isWithinMinAdvance && !isBooked && isZoneAvailable,
+    });
   }
 
   return slots;
@@ -137,14 +174,17 @@ export const GET: APIRoute = async ({ url }) => {
         const isBlocked = schedule.blockedDates.includes(dateStr);
 
         if (hasSchedule && !isBlocked) {
-          // Check if there are any available slots
+          // Check if there are any available slots (with zone-aware filtering)
           const bookedSlots = await getBookedSlotsForDate(dateStr);
+          const existingBookings = await getBookingsForDate(dateStr);
           const slots = generateTimeSlots(
             dateStr,
             dayOfWeek,
             schedule,
             bookedSlots,
-            schedule.minAdvanceHours
+            schedule.minAdvanceHours,
+            booking.propertyAddress,
+            existingBookings
           );
 
           if (slots.some(s => s.available)) {
@@ -171,15 +211,18 @@ export const GET: APIRoute = async ({ url }) => {
     const requestedDate = new Date(date);
     const dayOfWeek = requestedDate.getDay();
 
-    // Get booked slots for this date
+    // Get booked slots for this date and existing bookings for zone filtering
     const bookedSlots = await getBookedSlotsForDate(date);
+    const existingBookings = await getBookingsForDate(date);
 
     const slots = generateTimeSlots(
       date,
       dayOfWeek,
       schedule,
       bookedSlots,
-      schedule.minAdvanceHours
+      schedule.minAdvanceHours,
+      booking.propertyAddress,
+      existingBookings
     );
 
     return new Response(

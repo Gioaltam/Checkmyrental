@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { getBookingByToken, updateBooking, getBookedSlotsForDate } from '../../../lib/db';
 import { sendConfirmationSMS } from '../../../lib/twilio';
+import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
 
 export const prerender = false;
 
@@ -65,11 +66,17 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Update booking with scheduled date/time
+    // Extract zone information from property address
+    const zipcode = extractZipcode(booking.propertyAddress);
+    const serviceZone = getServiceZone(zipcode);
+
+    // Update booking with scheduled date/time and zone info
     await updateBooking(booking.id, {
       scheduledDate: date,
       scheduledTime: time,
       status: 'scheduled',
+      zipcode: zipcode || undefined,
+      serviceZone: serviceZone,
     });
 
     // Send confirmation SMS to tenant
@@ -131,6 +138,7 @@ export const POST: APIRoute = async ({ request }) => {
       }
 
       // Also notify admin
+      const zoneName = getZoneName(serviceZone);
       try {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -141,12 +149,13 @@ export const POST: APIRoute = async ({ request }) => {
           body: JSON.stringify({
             from: 'CheckMyRental <send@checkmyrental.io>',
             to: ['info@checkmyrental.io'],
-            subject: `[Booking] ${formattedDate} ${formattedTime} - ${booking.propertyAddress}`,
+            subject: `[Booking] ${formattedDate} ${formattedTime} - ${zoneName} - ${booking.propertyAddress}`,
             html: `
               <div style="font-family: Arial, sans-serif;">
                 <h3>New Booking Confirmed</h3>
                 <p><strong>Date:</strong> ${formattedDate}</p>
                 <p><strong>Time:</strong> ${formattedTime}</p>
+                <p><strong>Zone:</strong> ${zoneName} (${serviceZone})</p>
                 <p><strong>Property:</strong> ${booking.propertyAddress}</p>
                 <p><strong>Tenant:</strong> ${booking.tenantName} (${booking.tenantPhone})</p>
                 <p><strong>Landlord:</strong> ${booking.landlordName} (${booking.landlordEmail})</p>

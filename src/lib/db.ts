@@ -279,10 +279,19 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));
+}
+
+// Get all bookings for a specific date (for zone-aware scheduling)
+export async function getBookingsForDate(date: string): Promise<Booking[]> {
+  const bookings = await listBookings(200, 0);
+  return bookings.filter(b =>
+    b.scheduledDate === date &&
+    (b.status === 'scheduled' || b.status === 'pending_tenant')
+  );
 }
 
 // ==================== AVAILABILITY ====================
@@ -299,6 +308,8 @@ const DEFAULT_AVAILABILITY: AvailabilitySchedule = {
   slotDuration: 60,      // 1 hour slots
   minAdvanceHours: 24,   // FL law: 24 hour notice
   maxAdvanceDays: 14,    // 2 weeks out
+  enableZoneFiltering: true,   // Enable travel time filtering
+  travelBufferMinutes: 0,      // Extra buffer on top of travel time
 };
 
 export async function getAvailability(): Promise<AvailabilitySchedule> {

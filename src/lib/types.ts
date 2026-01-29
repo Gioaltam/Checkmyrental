@@ -81,3 +81,74 @@ export const FREQUENCY_LABELS: Record<string, string> = {
   one_time: 'One Time',
   custom: 'Custom Schedule',
 };
+
+// ==================== BOOKING TYPES ====================
+
+export interface Booking {
+  id: string;
+  createdAt: string;
+  // Link to invoice/property
+  invoiceId: string;
+  propertyIndex: number;  // Which property in the invoice (0-based)
+  propertyAddress: string;
+  // Tenant info
+  tenantName: string;
+  tenantPhone: string;
+  // Landlord info (from invoice)
+  landlordName: string;
+  landlordEmail: string;
+  // Scheduling
+  scheduledDate?: string;  // ISO date: "2024-02-15"
+  scheduledTime?: string;  // "09:00"
+  // Status
+  status: 'pending_tenant' | 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+  // SMS tracking
+  smsBookingLinkSentAt?: string;
+  smsConfirmationSentAt?: string;
+  smsReminderSentAt?: string;
+  // Booking token for security (unique token in booking URL)
+  bookingToken: string;
+}
+
+export interface WeeklySlot {
+  dayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;  // 0=Sunday, 6=Saturday
+  startTime: string;  // "09:00"
+  endTime: string;    // "17:00"
+}
+
+export interface AvailabilitySchedule {
+  // Recurring weekly slots
+  weeklySlots: WeeklySlot[];
+  // Blocked dates (holidays, vacations)
+  blockedDates: string[];  // ISO dates
+  // Slot duration in minutes
+  slotDuration: number;  // Default 60
+  // Advance booking window
+  minAdvanceHours: number;  // Default 24 for FL law
+  maxAdvanceDays: number;   // Default 14
+}
+
+export interface TimeSlot {
+  date: string;      // ISO date: "2024-02-15"
+  startTime: string; // "09:00"
+  endTime: string;   // "10:00"
+  available: boolean;
+}
+
+export const BOOKING_STATUS_LABELS: Record<Booking['status'], string> = {
+  pending_tenant: 'Awaiting Tenant',
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  no_show: 'No Show',
+};
+
+export const DAY_LABELS: Record<number, string> = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday',
+};

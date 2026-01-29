@@ -1,6 +1,6 @@
 // Database helper using Upstash Redis
 import { Redis } from '@upstash/redis';
-import type { Invoice, Inquiry } from './types';
+import type { Invoice, Inquiry, Booking, AvailabilitySchedule } from './types';
 
 // Initialize Redis client
 function getRedis(): Redis {
@@ -187,5 +187,176 @@ export async function getStats(): Promise<{
     pendingAmount: validInvoices
       .filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'viewed' || i.status === 'overdue')
       .reduce((sum, i) => sum + i.total, 0),
+  };
+}
+
+// ==================== BOOKINGS ====================
+
+// Generate secure booking token
+function generateBookingToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  for (let i = 0; i < 32; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
+}
+
+export async function createBooking(
+  data: Omit<Booking, 'id' | 'createdAt' | 'bookingToken' | 'status'>
+): Promise<Booking> {
+  const redis = getRedis();
+  const id = generateId();
+  const bookingToken = generateBookingToken();
+
+  const booking: Booking = {
+    ...data,
+    id,
+    bookingToken,
+    createdAt: new Date().toISOString(),
+    status: 'pending_tenant',
+  };
+
+  await redis.hset(`booking:${id}`, stripNulls(booking as Record<string, unknown>));
+  await redis.lpush('bookings:list', id);
+  // Index by token for lookup
+  await redis.set(`booking:token:${bookingToken}`, id);
+  // Index by invoice
+  await redis.lpush(`bookings:invoice:${data.invoiceId}`, id);
+
+  return booking;
+}
+
+export async function getBooking(id: string): Promise<Booking | null> {
+  const redis = getRedis();
+  const data = await redis.hgetall(`booking:${id}`);
+  if (!data || Object.keys(data).length === 0) return null;
+  return data as unknown as Booking;
+}
+
+export async function getBookingByToken(token: string): Promise<Booking | null> {
+  const redis = getRedis();
+  const id = await redis.get(`booking:token:${token}`);
+  if (!id) return null;
+  return getBooking(id as string);
+}
+
+export async function listBookings(
+  limit = 50,
+  offset = 0,
+  statusFilter?: Booking['status']
+): Promise<Booking[]> {
+  const redis = getRedis();
+  const ids = await redis.lrange('bookings:list', offset, offset + limit - 1);
+
+  if (!ids.length) return [];
+
+  const bookings = await Promise.all(
+    ids.map(id => getBooking(id as string))
+  );
+
+  let result = bookings.filter((b): b is Booking => b !== null);
+
+  if (statusFilter) {
+    result = result.filter(b => b.status === statusFilter);
+  }
+
+  return result;
+}
+
+export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]> {
+  const redis = getRedis();
+  const ids = await redis.lrange(`bookings:invoice:${invoiceId}`, 0, -1);
+
+  if (!ids.length) return [];
+
+  const bookings = await Promise.all(
+    ids.map(id => getBooking(id as string))
+  );
+
+  return bookings.filter((b): b is Booking => b !== null);
+}
+
+export async function updateBooking(
+  id: string,
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt'>>
+): Promise<void> {
+  const redis = getRedis();
+  await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));
+}
+
+// ==================== AVAILABILITY ====================
+
+const DEFAULT_AVAILABILITY: AvailabilitySchedule = {
+  weeklySlots: [
+    { dayOfWeek: 1, startTime: '09:00', endTime: '17:00' },  // Monday
+    { dayOfWeek: 2, startTime: '09:00', endTime: '17:00' },  // Tuesday
+    { dayOfWeek: 3, startTime: '09:00', endTime: '17:00' },  // Wednesday
+    { dayOfWeek: 4, startTime: '09:00', endTime: '17:00' },  // Thursday
+    { dayOfWeek: 5, startTime: '09:00', endTime: '17:00' },  // Friday
+  ],
+  blockedDates: [],
+  slotDuration: 60,      // 1 hour slots
+  minAdvanceHours: 24,   // FL law: 24 hour notice
+  maxAdvanceDays: 14,    // 2 weeks out
+};
+
+export async function getAvailability(): Promise<AvailabilitySchedule> {
+  const redis = getRedis();
+  const data = await redis.get('availability:schedule');
+
+  if (!data) {
+    return DEFAULT_AVAILABILITY;
+  }
+
+  return data as AvailabilitySchedule;
+}
+
+export async function setAvailability(schedule: AvailabilitySchedule): Promise<void> {
+  const redis = getRedis();
+  await redis.set('availability:schedule', JSON.stringify(schedule));
+}
+
+// Get booked slots for a specific date
+export async function getBookedSlotsForDate(date: string): Promise<string[]> {
+  const bookings = await listBookings(100, 0);
+  return bookings
+    .filter(b => b.scheduledDate === date && b.status === 'scheduled')
+    .map(b => b.scheduledTime!)
+    .filter(Boolean);
+}
+
+// ==================== BOOKING STATS ====================
+
+export async function getBookingStats(): Promise<{
+  pendingBookings: number;
+  scheduledThisWeek: number;
+  completedThisMonth: number;
+}> {
+  const bookings = await listBookings(200, 0);
+
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  return {
+    pendingBookings: bookings.filter(b => b.status === 'pending_tenant').length,
+    scheduledThisWeek: bookings.filter(b => {
+      if (b.status !== 'scheduled' || !b.scheduledDate) return false;
+      const date = new Date(b.scheduledDate);
+      return date >= startOfWeek && date < endOfWeek;
+    }).length,
+    completedThisMonth: bookings.filter(b => {
+      if (b.status !== 'completed' || !b.scheduledDate) return false;
+      const date = new Date(b.scheduledDate);
+      return date >= startOfMonth && date <= endOfMonth;
+    }).length,
   };
 }

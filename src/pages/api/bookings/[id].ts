@@ -1,0 +1,156 @@
+// Get or update a specific booking
+import type { APIRoute } from 'astro';
+import { getBooking, updateBooking } from '../../../lib/db';
+import { sendBookingLinkSMS } from '../../../lib/twilio';
+
+export const prerender = false;
+
+export const GET: APIRoute = async ({ params, request }) => {
+  try {
+    // Admin auth check
+    const authHeader = request.headers.get('Authorization');
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword || authHeader !== `Bearer ${adminPassword}`) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { id } = params;
+    if (!id) {
+      return new Response(
+        JSON.stringify({ error: 'Booking ID required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const booking = await getBooking(id);
+    if (!booking) {
+      return new Response(
+        JSON.stringify({ error: 'Booking not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ booking }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Get booking error:', error);
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+};
+
+export const PATCH: APIRoute = async ({ params, request }) => {
+  try {
+    // Admin auth check
+    const authHeader = request.headers.get('Authorization');
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword || authHeader !== `Bearer ${adminPassword}`) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { id } = params;
+    if (!id) {
+      return new Response(
+        JSON.stringify({ error: 'Booking ID required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const booking = await getBooking(id);
+    if (!booking) {
+      return new Response(
+        JSON.stringify({ error: 'Booking not found' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const body = await request.json();
+    const { action } = body;
+
+    switch (action) {
+      case 'complete':
+        await updateBooking(id, { status: 'completed' });
+        booking.status = 'completed';
+        break;
+
+      case 'cancel':
+        await updateBooking(id, { status: 'cancelled' });
+        booking.status = 'cancelled';
+        break;
+
+      case 'no_show':
+        await updateBooking(id, { status: 'no_show' });
+        booking.status = 'no_show';
+        break;
+
+      case 'resend_link':
+        // Resend the booking link SMS
+        if (booking.status !== 'pending_tenant') {
+          return new Response(
+            JSON.stringify({ error: 'Can only resend link for pending bookings' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        const baseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+        const bookingUrl = `${baseUrl}/book/${booking.bookingToken}`;
+
+        const smsResult = await sendBookingLinkSMS(
+          booking.tenantPhone,
+          booking.tenantName,
+          booking.propertyAddress,
+          bookingUrl
+        );
+
+        if (!smsResult.success) {
+          return new Response(
+            JSON.stringify({ error: 'Failed to send SMS', details: smsResult.error }),
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+
+        await updateBooking(id, {
+          smsBookingLinkSentAt: new Date().toISOString(),
+        });
+        break;
+
+      default:
+        return new Response(
+          JSON.stringify({ error: 'Invalid action' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+    }
+
+    // Fetch updated booking
+    const updatedBooking = await getBooking(id);
+
+    return new Response(
+      JSON.stringify({ success: true, booking: updatedBooking }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Update booking error:', error);
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+};

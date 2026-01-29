@@ -108,6 +108,45 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       await updateInvoice(id, { status: 'paid', paidAt: new Date().toISOString() });
       invoice.status = 'paid';
       invoice.paidAt = new Date().toISOString();
+
+      // Automatically send booking links to tenants
+      try {
+        const { createBooking, updateBooking: updateBookingDb } = await import('../../../lib/db');
+        const { sendBookingLinkSMS } = await import('../../../lib/twilio');
+        const baseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+
+        for (let i = 0; i < invoice.properties.length; i++) {
+          const property = invoice.properties[i];
+          if (property.tenantPhone) {
+            const booking = await createBooking({
+              invoiceId: id,
+              propertyIndex: i,
+              propertyAddress: property.address,
+              tenantName: property.tenantName || 'Tenant',
+              tenantPhone: property.tenantPhone,
+              landlordName: invoice.customerName,
+              landlordEmail: invoice.customerEmail,
+            });
+
+            const bookingUrl = `${baseUrl}/book/${booking.bookingToken}`;
+            const smsResult = await sendBookingLinkSMS(
+              property.tenantPhone,
+              property.tenantName || 'Tenant',
+              property.address,
+              bookingUrl
+            );
+
+            if (smsResult.success) {
+              await updateBookingDb(booking.id, {
+                smsBookingLinkSentAt: new Date().toISOString(),
+              });
+            }
+          }
+        }
+      } catch (bookingError) {
+        console.error('Error sending booking links:', bookingError);
+        // Don't fail the mark_paid action if booking links fail
+      }
     } else if (action === 'cancel') {
       // If Square invoice, cancel in Square too
       if (invoice.squareInvoiceId) {

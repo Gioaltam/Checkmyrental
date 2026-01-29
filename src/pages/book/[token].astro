@@ -1,0 +1,743 @@
+---
+export const prerender = false;
+
+// Get booking info from token
+const { token } = Astro.params;
+
+// Fetch booking data server-side
+let booking = null;
+let availableDates: string[] = [];
+let error = null;
+
+try {
+  const baseUrl = Astro.url.origin;
+  const response = await fetch(`${baseUrl}/api/bookings/available-slots?token=${token}`);
+  const data = await response.json();
+
+  if (response.ok) {
+    booking = data.booking;
+    availableDates = data.availableDates || [];
+  } else {
+    error = data.error || 'Unable to load booking';
+  }
+} catch (e) {
+  error = 'Unable to connect to server';
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Schedule Your Inspection | CheckMyRental</title>
+  <meta name="description" content="Select a convenient time for your property inspection">
+  <meta name="robots" content="noindex, nofollow">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="booking-container">
+    <!-- Header -->
+    <header class="booking-header">
+      <div class="logo">
+        <span class="logo-check">Check</span><span class="logo-my">My</span><span class="logo-rental">Rental</span>
+      </div>
+    </header>
+
+    {error ? (
+      <div class="error-state">
+        <div class="error-icon">!</div>
+        <h1>Unable to Load Booking</h1>
+        <p>{error}</p>
+        <p class="error-help">If you received this link via text message, please make sure you clicked the complete link. Contact us if you need help.</p>
+        <a href="tel:8132520524" class="contact-btn">Call (813) 252-0524</a>
+      </div>
+    ) : (
+      <main class="booking-main">
+        <!-- Property Info -->
+        <div class="property-info">
+          <h1>Schedule Your Inspection</h1>
+          <div class="property-card">
+            <div class="property-icon">🏠</div>
+            <div class="property-details">
+              <p class="tenant-name">Hi {booking?.tenantName}!</p>
+              <p class="property-address">{booking?.propertyAddress}</p>
+            </div>
+          </div>
+          <div class="notice-box">
+            <span class="notice-icon">ℹ️</span>
+            <p>Per Florida law, all appointments require 24-hour advance notice.</p>
+          </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div id="booking-form-container">
+          <!-- Step 1: Date Selection -->
+          <div class="form-step" id="step-date">
+            <h2>Select a Date</h2>
+            <div class="date-grid" id="date-grid">
+              {availableDates.length > 0 ? (
+                availableDates.map((dateStr) => {
+                  const date = new Date(dateStr + 'T12:00:00');
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  return (
+                    <button
+                      type="button"
+                      class="date-btn"
+                      data-date={dateStr}
+                    >
+                      <span class="date-day">{dayName}</span>
+                      <span class="date-num">{monthDay}</span>
+                    </button>
+                  );
+                })
+              ) : (
+                <p class="no-dates">No available dates at this time. Please contact us.</p>
+              )}
+            </div>
+          </div>
+
+          <!-- Step 2: Time Selection (hidden initially) -->
+          <div class="form-step hidden" id="step-time">
+            <div class="step-header">
+              <button type="button" class="back-btn" id="back-to-date">← Back</button>
+              <h2>Select a Time</h2>
+            </div>
+            <p class="selected-date" id="selected-date-display"></p>
+            <div class="time-grid" id="time-grid">
+              <!-- Populated via JavaScript -->
+            </div>
+            <div class="loading-times hidden" id="loading-times">
+              <div class="spinner"></div>
+              <p>Loading available times...</p>
+            </div>
+          </div>
+
+          <!-- Step 3: Confirmation (hidden initially) -->
+          <div class="form-step hidden" id="step-confirm">
+            <div class="step-header">
+              <button type="button" class="back-btn" id="back-to-time">← Back</button>
+              <h2>Confirm Booking</h2>
+            </div>
+            <div class="confirmation-card">
+              <div class="confirm-row">
+                <span class="confirm-label">Property</span>
+                <span class="confirm-value" id="confirm-property">{booking?.propertyAddress}</span>
+              </div>
+              <div class="confirm-row">
+                <span class="confirm-label">Date</span>
+                <span class="confirm-value" id="confirm-date"></span>
+              </div>
+              <div class="confirm-row">
+                <span class="confirm-label">Time</span>
+                <span class="confirm-value" id="confirm-time"></span>
+              </div>
+            </div>
+            <button type="button" class="confirm-btn" id="confirm-booking-btn">
+              Confirm Booking
+            </button>
+            <p class="confirm-note">You'll receive a confirmation text message.</p>
+          </div>
+
+          <!-- Success View (hidden initially) -->
+          <div class="form-step hidden" id="step-success">
+            <div class="success-icon">✓</div>
+            <h2>You're All Set!</h2>
+            <p class="success-message">Your inspection has been scheduled.</p>
+            <div class="success-details">
+              <p><strong>Property:</strong> <span id="success-property">{booking?.propertyAddress}</span></p>
+              <p><strong>Date:</strong> <span id="success-date"></span></p>
+              <p><strong>Time:</strong> <span id="success-time"></span></p>
+            </div>
+            <div class="success-note">
+              <p>A CheckMyRental inspector will arrive during your scheduled time window. Please ensure access is available.</p>
+            </div>
+            <p class="success-help">Questions? Text us back or call <a href="tel:8132520524">(813) 252-0524</a></p>
+          </div>
+        </div>
+      </main>
+    )}
+
+    <!-- Footer -->
+    <footer class="booking-footer">
+      <p>© {new Date().getFullYear()} CheckMyRental</p>
+    </footer>
+  </div>
+
+  <script define:vars={{ token, availableDates }}>
+    let selectedDate = null;
+    let selectedTime = null;
+
+    // Format date for display
+    function formatDate(dateStr) {
+      const date = new Date(dateStr + 'T12:00:00');
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    // Format time for display
+    function formatTime(timeStr) {
+      const [hour, minute] = timeStr.split(':').map(Number);
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+    }
+
+    // Show a specific step
+    function showStep(stepId) {
+      document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.add('hidden');
+      });
+      document.getElementById(stepId).classList.remove('hidden');
+    }
+
+    // Handle date selection
+    document.querySelectorAll('.date-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        selectedDate = btn.dataset.date;
+
+        // Update UI
+        document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        // Show loading
+        showStep('step-time');
+        document.getElementById('loading-times').classList.remove('hidden');
+        document.getElementById('time-grid').innerHTML = '';
+        document.getElementById('selected-date-display').textContent = formatDate(selectedDate);
+
+        // Fetch available times
+        try {
+          const response = await fetch(`/api/bookings/available-slots?token=${token}&date=${selectedDate}`);
+          const data = await response.json();
+
+          document.getElementById('loading-times').classList.add('hidden');
+
+          if (response.ok && data.slots) {
+            const availableSlots = data.slots.filter(s => s.available);
+            const timeGrid = document.getElementById('time-grid');
+
+            if (availableSlots.length === 0) {
+              timeGrid.innerHTML = '<p class="no-times">No available times for this date. Please select another date.</p>';
+            } else {
+              timeGrid.innerHTML = availableSlots.map(slot => `
+                <button type="button" class="time-btn" data-time="${slot.startTime}">
+                  ${formatTime(slot.startTime)}
+                </button>
+              `).join('');
+
+              // Add click handlers
+              document.querySelectorAll('.time-btn').forEach(timeBtn => {
+                timeBtn.addEventListener('click', () => {
+                  selectedTime = timeBtn.dataset.time;
+                  document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('selected'));
+                  timeBtn.classList.add('selected');
+
+                  // Show confirmation
+                  document.getElementById('confirm-date').textContent = formatDate(selectedDate);
+                  document.getElementById('confirm-time').textContent = formatTime(selectedTime);
+                  showStep('step-confirm');
+                });
+              });
+            }
+          } else {
+            document.getElementById('time-grid').innerHTML = `<p class="error-message">${data.error || 'Unable to load times'}</p>`;
+          }
+        } catch (error) {
+          document.getElementById('loading-times').classList.add('hidden');
+          document.getElementById('time-grid').innerHTML = '<p class="error-message">Unable to connect to server. Please try again.</p>';
+        }
+      });
+    });
+
+    // Back buttons
+    document.getElementById('back-to-date')?.addEventListener('click', () => {
+      showStep('step-date');
+    });
+
+    document.getElementById('back-to-time')?.addEventListener('click', () => {
+      showStep('step-time');
+    });
+
+    // Confirm booking
+    document.getElementById('confirm-booking-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('confirm-booking-btn');
+      btn.disabled = true;
+      btn.textContent = 'Confirming...';
+
+      try {
+        const response = await fetch('/api/bookings/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            date: selectedDate,
+            time: selectedTime
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Show success
+          document.getElementById('success-date').textContent = formatDate(selectedDate);
+          document.getElementById('success-time').textContent = formatTime(selectedTime);
+          showStep('step-success');
+        } else {
+          alert(data.error || 'Unable to confirm booking. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Confirm Booking';
+        }
+      } catch (error) {
+        alert('Unable to connect to server. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Booking';
+      }
+    });
+  </script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #f0f0f0;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .booking-container {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    .booking-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .logo {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .logo-check { color: #fff; }
+    .logo-my { color: rgba(255, 255, 255, 0.6); }
+    .logo-rental { color: #e74c3c; font-weight: 700; }
+
+    /* Main Content */
+    .booking-main {
+      flex: 1;
+      padding: 1.5rem;
+    }
+
+    /* Property Info */
+    .property-info {
+      margin-bottom: 2rem;
+    }
+
+    .property-info h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .property-card {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .property-icon {
+      font-size: 2rem;
+    }
+
+    .tenant-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .property-address {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+    }
+
+    .notice-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .notice-icon {
+      flex-shrink: 0;
+    }
+
+    /* Form Steps */
+    .form-step {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .form-step.hidden {
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .back-btn {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      margin-left: -0.5rem;
+    }
+
+    .form-step h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .step-header h2 {
+      margin-bottom: 0;
+    }
+
+    /* Date Grid */
+    .date-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+
+    .date-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem 0.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: #f0f0f0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .date-btn:hover {
+      border-color: rgba(231, 76, 60, 0.5);
+      background: rgba(231, 76, 60, 0.1);
+    }
+
+    .date-btn.selected {
+      border-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.15);
+    }
+
+    .date-day {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.6);
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .date-num {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    /* Time Grid */
+    .selected-date {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .time-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .time-btn {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      color: #f0f0f0;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .time-btn:hover {
+      border-color: rgba(231, 76, 60, 0.5);
+      background: rgba(231, 76, 60, 0.1);
+    }
+
+    .time-btn.selected {
+      border-color: #e74c3c;
+      background: rgba(231, 76, 60, 0.15);
+    }
+
+    .no-times, .no-dates {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+      padding: 2rem;
+    }
+
+    /* Loading */
+    .loading-times {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #e74c3c;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Confirmation */
+    .confirmation-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .confirm-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .confirm-row:last-child {
+      border-bottom: none;
+    }
+
+    .confirm-label {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .confirm-value {
+      font-weight: 500;
+      text-align: right;
+      max-width: 60%;
+    }
+
+    .confirm-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .confirm-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+    }
+
+    .confirm-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .confirm-note {
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 1rem;
+    }
+
+    /* Success */
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: white;
+      margin: 0 auto 1.5rem;
+    }
+
+    #step-success h2 {
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    .success-message {
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 1.5rem;
+    }
+
+    .success-details {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .success-details p {
+      margin-bottom: 0.5rem;
+    }
+
+    .success-details p:last-child {
+      margin-bottom: 0;
+    }
+
+    .success-note {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid rgba(39, 174, 96, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .success-help {
+      text-align: center;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .success-help a {
+      color: #e74c3c;
+      text-decoration: none;
+    }
+
+    /* Error State */
+    .error-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .error-icon {
+      width: 64px;
+      height: 64px;
+      background: rgba(231, 76, 60, 0.15);
+      border: 2px solid #e74c3c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: #e74c3c;
+      margin-bottom: 1.5rem;
+    }
+
+    .error-state h1 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .error-state p {
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 0.5rem;
+    }
+
+    .error-help {
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contact-btn {
+      padding: 0.75rem 1.5rem;
+      background: #e74c3c;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      text-align: center;
+      padding: 1rem;
+    }
+
+    /* Footer */
+    .booking-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Responsive */
+    @media (max-width: 400px) {
+      .date-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</body>
+</html>

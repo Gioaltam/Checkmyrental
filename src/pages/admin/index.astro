@@ -237,6 +237,31 @@ export const prerender = false;
       color: #059669;
     }
 
+    .badge-pending_tenant {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-scheduled {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .badge-completed {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-cancelled {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .badge-no_show {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
     /* Action buttons in table */
     .table-actions {
       display: flex;
@@ -477,6 +502,7 @@ export const prerender = false;
   <header class="header">
     <h1><span>CheckMy</span><span>Rental</span> <span style="font-weight: 400; font-size: 16px; margin-left: 10px;">Admin</span></h1>
     <div class="header-actions">
+      <a href="/admin/availability" class="btn btn-secondary">Availability</a>
       <button class="btn btn-primary" onclick="openCreateInvoiceModal()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -506,6 +532,14 @@ export const prerender = false;
       <div class="stat-card">
         <div class="label">Pending Amount</div>
         <div class="value pending" id="stat-pending-amount">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Pending Bookings</div>
+        <div class="value" id="stat-pending-bookings">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Scheduled This Week</div>
+        <div class="value" id="stat-scheduled-week">-</div>
       </div>
     </div>
 
@@ -566,6 +600,37 @@ export const prerender = false;
             </thead>
             <tbody id="invoices-tbody">
               <tr><td colspan="7" class="loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Bookings Section -->
+    <section class="section">
+      <div class="section-header">
+        <h2>Tenant Bookings</h2>
+        <div class="tabs" id="bookings-tabs">
+          <button class="tab active" data-filter="pending_tenant">Pending</button>
+          <button class="tab" data-filter="scheduled">Scheduled</button>
+          <button class="tab" data-filter="all">All</button>
+        </div>
+      </div>
+      <div class="section-content">
+        <div class="table-container">
+          <table id="bookings-table">
+            <thead>
+              <tr>
+                <th>Date/Time</th>
+                <th>Property</th>
+                <th>Tenant</th>
+                <th>Landlord</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-tbody">
+              <tr><td colspan="6" class="loading">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -675,11 +740,13 @@ export const prerender = false;
     // State
     let inquiries = [];
     let invoices = [];
+    let bookings = [];
     let propertyCount = 0;
 
     // Fetch data
     async function fetchData() {
       try {
+        // Fetch invoices and inquiries
         const response = await fetch('/api/invoices/list?type=all', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -705,6 +772,23 @@ export const prerender = false;
         renderInquiries();
         renderInvoices();
         populateInquirySelect();
+
+        // Fetch bookings
+        const bookingsResponse = await fetch('/api/bookings/list', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (bookingsResponse.ok) {
+          const bookingsData = await bookingsResponse.json();
+          bookings = bookingsData.bookings || [];
+
+          if (bookingsData.stats) {
+            document.getElementById('stat-pending-bookings').textContent = bookingsData.stats.pendingBookings || 0;
+            document.getElementById('stat-scheduled-week').textContent = bookingsData.stats.scheduledThisWeek || 0;
+          }
+
+          renderBookings();
+        }
       } catch (error) {
         console.error('Fetch error:', error);
       }
@@ -799,10 +883,194 @@ export const prerender = false;
                   Mark Paid
                 </button>
               ` : ''}
+              ${invoice.status === 'paid' ? `
+                <button class="table-btn table-btn-secondary" onclick="sendBookingLinks('${invoice.id}')">
+                  Send Booking Links
+                </button>
+              ` : ''}
             </div>
           </td>
         </tr>
       `).join('');
+    }
+
+    // Render bookings table
+    function renderBookings(filter = 'pending_tenant') {
+      const tbody = document.getElementById('bookings-tbody');
+      let filtered = bookings;
+
+      if (filter === 'pending_tenant') {
+        filtered = bookings.filter(b => b.status === 'pending_tenant');
+      } else if (filter === 'scheduled') {
+        filtered = bookings.filter(b => b.status === 'scheduled');
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              <p>No ${filter === 'pending_tenant' ? 'pending ' : filter === 'scheduled' ? 'scheduled ' : ''}bookings found</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      const STATUS_LABELS = {
+        pending_tenant: 'Awaiting Tenant',
+        scheduled: 'Scheduled',
+        completed: 'Completed',
+        cancelled: 'Cancelled',
+        no_show: 'No Show'
+      };
+
+      tbody.innerHTML = filtered.map(booking => {
+        const dateTime = booking.scheduledDate && booking.scheduledTime
+          ? `${new Date(booking.scheduledDate + 'T12:00:00').toLocaleDateString()}<br><small>${formatTime(booking.scheduledTime)}</small>`
+          : '<span style="color: #94a3b8;">Not scheduled</span>';
+
+        return `
+          <tr>
+            <td>${dateTime}</td>
+            <td>${booking.propertyAddress}</td>
+            <td>
+              <strong>${booking.tenantName}</strong><br>
+              <small style="color: #64748b;">${booking.tenantPhone}</small>
+            </td>
+            <td>
+              <strong>${booking.landlordName}</strong><br>
+              <small style="color: #64748b;">${booking.landlordEmail}</small>
+            </td>
+            <td><span class="badge badge-${booking.status}">${STATUS_LABELS[booking.status] || booking.status}</span></td>
+            <td>
+              <div class="table-actions">
+                ${booking.status === 'pending_tenant' ? `
+                  <button class="table-btn table-btn-secondary" onclick="resendBookingLink('${booking.id}')">
+                    Resend Link
+                  </button>
+                ` : ''}
+                ${booking.status === 'scheduled' ? `
+                  <button class="table-btn table-btn-primary" onclick="completeBooking('${booking.id}')">
+                    Complete
+                  </button>
+                  <button class="table-btn table-btn-secondary" onclick="cancelBooking('${booking.id}')">
+                    Cancel
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Format time for display
+    function formatTime(timeStr) {
+      const [hour, minute] = timeStr.split(':').map(Number);
+      const period = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+    }
+
+    // Send booking links for an invoice
+    async function sendBookingLinks(invoiceId) {
+      if (!confirm('Send booking links to tenants for this invoice?')) return;
+
+      try {
+        const response = await fetch('/api/bookings/send-links', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ invoiceId })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert(data.message || 'Booking links sent!');
+          fetchData();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to send booking links'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Resend booking link
+    async function resendBookingLink(bookingId) {
+      if (!confirm('Resend booking link to tenant?')) return;
+
+      try {
+        const response = await fetch(`/api/bookings/${bookingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'resend_link' })
+        });
+
+        if (response.ok) {
+          alert('Booking link sent!');
+          fetchData();
+        } else {
+          const data = await response.json();
+          alert('Error: ' + (data.error || 'Failed to resend'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Complete booking
+    async function completeBooking(bookingId) {
+      if (!confirm('Mark this booking as completed?')) return;
+
+      try {
+        const response = await fetch(`/api/bookings/${bookingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'complete' })
+        });
+
+        if (response.ok) {
+          fetchData();
+        } else {
+          alert('Failed to update booking');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Cancel booking
+    async function cancelBooking(bookingId) {
+      if (!confirm('Cancel this booking?')) return;
+
+      try {
+        const response = await fetch(`/api/bookings/${bookingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'cancel' })
+        });
+
+        if (response.ok) {
+          fetchData();
+        } else {
+          alert('Failed to cancel booking');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
     }
 
     // Populate inquiry select in modal
@@ -1058,6 +1326,8 @@ export const prerender = false;
 
         if (section.querySelector('#inquiries-table')) {
           renderInquiries(filter);
+        } else if (section.querySelector('#bookings-table')) {
+          renderBookings(filter);
         } else {
           renderInvoices(filter);
         }

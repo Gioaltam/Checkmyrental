@@ -1,0 +1,636 @@
+---
+// Admin Availability Management
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Availability Settings - CheckMyRental Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      color: white;
+      font-size: 24px;
+    }
+
+    .header h1 span:first-child { color: white; }
+    .header h1 span:last-child { color: #e74c3c; }
+
+    .header-actions {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    .page-header {
+      margin-bottom: 30px;
+    }
+
+    .page-header h2 {
+      font-size: 24px;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .page-header p {
+      color: #64748b;
+    }
+
+    .section {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .section-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .section-header h3 {
+      font-size: 16px;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .section-header p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .section-content {
+      padding: 24px;
+    }
+
+    /* Weekly Schedule */
+    .day-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .day-row:last-child {
+      border-bottom: none;
+    }
+
+    .day-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 140px;
+    }
+
+    .day-toggle input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .day-name {
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .day-times {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .day-times input {
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 110px;
+    }
+
+    .day-times input:focus {
+      outline: none;
+      border-color: #e74c3c;
+    }
+
+    .day-times span {
+      color: #64748b;
+    }
+
+    .day-times.disabled input {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    /* Settings */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .setting-row:last-child {
+      border-bottom: none;
+    }
+
+    .setting-info {
+      flex: 1;
+    }
+
+    .setting-label {
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+
+    .setting-desc {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .setting-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .setting-input input {
+      width: 80px;
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .setting-input input:focus {
+      outline: none;
+      border-color: #e74c3c;
+    }
+
+    .setting-input span {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    /* Blocked Dates */
+    .blocked-dates-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .blocked-date-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #fee2e2;
+      color: #dc2626;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+
+    .blocked-date-tag button {
+      background: none;
+      border: none;
+      color: #dc2626;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    .add-blocked-date {
+      display: flex;
+      gap: 8px;
+    }
+
+    .add-blocked-date input {
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .add-blocked-date button {
+      padding: 8px 16px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Footer Actions */
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+    }
+
+    .save-status {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .save-status.success {
+      color: #10b981;
+    }
+
+    .save-status.error {
+      color: #dc2626;
+    }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+      }
+
+      .main {
+        padding: 15px;
+      }
+
+      .day-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1><span>CheckMy</span><span>Rental</span> <span style="font-weight: 400; font-size: 16px; margin-left: 10px;">Admin</span></h1>
+    <div class="header-actions">
+      <a href="/admin" class="btn btn-secondary">← Back to Dashboard</a>
+      <button class="btn btn-secondary" onclick="logout()">Logout</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="page-header">
+      <h2>Availability Settings</h2>
+      <p>Configure when tenants can book property inspections</p>
+    </div>
+
+    <div id="loading" class="loading">Loading availability settings...</div>
+
+    <div id="settings-container" style="display: none;">
+      <!-- Weekly Schedule -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Weekly Schedule</h3>
+          <p>Set your working hours for each day of the week</p>
+        </div>
+        <div class="section-content" id="weekly-schedule">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- Booking Settings -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Booking Settings</h3>
+          <p>Control how far in advance tenants can book</p>
+        </div>
+        <div class="section-content">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Slot Duration</div>
+              <div class="setting-desc">Length of each appointment slot</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="slot-duration" min="30" max="180" step="30" value="60">
+              <span>minutes</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Minimum Advance Notice</div>
+              <div class="setting-desc">How far ahead tenants must book (FL law requires 24 hours)</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="min-advance" min="24" max="168" value="24">
+              <span>hours</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Maximum Advance Booking</div>
+              <div class="setting-desc">How far in the future tenants can book</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="max-advance" min="7" max="60" value="14">
+              <span>days</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blocked Dates -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Blocked Dates</h3>
+          <p>Block specific dates (holidays, vacations, etc.)</p>
+        </div>
+        <div class="section-content">
+          <div class="blocked-dates-grid" id="blocked-dates">
+            <!-- Populated by JavaScript -->
+          </div>
+          <div class="add-blocked-date">
+            <input type="date" id="new-blocked-date">
+            <button onclick="addBlockedDate()">Add Date</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="footer-actions">
+        <span class="save-status" id="save-status"></span>
+        <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    let currentSchedule = null;
+
+    // Check auth
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      window.location.href = '/admin/login';
+    }
+
+    function logout() {
+      localStorage.removeItem('adminToken');
+      window.location.href = '/admin/login';
+    }
+
+    // Load availability
+    async function loadAvailability() {
+      try {
+        const response = await fetch('/api/admin/availability', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.status === 401) {
+          logout();
+          return;
+        }
+
+        const data = await response.json();
+        currentSchedule = data.schedule;
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('settings-container').style.display = 'block';
+
+        renderWeeklySchedule();
+        renderSettings();
+        renderBlockedDates();
+      } catch (error) {
+        console.error('Error loading availability:', error);
+        document.getElementById('loading').textContent = 'Error loading settings. Please try again.';
+      }
+    }
+
+    function renderWeeklySchedule() {
+      const container = document.getElementById('weekly-schedule');
+      container.innerHTML = '';
+
+      DAY_NAMES.forEach((dayName, dayIndex) => {
+        const slot = currentSchedule.weeklySlots.find(s => s.dayOfWeek === dayIndex);
+        const isEnabled = !!slot;
+
+        const row = document.createElement('div');
+        row.className = 'day-row';
+        row.innerHTML = `
+          <div class="day-toggle">
+            <input type="checkbox" id="day-${dayIndex}" ${isEnabled ? 'checked' : ''} onchange="toggleDay(${dayIndex})">
+            <label class="day-name" for="day-${dayIndex}">${dayName}</label>
+          </div>
+          <div class="day-times ${!isEnabled ? 'disabled' : ''}" id="times-${dayIndex}">
+            <input type="time" id="start-${dayIndex}" value="${slot?.startTime || '09:00'}" ${!isEnabled ? 'disabled' : ''}>
+            <span>to</span>
+            <input type="time" id="end-${dayIndex}" value="${slot?.endTime || '17:00'}" ${!isEnabled ? 'disabled' : ''}>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function toggleDay(dayIndex) {
+      const checkbox = document.getElementById(`day-${dayIndex}`);
+      const timesContainer = document.getElementById(`times-${dayIndex}`);
+      const startInput = document.getElementById(`start-${dayIndex}`);
+      const endInput = document.getElementById(`end-${dayIndex}`);
+
+      if (checkbox.checked) {
+        timesContainer.classList.remove('disabled');
+        startInput.disabled = false;
+        endInput.disabled = false;
+      } else {
+        timesContainer.classList.add('disabled');
+        startInput.disabled = true;
+        endInput.disabled = true;
+      }
+    }
+
+    function renderSettings() {
+      document.getElementById('slot-duration').value = currentSchedule.slotDuration || 60;
+      document.getElementById('min-advance').value = currentSchedule.minAdvanceHours || 24;
+      document.getElementById('max-advance').value = currentSchedule.maxAdvanceDays || 14;
+    }
+
+    function renderBlockedDates() {
+      const container = document.getElementById('blocked-dates');
+      container.innerHTML = '';
+
+      if (!currentSchedule.blockedDates || currentSchedule.blockedDates.length === 0) {
+        container.innerHTML = '<span style="color: #64748b; font-size: 14px;">No blocked dates</span>';
+        return;
+      }
+
+      currentSchedule.blockedDates.forEach(dateStr => {
+        const date = new Date(dateStr + 'T12:00:00');
+        const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const tag = document.createElement('div');
+        tag.className = 'blocked-date-tag';
+        tag.innerHTML = `
+          ${formatted}
+          <button onclick="removeBlockedDate('${dateStr}')">&times;</button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+
+    function addBlockedDate() {
+      const input = document.getElementById('new-blocked-date');
+      const dateStr = input.value;
+
+      if (!dateStr) return;
+
+      if (!currentSchedule.blockedDates) {
+        currentSchedule.blockedDates = [];
+      }
+
+      if (!currentSchedule.blockedDates.includes(dateStr)) {
+        currentSchedule.blockedDates.push(dateStr);
+        currentSchedule.blockedDates.sort();
+        renderBlockedDates();
+      }
+
+      input.value = '';
+    }
+
+    function removeBlockedDate(dateStr) {
+      currentSchedule.blockedDates = currentSchedule.blockedDates.filter(d => d !== dateStr);
+      renderBlockedDates();
+    }
+
+    async function saveSettings() {
+      const statusEl = document.getElementById('save-status');
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'save-status';
+
+      // Build weekly slots from form
+      const weeklySlots = [];
+      DAY_NAMES.forEach((_, dayIndex) => {
+        const checkbox = document.getElementById(`day-${dayIndex}`);
+        if (checkbox.checked) {
+          weeklySlots.push({
+            dayOfWeek: dayIndex,
+            startTime: document.getElementById(`start-${dayIndex}`).value,
+            endTime: document.getElementById(`end-${dayIndex}`).value
+          });
+        }
+      });
+
+      const schedule = {
+        weeklySlots,
+        blockedDates: currentSchedule.blockedDates || [],
+        slotDuration: parseInt(document.getElementById('slot-duration').value),
+        minAdvanceHours: parseInt(document.getElementById('min-advance').value),
+        maxAdvanceDays: parseInt(document.getElementById('max-advance').value)
+      };
+
+      try {
+        const response = await fetch('/api/admin/availability', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(schedule)
+        });
+
+        if (response.ok) {
+          statusEl.textContent = 'Saved successfully!';
+          statusEl.className = 'save-status success';
+          currentSchedule = schedule;
+        } else {
+          const data = await response.json();
+          statusEl.textContent = data.error || 'Error saving';
+          statusEl.className = 'save-status error';
+        }
+      } catch (error) {
+        statusEl.textContent = 'Error saving settings';
+        statusEl.className = 'save-status error';
+      }
+
+      setTimeout(() => {
+        statusEl.textContent = '';
+      }, 3000);
+    }
+
+    // Initialize
+    loadAvailability();
+  </script>
+</body>
+</html>

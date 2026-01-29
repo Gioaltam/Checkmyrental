@@ -305,7 +305,7 @@ const DEFAULT_AVAILABILITY: AvailabilitySchedule = {
     { dayOfWeek: 5, startTime: '09:00', endTime: '17:00' },  // Friday
   ],
   blockedDates: [],
-  slotDuration: 60,      // 1 hour slots
+  slotDuration: 30,      // 30 min slots for high volume
   minAdvanceHours: 24,   // FL law: 24 hour notice
   maxAdvanceDays: 14,    // 2 weeks out
   enableZoneFiltering: true,   // Enable travel time filtering

@@ -141,6 +141,7 @@ export interface TimeSlot {
   startTime: string; // "09:00"
   endTime: string;   // "10:00"
   available: boolean;
+  preferred?: boolean;  // True if same-zone as existing bookings (better for route efficiency)
 }
 
 export const BOOKING_STATUS_LABELS: Record<Booking['status'], string> = {

@@ -2,7 +2,7 @@
 import type { APIRoute } from 'astro';
 import { getBookingByToken, getAvailability, getBookedSlotsForDate, getBookingsForDate } from '../../../lib/db';
 import type { TimeSlot, Booking } from '../../../lib/types';
-import { filterSlotsWithTravel } from '../../../lib/scheduling';
+import { filterSlotsWithTravel, isPreferredZone } from '../../../lib/scheduling';
 
 export const prerender = false;
 
@@ -85,6 +85,11 @@ function generateTimeSlots(
     });
   }
 
+  // Check if this property's zone matches existing bookings (for preferred marking)
+  const isPreferred = propertyAddress && existingBookings && existingBookings.length > 0
+    ? isPreferredZone(propertyAddress, existingBookings)
+    : false;
+
   // Build final slots array
   for (const startTime of potentialSlots) {
     // Calculate end time
@@ -109,11 +114,15 @@ function generateTimeSlots(
     const zoneFilter = zoneFilteredSlots.get(startTime);
     const isZoneAvailable = !zoneFilter || zoneFilter.available;
 
+    const isAvailable = isWithinMinAdvance && !isBooked && isZoneAvailable;
+
     slots.push({
       date,
       startTime,
       endTime,
-      available: isWithinMinAdvance && !isBooked && isZoneAvailable,
+      available: isAvailable,
+      // Mark as preferred if available and in same zone as existing bookings
+      preferred: isAvailable && isPreferred,
     });
   }
 

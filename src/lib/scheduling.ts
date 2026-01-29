@@ -225,3 +225,36 @@ export function getRouteSummary(bookings: BookingWithZone[], slotDuration: numbe
     zones: sortedBookings.map(b => b.serviceZone),
   };
 }
+
+/**
+ * Determine which zones already have bookings for the day
+ */
+export function getExistingZonesForDay(existingBookings: Booking[]): ServiceZone[] {
+  const zones = new Set<ServiceZone>();
+
+  for (const booking of existingBookings) {
+    if (booking.status === 'scheduled' && booking.scheduledTime) {
+      const zone = (booking.serviceZone as ServiceZone) || getServiceZone(extractZipcode(booking.propertyAddress));
+      zones.add(zone);
+    }
+  }
+
+  return Array.from(zones);
+}
+
+/**
+ * Check if a property zone matches any existing booking zones for the day
+ * This helps determine if a slot should be marked as "preferred"
+ */
+export function isPreferredZone(propertyAddress: string, existingBookings: Booking[]): boolean {
+  const propertyZipcode = extractZipcode(propertyAddress);
+  const propertyZone = getServiceZone(propertyZipcode);
+
+  const existingZones = getExistingZonesForDay(existingBookings);
+
+  // If no existing bookings, no preference
+  if (existingZones.length === 0) return false;
+
+  // Preferred if property zone matches any existing booking zone
+  return existingZones.includes(propertyZone);
+}

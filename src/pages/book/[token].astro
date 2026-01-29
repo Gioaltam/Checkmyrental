@@ -229,9 +229,21 @@ try {
             if (availableSlots.length === 0) {
               timeGrid.innerHTML = '<p class="no-times">No available times for this date. Please select another date.</p>';
             } else {
-              timeGrid.innerHTML = availableSlots.map(slot => `
-                <button type="button" class="time-btn" data-time="${slot.startTime}">
+              // Sort preferred slots first for better route efficiency
+              const sortedSlots = [...availableSlots].sort((a, b) => {
+                if (a.preferred && !b.preferred) return -1;
+                if (!a.preferred && b.preferred) return 1;
+                return 0;
+              });
+
+              // Check if any slots are preferred
+              const hasPreferred = sortedSlots.some(s => s.preferred);
+
+              timeGrid.innerHTML = (hasPreferred ? '<p class="preferred-hint">Preferred times help us serve you faster</p>' : '') +
+                sortedSlots.map(slot => `
+                <button type="button" class="time-btn ${slot.preferred ? 'preferred' : ''}" data-time="${slot.startTime}">
                   ${formatTime(slot.startTime)}
+                  ${slot.preferred ? '<span class="preferred-badge">Preferred</span>' : ''}
                 </button>
               `).join('');
 
@@ -517,6 +529,43 @@ try {
     .time-btn.selected {
       border-color: #e74c3c;
       background: rgba(231, 76, 60, 0.15);
+    }
+
+    .time-btn.preferred {
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.1);
+      position: relative;
+    }
+
+    .time-btn.preferred:hover {
+      border-color: rgba(16, 185, 129, 0.6);
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    .time-btn.preferred.selected {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.2);
+    }
+
+    .preferred-badge {
+      display: block;
+      font-size: 0.65rem;
+      color: #10b981;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 0.25rem;
+    }
+
+    .preferred-hint {
+      grid-column: 1 / -1;
+      text-align: center;
+      font-size: 0.8rem;
+      color: rgba(16, 185, 129, 0.8);
+      margin-bottom: 0.75rem;
+      padding: 0.5rem;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 6px;
     }
 
     .no-times, .no-dates {

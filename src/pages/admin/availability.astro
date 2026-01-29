@@ -470,10 +470,10 @@ export const prerender = false;
           <div class="setting-row">
             <div class="setting-info">
               <div class="setting-label">Slot Duration</div>
-              <div class="setting-desc">Length of each appointment slot</div>
+              <div class="setting-desc">Shorter slots = more inspections per day (30 min recommended)</div>
             </div>
             <div class="setting-input">
-              <input type="number" id="slot-duration" min="30" max="180" step="30" value="60">
+              <input type="number" id="slot-duration" min="15" max="120" step="15" value="30">
               <span>minutes</span>
             </div>
           </div>
@@ -656,7 +656,7 @@ export const prerender = false;
     }
 
     function renderSettings() {
-      document.getElementById('slot-duration').value = currentSchedule.slotDuration || 60;
+      document.getElementById('slot-duration').value = currentSchedule.slotDuration || 30;
       document.getElementById('min-advance').value = currentSchedule.minAdvanceHours || 24;
       document.getElementById('max-advance').value = currentSchedule.maxAdvanceDays || 14;
       // Zone settings

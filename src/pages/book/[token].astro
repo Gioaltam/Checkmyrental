@@ -8,15 +8,27 @@ const { token } = Astro.params;
 let booking = null;
 let availableDates: string[] = [];
 let error = null;
+let isReschedule = false;
 
 try {
   const baseUrl = Astro.url.origin;
-  const response = await fetch(`${baseUrl}/api/bookings/available-slots?token=${token}`);
-  const data = await response.json();
+  let response = await fetch(`${baseUrl}/api/bookings/available-slots?token=${token}`);
+  let data = await response.json();
 
   if (response.ok) {
     booking = data.booking;
     availableDates = data.availableDates || [];
+  } else if (data.status === 'scheduled') {
+    // Booking is already scheduled - try reschedule mode
+    isReschedule = true;
+    response = await fetch(`${baseUrl}/api/bookings/available-slots?token=${token}&reschedule=true`);
+    data = await response.json();
+    if (response.ok) {
+      booking = data.booking;
+      availableDates = data.availableDates || [];
+    } else {
+      error = data.error || 'Unable to load booking';
+    }
   } else {
     error = data.error || 'Unable to load booking';
   }
@@ -60,7 +72,7 @@ try {
       <main class="booking-main">
         <!-- Property Info -->
         <div class="property-info">
-          <h1>Schedule Your Inspection</h1>
+          <h1>{isReschedule ? 'Your Inspection' : 'Schedule Your Inspection'}</h1>
           <div class="property-card">
             <div class="property-icon">🏠</div>
             <div class="property-details">
@@ -76,9 +88,41 @@ try {
 
         <!-- Booking Form -->
         <div id="booking-form-container">
+          {/* Step 0: Current Booking (reschedule mode only) */}
+          {isReschedule && (
+            <div class="form-step" id="step-current">
+              <div class="current-booking-icon">&#128197;</div>
+              <h2 style="text-align: center;">Your Inspection is Scheduled</h2>
+              <div class="confirmation-card">
+                <div class="confirm-row">
+                  <span class="confirm-label">Property</span>
+                  <span class="confirm-value">{booking?.propertyAddress}</span>
+                </div>
+                <div class="confirm-row">
+                  <span class="confirm-label">Date</span>
+                  <span class="confirm-value" id="current-date"></span>
+                </div>
+                <div class="confirm-row">
+                  <span class="confirm-label">Time</span>
+                  <span class="confirm-value" id="current-time"></span>
+                </div>
+              </div>
+              <button type="button" class="reschedule-link-btn" id="start-reschedule-btn">
+                Need to reschedule?
+              </button>
+              <p class="confirm-note">You can reschedule up to 2 times. FL law requires 24-hour notice.</p>
+            </div>
+          )}
+
           <!-- Step 1: Date Selection -->
-          <div class="form-step" id="step-date">
-            <h2>Select a Date</h2>
+          <div class={`form-step ${isReschedule ? 'hidden' : ''}`} id="step-date">
+            {isReschedule && (
+              <div class="step-header">
+                <button type="button" class="back-btn" id="back-to-current">&larr; Back</button>
+                <h2>Select a New Date</h2>
+              </div>
+            )}
+            {!isReschedule && <h2>Select a Date</h2>}
             <div class="date-grid" id="date-grid">
               {availableDates.length > 0 ? (
                 availableDates.map((dateStr) => {
@@ -139,7 +183,7 @@ try {
               </div>
             </div>
             <button type="button" class="confirm-btn" id="confirm-booking-btn">
-              Confirm Booking
+              {isReschedule ? 'Confirm Reschedule' : 'Confirm Booking'}
             </button>
             <p class="confirm-note">You'll receive a confirmation text message.</p>
           </div>
@@ -169,7 +213,7 @@ try {
     </footer>
   </div>
 
-  <script define:vars={{ token, availableDates }}>
+  <script define:vars={{ token, availableDates, isReschedule, booking }}>
     let selectedDate = null;
     let selectedTime = null;
 
@@ -200,6 +244,26 @@ try {
       document.getElementById(stepId).classList.remove('hidden');
     }
 
+    // If reschedule mode, populate current booking info and set up reschedule button
+    if (isReschedule && booking) {
+      const currentDateEl = document.getElementById('current-date');
+      const currentTimeEl = document.getElementById('current-time');
+      if (currentDateEl && booking.scheduledDate) {
+        currentDateEl.textContent = formatDate(booking.scheduledDate);
+      }
+      if (currentTimeEl && booking.scheduledTime) {
+        currentTimeEl.textContent = formatTime(booking.scheduledTime);
+      }
+
+      document.getElementById('start-reschedule-btn')?.addEventListener('click', () => {
+        showStep('step-date');
+      });
+
+      document.getElementById('back-to-current')?.addEventListener('click', () => {
+        showStep('step-current');
+      });
+    }
+
     // Handle date selection
     document.querySelectorAll('.date-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -217,7 +281,8 @@ try {
 
         // Fetch available times
         try {
-          const response = await fetch(`/api/bookings/available-slots?token=${token}&date=${selectedDate}`);
+          const rescheduleParam = isReschedule ? '&reschedule=true' : '';
+          const response = await fetch(`/api/bookings/available-slots?token=${token}&date=${selectedDate}${rescheduleParam}`);
           const data = await response.json();
 
           document.getElementById('loading-times').classList.add('hidden');
@@ -284,10 +349,11 @@ try {
     document.getElementById('confirm-booking-btn')?.addEventListener('click', async () => {
       const btn = document.getElementById('confirm-booking-btn');
       btn.disabled = true;
-      btn.textContent = 'Confirming...';
+      btn.textContent = isReschedule ? 'Rescheduling...' : 'Confirming...';
 
       try {
-        const response = await fetch('/api/bookings/confirm', {
+        const endpoint = isReschedule ? '/api/bookings/reschedule' : '/api/bookings/confirm';
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -303,16 +369,24 @@ try {
           // Show success
           document.getElementById('success-date').textContent = formatDate(selectedDate);
           document.getElementById('success-time').textContent = formatTime(selectedTime);
+
+          if (isReschedule) {
+            const successH2 = document.querySelector('#step-success h2');
+            const successMsg = document.querySelector('.success-message');
+            if (successH2) successH2.textContent = 'Rescheduled!';
+            if (successMsg) successMsg.textContent = 'Your inspection has been rescheduled. You\'ll receive a confirmation text.';
+          }
+
           showStep('step-success');
         } else {
           alert(data.error || 'Unable to confirm booking. Please try again.');
           btn.disabled = false;
-          btn.textContent = 'Confirm Booking';
+          btn.textContent = isReschedule ? 'Confirm Reschedule' : 'Confirm Booking';
         }
       } catch (error) {
         alert('Unable to connect to server. Please try again.');
         btn.disabled = false;
-        btn.textContent = 'Confirm Booking';
+        btn.textContent = isReschedule ? 'Confirm Reschedule' : 'Confirm Booking';
       }
     });
   </script>
@@ -715,6 +789,38 @@ try {
     .success-help a {
       color: #e74c3c;
       text-decoration: none;
+    }
+
+    /* Reschedule */
+    .current-booking-icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin: 0 auto 1.5rem;
+    }
+
+    .reschedule-link-btn {
+      width: 100%;
+      padding: 0.875rem;
+      background: transparent;
+      border: 2px solid rgba(231, 76, 60, 0.4);
+      border-radius: 12px;
+      color: #e74c3c;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 1rem;
+    }
+
+    .reschedule-link-btn:hover {
+      background: rgba(231, 76, 60, 0.1);
+      border-color: #e74c3c;
     }
 
     /* Error State */

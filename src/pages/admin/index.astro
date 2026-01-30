@@ -262,6 +262,12 @@ export const prerender = false;
       color: #dc2626;
     }
 
+    .badge-freq {
+      background: #ede9fe;
+      color: #6d28d9;
+      font-size: 0.7rem;
+    }
+
     /* Zone badges */
     .zone-badge {
       display: inline-block;
@@ -851,6 +857,7 @@ export const prerender = false;
     let invoices = [];
     let bookings = [];
     let propertyCount = 0;
+    let slotDuration = 60;
 
     // Fetch data
     async function fetchData() {
@@ -890,6 +897,7 @@ export const prerender = false;
         if (bookingsResponse.ok) {
           const bookingsData = await bookingsResponse.json();
           bookings = bookingsData.bookings || [];
+          slotDuration = bookingsData.slotDuration || 60;
 
           if (bookingsData.stats) {
             document.getElementById('stat-pending-bookings').textContent = bookingsData.stats.pendingBookings || 0;
@@ -1034,6 +1042,15 @@ export const prerender = false;
         no_show: 'No Show'
       };
 
+      const FREQ_LABELS = {
+        quarterly: 'Quarterly',
+        monthly: 'Monthly',
+        bimonthly: 'Bi-Monthly',
+        weekly: 'Weekly',
+        one_time: 'One Time',
+        custom: 'Custom',
+      };
+
       tbody.innerHTML = filtered.map(booking => {
         const dateTime = booking.scheduledDate && booking.scheduledTime
           ? `${new Date(booking.scheduledDate + 'T12:00:00').toLocaleDateString()}<br><small>${formatTime(booking.scheduledTime)}</small>`
@@ -1054,7 +1071,10 @@ export const prerender = false;
               <strong>${booking.landlordName}</strong><br>
               <small style="color: #64748b;">${booking.landlordEmail}</small>
             </td>
-            <td><span class="badge badge-${booking.status}">${STATUS_LABELS[booking.status] || booking.status}</span></td>
+            <td>
+              <span class="badge badge-${booking.status}">${STATUS_LABELS[booking.status] || booking.status}</span>
+              ${booking.inspectionFrequency && booking.inspectionFrequency !== 'one_time' ? `<br><span class="badge badge-freq" style="margin-top: 4px;">${FREQ_LABELS[booking.inspectionFrequency] || booking.inspectionFrequency}</span>` : ''}
+            </td>
             <td>
               <div class="table-actions">
                 ${booking.status === 'pending_tenant' ? `
@@ -1151,7 +1171,7 @@ export const prerender = false;
         currentZone = zone;
       }
 
-      const totalInspectionTime = todayBookings.length * 60; // Assume 60 min per inspection
+      const totalInspectionTime = todayBookings.length * slotDuration;
       const ratio = totalTravel / totalInspectionTime;
       let efficiency = 'good';
       if (ratio >= 1.0) efficiency = 'poor';

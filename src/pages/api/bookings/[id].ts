@@ -1,6 +1,6 @@
 // Get or update a specific booking
 import type { APIRoute } from 'astro';
-import { getBooking, updateBooking } from '../../../lib/db';
+import { getBooking, updateBooking, createNextRecurringBooking } from '../../../lib/db';
 import { sendBookingLinkSMS } from '../../../lib/twilio';
 
 export const prerender = false;
@@ -83,10 +83,45 @@ export const PATCH: APIRoute = async ({ params, request }) => {
     const { action } = body;
 
     switch (action) {
-      case 'complete':
+      case 'complete': {
         await updateBooking(id, { status: 'completed' });
         booking.status = 'completed';
-        break;
+
+        // Auto-create next recurring booking if applicable
+        let nextBooking = null;
+        try {
+          nextBooking = await createNextRecurringBooking(booking);
+          if (nextBooking) {
+            // Send SMS booking link for next inspection
+            const recurBaseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+            const nextBookingUrl = `${recurBaseUrl}/book/${nextBooking.bookingToken}`;
+            const sms = await sendBookingLinkSMS(
+              nextBooking.tenantPhone,
+              nextBooking.tenantName,
+              nextBooking.propertyAddress,
+              nextBookingUrl
+            );
+            if (sms.success) {
+              await updateBooking(nextBooking.id, {
+                smsBookingLinkSentAt: new Date().toISOString(),
+              });
+            }
+          }
+        } catch (recurError) {
+          console.error('Failed to create recurring booking:', recurError);
+        }
+
+        // Return early with next booking info
+        const updatedCompleted = await getBooking(id);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            booking: updatedCompleted,
+            ...(nextBooking && { nextBooking: { id: nextBooking.id, inspectionFrequency: nextBooking.inspectionFrequency } }),
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
 
       case 'cancel':
         await updateBooking(id, { status: 'cancelled' });

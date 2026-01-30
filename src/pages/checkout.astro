@@ -1742,7 +1742,6 @@ import LandingFooter from '../components/LandingFooter.astro';
 
   // Add property
   function addProperty() {
-    console.log('addProperty called, current count:', propertyCount);
     if (propertyCount >= maxProperties) {
       alert(`Maximum ${maxProperties} properties allowed. Contact us for larger portfolios.`);
       return;
@@ -1775,11 +1774,8 @@ import LandingFooter from '../components/LandingFooter.astro';
 
   // Initialize
   document.addEventListener('astro:page-load', () => {
-    console.log('DOM loaded, initializing checkout form...');
-
     // Add property button
     const addBtn = document.getElementById('add-property-btn');
-    console.log('Add property button found:', addBtn);
     if (addBtn) {
       addBtn.addEventListener('click', addProperty);
     }

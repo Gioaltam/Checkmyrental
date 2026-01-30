@@ -279,7 +279,7 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));
@@ -292,6 +292,42 @@ export async function getBookingsForDate(date: string): Promise<Booking[]> {
     b.scheduledDate === date &&
     (b.status === 'scheduled' || b.status === 'pending_tenant')
   );
+}
+
+// ==================== RECURRING BOOKINGS ====================
+
+const FREQUENCY_INTERVAL_DAYS: Record<string, number> = {
+  weekly: 7,
+  bimonthly: 60,
+  monthly: 30,
+  quarterly: 90,
+};
+
+/**
+ * Create the next recurring booking after a completed inspection.
+ * Returns the new booking or null if frequency is one_time/custom/unknown.
+ */
+export async function createNextRecurringBooking(
+  completedBooking: Booking
+): Promise<Booking | null> {
+  const frequency = completedBooking.inspectionFrequency;
+  if (!frequency || frequency === 'one_time' || frequency === 'custom') {
+    return null;
+  }
+
+  const intervalDays = FREQUENCY_INTERVAL_DAYS[frequency];
+  if (!intervalDays) return null;
+
+  return createBooking({
+    invoiceId: completedBooking.invoiceId,
+    propertyIndex: completedBooking.propertyIndex,
+    propertyAddress: completedBooking.propertyAddress,
+    tenantName: completedBooking.tenantName,
+    tenantPhone: completedBooking.tenantPhone,
+    landlordName: completedBooking.landlordName,
+    landlordEmail: completedBooking.landlordEmail,
+    inspectionFrequency: completedBooking.inspectionFrequency,
+  });
 }
 
 // ==================== AVAILABILITY ====================

@@ -78,7 +78,8 @@ function generateTimeSlots(
       potentialSlots,
       slotDuration,
       propertyAddress,
-      existingBookings
+      existingBookings,
+      schedule.travelBufferMinutes || 0
     );
     filtered.forEach(slot => {
       zoneFilteredSlots.set(slot.time, { available: slot.available, reason: slot.reason });
@@ -150,10 +151,15 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    if (booking.status !== 'pending_tenant') {
+    const isReschedule = url.searchParams.get('reschedule') === 'true';
+    const allowedStatuses = isReschedule
+      ? ['pending_tenant', 'scheduled']
+      : ['pending_tenant'];
+
+    if (!allowedStatuses.includes(booking.status)) {
       return new Response(
         JSON.stringify({
-          error: 'Booking already completed',
+          error: 'Booking is not available for scheduling',
           status: booking.status,
         }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -184,8 +190,15 @@ export const GET: APIRoute = async ({ url }) => {
 
         if (hasSchedule && !isBlocked) {
           // Check if there are any available slots (with zone-aware filtering)
-          const bookedSlots = await getBookedSlotsForDate(dateStr);
-          const existingBookings = await getBookingsForDate(dateStr);
+          let bookedSlots = await getBookedSlotsForDate(dateStr);
+          let existingBookings = await getBookingsForDate(dateStr);
+
+          // When rescheduling, exclude the current booking from conflict checks
+          if (isReschedule) {
+            bookedSlots = bookedSlots.filter(s => s !== booking.scheduledTime || booking.scheduledDate !== dateStr);
+            existingBookings = existingBookings.filter(b => b.id !== booking.id);
+          }
+
           const slots = generateTimeSlots(
             dateStr,
             dayOfWeek,
@@ -207,6 +220,11 @@ export const GET: APIRoute = async ({ url }) => {
           booking: {
             propertyAddress: booking.propertyAddress,
             tenantName: booking.tenantName,
+            ...(isReschedule && {
+              scheduledDate: booking.scheduledDate,
+              scheduledTime: booking.scheduledTime,
+              rescheduleCount: booking.rescheduleCount || 0,
+            }),
           },
           availableDates,
           minAdvanceHours: schedule.minAdvanceHours,
@@ -221,8 +239,14 @@ export const GET: APIRoute = async ({ url }) => {
     const dayOfWeek = requestedDate.getDay();
 
     // Get booked slots for this date and existing bookings for zone filtering
-    const bookedSlots = await getBookedSlotsForDate(date);
-    const existingBookings = await getBookingsForDate(date);
+    let bookedSlots = await getBookedSlotsForDate(date);
+    let existingBookings = await getBookingsForDate(date);
+
+    // When rescheduling, exclude the current booking from conflict checks
+    if (isReschedule) {
+      bookedSlots = bookedSlots.filter(s => s !== booking.scheduledTime || booking.scheduledDate !== date);
+      existingBookings = existingBookings.filter(b => b.id !== booking.id);
+    }
 
     const slots = generateTimeSlots(
       date,

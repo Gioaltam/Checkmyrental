@@ -74,6 +74,7 @@ export const POST: APIRoute = async ({ request }) => {
           tenantPhone: property.tenantPhone,
           landlordName: invoice.customerName,
           landlordEmail: invoice.customerEmail,
+          inspectionFrequency: invoice.inspectionFrequency,
         });
 
         // Build booking URL

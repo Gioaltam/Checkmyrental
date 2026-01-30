@@ -44,6 +44,7 @@ export const POST: APIRoute = async ({ request }) => {
     let customerPhone: string;
     let properties: Property[];
     let inquiryId: string | undefined;
+    let inspectionFrequency: string | undefined;
 
     // If inquiryId provided, fetch details from inquiry
     if (body.inquiryId) {
@@ -59,6 +60,7 @@ export const POST: APIRoute = async ({ request }) => {
       customerPhone = inquiry.customerPhone;
       properties = inquiry.properties;
       inquiryId = inquiry.id;
+      inspectionFrequency = inquiry.inspectionFrequency;
     } else {
       // Use provided details
       if (!body.customerName || !body.customerEmail || !body.customerPhone || !body.properties) {
@@ -92,6 +94,7 @@ export const POST: APIRoute = async ({ request }) => {
       status: 'draft',
       dueDate: body.dueDate,
       notes: body.notes,
+      inspectionFrequency,
     });
 
     // Send invoice based on payment method

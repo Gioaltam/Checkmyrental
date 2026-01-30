@@ -59,7 +59,8 @@ export function checkSlotAvailability(
   slotTime: string,
   slotDuration: number,
   propertyZone: ServiceZone,
-  existingBookings: BookingWithZone[]
+  existingBookings: BookingWithZone[],
+  travelBufferMinutes: number = 0
 ): { available: boolean; reason?: string } {
   const slotStartMinutes = timeToMinutes(slotTime);
   const slotEndMinutes = slotStartMinutes + slotDuration;
@@ -79,12 +80,12 @@ export function checkSlotAvailability(
     // Check if new slot ends too close to existing booking start
     // New slot ends at slotEndMinutes, existing booking starts at bookingStartMinutes
     // Need: slotEndMinutes + travelTimeToBooking <= bookingStartMinutes
-    const canFitBefore = slotEndMinutes + travelTimeToBooking <= bookingStartMinutes;
+    const canFitBefore = slotEndMinutes + travelTimeToBooking + travelBufferMinutes <= bookingStartMinutes;
 
     // Check if new slot starts too close to existing booking end
     // Existing booking ends at bookingEndMinutes, new slot starts at slotStartMinutes
-    // Need: bookingEndMinutes + travelTimeFromBooking <= slotStartMinutes
-    const canFitAfter = bookingEndMinutes + travelTimeFromBooking <= slotStartMinutes;
+    // Need: bookingEndMinutes + travelTimeFromBooking + buffer <= slotStartMinutes
+    const canFitAfter = bookingEndMinutes + travelTimeFromBooking + travelBufferMinutes <= slotStartMinutes;
 
     // Also check for direct time overlap (regardless of travel)
     const hasTimeOverlap = rangesOverlap(slotStartMinutes, slotEndMinutes, bookingStartMinutes, bookingEndMinutes);
@@ -122,7 +123,8 @@ export function filterSlotsWithTravel(
   potentialSlots: string[],
   slotDuration: number,
   propertyAddress: string,
-  existingBookings: Booking[]
+  existingBookings: Booking[],
+  travelBufferMinutes: number = 0
 ): TimeSlot[] {
   // Determine the zone for the property being booked
   const zipcode = extractZipcode(propertyAddress);
@@ -142,7 +144,7 @@ export function filterSlotsWithTravel(
 
   // Check each potential slot
   return potentialSlots.map(time => {
-    const result = checkSlotAvailability(time, slotDuration, propertyZone, bookingsWithZone);
+    const result = checkSlotAvailability(time, slotDuration, propertyZone, bookingsWithZone, travelBufferMinutes);
     return {
       time,
       available: result.available,

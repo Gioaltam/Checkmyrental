@@ -16,7 +16,10 @@ export default defineConfig({
   ],
   vite: {
     build: {
-      cssCodeSplit: true // Re-enabled for better performance
+      cssCodeSplit: true, // Re-enabled for better performance
+      rollupOptions: {
+        external: ['twilio']
+      }
     }
   }
 });

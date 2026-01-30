@@ -120,3 +120,31 @@ export async function sendReminderSMS(
     };
   }
 }
+
+// Send reschedule confirmation SMS to tenant
+export async function sendRescheduleSMS(
+  phone: string,
+  tenantName: string,
+  propertyAddress: string,
+  date: string,
+  time: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const client = getTwilioClient();
+    const fromNumber = getFromNumber();
+
+    const message = await client.messages.create({
+      body: `Hi ${tenantName}! Your inspection at ${propertyAddress} has been rescheduled to ${date} at ${time}. FL law requires 24hr notice. Questions? Reply to this text. - CheckMyRental`,
+      from: fromNumber,
+      to: formatPhoneNumber(phone),
+    });
+
+    return { success: true, messageId: message.sid };
+  } catch (error) {
+    console.error('Failed to send reschedule SMS:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}

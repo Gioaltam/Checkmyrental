@@ -42,6 +42,7 @@ export interface Invoice {
   squarePaymentUrl?: string;
   paidAt?: string;
   notes?: string;
+  inspectionFrequency?: string;
   invoiceNumber: string;
 }
 
@@ -113,6 +114,10 @@ export interface Booking {
   smsReminderSentAt?: string;
   // Booking token for security (unique token in booking URL)
   bookingToken: string;
+  // Recurring inspection frequency
+  inspectionFrequency?: string;
+  // Rescheduling
+  rescheduleCount?: number;
 }
 
 export interface WeeklySlot {

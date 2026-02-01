@@ -212,6 +212,11 @@ export const prerender = false;
       color: #92400e;
     }
 
+    .badge-archived {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
     .badge-sent {
       background: #e0e7ff;
       color: #4338ca;
@@ -661,9 +666,11 @@ export const prerender = false;
     <!-- Inquiries Section -->
     <section class="section">
       <div class="section-header">
-        <h2>Recent Inquiries</h2>
+        <h2>Inquiries</h2>
         <div class="tabs">
           <button class="tab active" data-filter="new">New</button>
+          <button class="tab" data-filter="invoiced">Invoiced</button>
+          <button class="tab" data-filter="archived">Archived</button>
           <button class="tab" data-filter="all">All</button>
         </div>
       </div>
@@ -839,6 +846,9 @@ export const prerender = false;
     </div>
   </div>
 
+  <!-- Inquiry Detail Modal -->
+  <div class="modal-overlay" id="inquiry-detail-modal"></div>
+
   <script is:inline>
     // Auth check
     const token = localStorage.getItem('adminToken');
@@ -917,15 +927,15 @@ export const prerender = false;
       const tbody = document.getElementById('inquiries-tbody');
       let filtered = inquiries;
 
-      if (filter === 'new') {
-        filtered = inquiries.filter(i => i.status === 'new');
+      if (filter !== 'all') {
+        filtered = inquiries.filter(i => i.status === filter);
       }
 
       if (filtered.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="7" class="empty-state">
-              <p>No ${filter === 'new' ? 'new ' : ''}inquiries found</p>
+              <p>No ${filter !== 'all' ? filter + ' ' : ''}inquiries found</p>
             </td>
           </tr>
         `;
@@ -950,6 +960,14 @@ export const prerender = false;
                   Create Invoice
                 </button>
               ` : ''}
+              ${inquiry.status !== 'archived' ? `
+                <button class="table-btn table-btn-secondary" onclick="archiveInquiry('${inquiry.id}')">
+                  Archive
+                </button>
+              ` : ''}
+              <button class="table-btn table-btn-secondary" onclick="showInquiryDetail('${inquiry.id}')">
+                Details
+              </button>
             </div>
           </td>
         </tr>
@@ -1074,6 +1092,8 @@ export const prerender = false;
             <td>
               <span class="badge badge-${booking.status}">${STATUS_LABELS[booking.status] || booking.status}</span>
               ${booking.inspectionFrequency && booking.inspectionFrequency !== 'one_time' ? `<br><span class="badge badge-freq" style="margin-top: 4px;">${FREQ_LABELS[booking.inspectionFrequency] || booking.inspectionFrequency}</span>` : ''}
+              ${booking.status === 'pending_tenant' && !booking.smsBookingLinkSentAt ? `<br><span style="color: #f59e0b; font-size: 11px;" title="Booking link SMS was not delivered">&#9888; SMS not sent</span>` : ''}
+              ${booking.status === 'scheduled' && !booking.smsConfirmationSentAt ? `<br><span style="color: #f59e0b; font-size: 11px;" title="Confirmation SMS was not delivered">&#9888; SMS not sent</span>` : ''}
             </td>
             <td>
               <div class="table-actions">
@@ -1089,6 +1109,11 @@ export const prerender = false;
                   <button class="table-btn table-btn-secondary" onclick="cancelBooking('${booking.id}')">
                     Cancel
                   </button>
+                  ${!booking.smsConfirmationSentAt ? `
+                    <button class="table-btn table-btn-secondary" onclick="retryConfirmationSMS('${booking.id}')" title="Retry sending confirmation SMS">
+                      Retry SMS
+                    </button>
+                  ` : ''}
                 ` : ''}
               </div>
             </td>
@@ -1320,6 +1345,117 @@ export const prerender = false;
       } catch (error) {
         alert('Error: ' + error.message);
       }
+    }
+
+    // Retry confirmation SMS
+    async function retryConfirmationSMS(bookingId) {
+      if (!confirm('Retry sending confirmation SMS to tenant?')) return;
+      try {
+        const response = await fetch(`/api/bookings/${bookingId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ action: 'retry_confirmation_sms' })
+        });
+        if (response.ok) {
+          alert('Confirmation SMS sent successfully!');
+          fetchData();
+        } else {
+          const data = await response.json();
+          alert('Error: ' + (data.error || 'Failed to send SMS'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Archive inquiry
+    async function archiveInquiry(inquiryId) {
+      if (!confirm('Archive this inquiry?')) return;
+      try {
+        const response = await fetch(`/api/inquiries/${inquiryId}`, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: 'archived' })
+        });
+        if (response.ok) {
+          fetchData();
+        } else {
+          const data = await response.json();
+          alert('Error: ' + (data.error || 'Failed to archive inquiry'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Show inquiry detail modal
+    function showInquiryDetail(inquiryId) {
+      const inquiry = inquiries.find(i => i.id === inquiryId);
+      if (!inquiry) return;
+
+      const FREQ_LABELS = {
+        quarterly: 'Quarterly', monthly: 'Monthly', bimonthly: 'Every 2 Months',
+        weekly: 'Weekly', one_time: 'One Time', custom: 'Custom Schedule',
+      };
+      const TIMEFRAME_LABELS = {
+        asap: 'As soon as possible', this_week: 'This week', next_week: 'Next week',
+        this_month: 'Within this month', flexible: 'Flexible',
+      };
+      const TYPE_LABELS = {
+        apartment: 'Apartment', single_family: 'Single Family Home', multifamily: 'Multifamily Home',
+      };
+
+      const propertiesHtml = (inquiry.properties || []).map(p => `
+        <div style="padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px;">
+          <div style="font-weight: 600;">${TYPE_LABELS[p.type] || p.type}</div>
+          <div style="color: #64748b; font-size: 13px;">${p.address}</div>
+          ${p.tenantName ? `<div style="font-size: 13px;">Tenant: ${p.tenantName}${p.tenantPhone ? ' (' + p.tenantPhone + ')' : ''}</div>` : ''}
+          <div style="font-weight: 500; color: #e74c3c;">$${(p.price || 0).toFixed(2)}</div>
+        </div>
+      `).join('');
+
+      const detailModal = document.getElementById('inquiry-detail-modal');
+      detailModal.innerHTML = `
+        <div class="modal">
+          <div class="modal-header">
+            <h3>Inquiry Details</h3>
+            <button class="modal-close" onclick="closeInquiryDetail()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+              <div><strong>Customer:</strong> ${inquiry.customerName}</div>
+              <div><strong>Email:</strong> ${inquiry.customerEmail}</div>
+              <div><strong>Phone:</strong> ${inquiry.customerPhone}</div>
+              <div><strong>Status:</strong> <span class="badge badge-${inquiry.status}">${inquiry.status}</span></div>
+              <div><strong>Payment:</strong> ${inquiry.paymentPreference === 'zelle' ? 'Zelle' : 'Card'}</div>
+              <div><strong>Total:</strong> $${(inquiry.total || 0).toFixed(2)}</div>
+              <div><strong>Timeframe:</strong> ${TIMEFRAME_LABELS[inquiry.preferredTimeframe] || inquiry.preferredTimeframe}</div>
+              <div><strong>Frequency:</strong> ${FREQ_LABELS[inquiry.inspectionFrequency] || inquiry.inspectionFrequency}</div>
+            </div>
+            <h4 style="margin-bottom: 12px;">Properties (${inquiry.properties?.length || 0})</h4>
+            ${propertiesHtml}
+            ${inquiry.notes ? `<div style="margin-top: 16px;"><strong>Notes:</strong><p style="color: #64748b; margin-top: 4px;">${inquiry.notes}</p></div>` : ''}
+            <div style="color: #94a3b8; font-size: 12px; margin-top: 16px;">
+              Submitted: ${new Date(inquiry.createdAt).toLocaleString()}
+            </div>
+          </div>
+          <div class="modal-footer">
+            ${inquiry.status === 'new' ? `<button class="btn btn-primary" onclick="closeInquiryDetail(); createInvoiceFromInquiry('${inquiry.id}')">Create Invoice</button>` : ''}
+            <button class="btn btn-secondary" style="background: #e5e7eb; color: #374151;" onclick="closeInquiryDetail()">Close</button>
+          </div>
+        </div>
+      `;
+      detailModal.classList.add('show');
+    }
+
+    function closeInquiryDetail() {
+      document.getElementById('inquiry-detail-modal').classList.remove('show');
     }
 
     // Populate inquiry select in modal

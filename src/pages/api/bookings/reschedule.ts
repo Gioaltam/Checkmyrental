@@ -1,6 +1,6 @@
 // Reschedule a booking - tenant changes their scheduled time
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock } from '../../../lib/db';
 import { sendRescheduleSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
 
@@ -89,13 +89,28 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Verify new slot is still available (exclude this booking's current slot)
+    // Release old slot lock
+    if (booking.scheduledDate && booking.scheduledTime) {
+      await releaseSlotLock(booking.scheduledDate, booking.scheduledTime);
+    }
+
+    // Atomic slot lock — prevents double-booking
+    const lockAcquired = await acquireSlotLock(date, time, booking.id);
+    if (!lockAcquired) {
+      return new Response(
+        JSON.stringify({ error: 'This time slot was just booked by someone else. Please select another time.' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Secondary check for existing bookings (exclude this booking's old slot)
     const bookedSlots = await getBookedSlotsForDate(date);
     const isSlotTaken = booking.scheduledDate === date
       ? bookedSlots.filter(s => s !== booking.scheduledTime).includes(time)
       : bookedSlots.includes(time);
 
     if (isSlotTaken) {
+      await releaseSlotLock(date, time);
       return new Response(
         JSON.stringify({ error: 'This time slot has already been booked. Please select another time.' }),
         { status: 409, headers: { 'Content-Type': 'application/json' } }
@@ -107,13 +122,18 @@ export const POST: APIRoute = async ({ request }) => {
     const serviceZone = getServiceZone(zipcode);
 
     // Update booking
-    await updateBooking(booking.id, {
-      scheduledDate: date,
-      scheduledTime: time,
-      zipcode: zipcode || undefined,
-      serviceZone: serviceZone,
-      rescheduleCount: rescheduleCount + 1,
-    });
+    try {
+      await updateBooking(booking.id, {
+        scheduledDate: date,
+        scheduledTime: time,
+        zipcode: zipcode || undefined,
+        serviceZone: serviceZone,
+        rescheduleCount: rescheduleCount + 1,
+      });
+    } catch (updateError) {
+      await releaseSlotLock(date, time);
+      throw updateError;
+    }
 
     // Send reschedule SMS to tenant
     const formattedDate = formatDate(date);

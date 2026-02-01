@@ -1,6 +1,6 @@
 // Confirm a booking - tenant selects a time slot
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock } from '../../../lib/db';
 import { sendConfirmationSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
 
@@ -57,9 +57,19 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Verify slot is still available (prevent race conditions)
+    // Atomic slot lock — prevents double-booking
+    const lockAcquired = await acquireSlotLock(date, time, booking.id);
+    if (!lockAcquired) {
+      return new Response(
+        JSON.stringify({ error: 'This time slot was just booked by someone else. Please select another time.' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Secondary check for existing bookings
     const bookedSlots = await getBookedSlotsForDate(date);
     if (bookedSlots.includes(time)) {
+      await releaseSlotLock(date, time);
       return new Response(
         JSON.stringify({ error: 'This time slot has already been booked. Please select another time.' }),
         { status: 409, headers: { 'Content-Type': 'application/json' } }
@@ -71,13 +81,18 @@ export const POST: APIRoute = async ({ request }) => {
     const serviceZone = getServiceZone(zipcode);
 
     // Update booking with scheduled date/time and zone info
-    await updateBooking(booking.id, {
-      scheduledDate: date,
-      scheduledTime: time,
-      status: 'scheduled',
-      zipcode: zipcode || undefined,
-      serviceZone: serviceZone,
-    });
+    try {
+      await updateBooking(booking.id, {
+        scheduledDate: date,
+        scheduledTime: time,
+        status: 'scheduled',
+        zipcode: zipcode || undefined,
+        serviceZone: serviceZone,
+      });
+    } catch (updateError) {
+      await releaseSlotLock(date, time);
+      throw updateError;
+    }
 
     // Send confirmation SMS to tenant
     const formattedDate = formatDate(date);

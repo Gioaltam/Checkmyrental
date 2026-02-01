@@ -364,6 +364,19 @@ export async function setAvailability(schedule: AvailabilitySchedule): Promise<v
   await redis.set('availability:schedule', JSON.stringify(schedule));
 }
 
+// Atomic slot lock to prevent double-booking
+export async function acquireSlotLock(date: string, time: string, bookingId: string): Promise<boolean> {
+  const redis = getRedis();
+  const lockKey = `slot:lock:${date}:${time}`;
+  const result = await redis.set(lockKey, bookingId, { nx: true, ex: 300 });
+  return result === 'OK';
+}
+
+export async function releaseSlotLock(date: string, time: string): Promise<void> {
+  const redis = getRedis();
+  await redis.del(`slot:lock:${date}:${time}`);
+}
+
 // Get booked slots for a specific date
 export async function getBookedSlotsForDate(date: string): Promise<string[]> {
   const bookings = await listBookings(100, 0);

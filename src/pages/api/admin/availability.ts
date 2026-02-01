@@ -88,6 +88,8 @@ export const PUT: APIRoute = async ({ request }) => {
       slotDuration: schedule.slotDuration || 60,
       minAdvanceHours: schedule.minAdvanceHours || 24,
       maxAdvanceDays: schedule.maxAdvanceDays || 14,
+      enableZoneFiltering: schedule.enableZoneFiltering !== false,
+      travelBufferMinutes: schedule.travelBufferMinutes || 0,
     };
 
     await setAvailability(validatedSchedule);

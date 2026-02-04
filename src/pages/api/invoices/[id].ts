@@ -223,6 +223,98 @@ export const PATCH: APIRoute = async ({ params, request }) => {
           }),
         });
       }
+    } else if (action === 'edit') {
+      // Edit invoice metadata (only for non-paid/non-cancelled)
+      if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+        return new Response(
+          JSON.stringify({ error: 'Cannot edit a paid or cancelled invoice' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const editableFields: Record<string, string> = {};
+      if (body.customerName) editableFields.customerName = body.customerName;
+      if (body.customerEmail) editableFields.customerEmail = body.customerEmail;
+      if (body.customerPhone) editableFields.customerPhone = body.customerPhone;
+      if (body.dueDate) editableFields.dueDate = body.dueDate;
+      if (body.notes !== undefined) editableFields.notes = body.notes;
+
+      await updateInvoice(id, editableFields as any);
+      Object.assign(invoice, editableFields);
+    } else if (action === 'send_reminder') {
+      // Send payment reminder for unpaid invoices
+      if (invoice.status === 'paid' || invoice.status === 'cancelled') {
+        return new Response(
+          JSON.stringify({ error: 'Cannot send reminder for paid or cancelled invoice' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const RESEND_API_KEY = process.env.RESEND_API_KEY;
+      if (!RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY not configured');
+      }
+
+      if (invoice.paymentMethod === 'zelle') {
+        const { generateInvoicePDF, generateInvoiceEmailHTML } = await import('../../../lib/invoice-pdf');
+        const pdfBuffer = generateInvoicePDF(invoice);
+        const emailHtml = generateInvoiceEmailHTML(invoice);
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'CheckMyRental <send@checkmyrental.io>',
+            to: [String(invoice.customerEmail)],
+            subject: `Reminder: Invoice ${invoice.invoiceNumber} from CheckMyRental`,
+            html: emailHtml,
+            attachments: [{
+              filename: `${invoice.invoiceNumber}.pdf`,
+              content: pdfBuffer.toString('base64'),
+            }],
+          }),
+        });
+
+        if (!resendResponse.ok) {
+          const errorData = await resendResponse.text();
+          throw new Error(`Resend API error: ${errorData}`);
+        }
+      } else {
+        // Square - send email with payment link
+        const paymentUrl = invoice.squarePaymentUrl || '';
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'CheckMyRental <send@checkmyrental.io>',
+            to: [String(invoice.customerEmail)],
+            subject: `Reminder: Invoice ${invoice.invoiceNumber} from CheckMyRental`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <h2>Payment Reminder</h2>
+                <p>Hi ${invoice.customerName},</p>
+                <p>This is a friendly reminder that invoice <strong>${invoice.invoiceNumber}</strong> for <strong>$${invoice.total.toFixed(2)}</strong> is still pending.</p>
+                ${paymentUrl ? `<p><a href="${paymentUrl}" style="display: inline-block; padding: 12px 24px; background: #e74c3c; color: white; text-decoration: none; border-radius: 6px;">Pay Now</a></p>` : ''}
+                <p>Thank you,<br>CheckMyRental</p>
+              </div>
+            `,
+          }),
+        });
+
+        if (!resendResponse.ok) {
+          const errorData = await resendResponse.text();
+          throw new Error(`Resend API error: ${errorData}`);
+        }
+      }
+
+      await updateInvoice(id, { lastReminderSentAt: new Date().toISOString() });
+      invoice.lastReminderSentAt = new Date().toISOString();
     } else if (status) {
       // Direct status update
       await updateInvoice(id, { status });

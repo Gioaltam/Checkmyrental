@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { createInvoice, getInquiry, updateInquiryStatus } from '../../../lib/db';
+import { createInvoice, getInquiry, updateInquiryStatus, listInvoices } from '../../../lib/db';
 import type { Invoice, Property } from '../../../lib/types';
 
 export const prerender = false;
@@ -14,6 +14,7 @@ interface CreateInvoiceRequest {
   paymentMethod: 'square' | 'zelle';
   dueDate: string; // ISO date string
   notes?: string;
+  forceDuplicate?: boolean;
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -73,6 +74,28 @@ export const POST: APIRoute = async ({ request }) => {
       customerEmail = body.customerEmail;
       customerPhone = body.customerPhone;
       properties = body.properties;
+    }
+
+    // Check for duplicate invoices
+    if (!body.forceDuplicate) {
+      const existingInvoices = await listInvoices(100, 0);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const duplicate = existingInvoices.find(inv =>
+        inv.customerEmail === customerEmail &&
+        inv.createdAt > sevenDaysAgo &&
+        inv.properties.length === properties.length &&
+        inv.status !== 'cancelled'
+      );
+      if (duplicate) {
+        return new Response(
+          JSON.stringify({
+            warning: 'duplicate_detected',
+            existingInvoice: duplicate.invoiceNumber,
+            message: `A similar invoice (${duplicate.invoiceNumber}) was created on ${new Date(duplicate.createdAt).toLocaleDateString()} for this customer. Create anyway?`,
+          }),
+          { status: 409, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Calculate totals

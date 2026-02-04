@@ -234,6 +234,27 @@ export const PATCH: APIRoute = async ({ params, request }) => {
         break;
       }
 
+      case 'update_notes': {
+        const notes = body.notes ?? '';
+        await updateBooking(id, { notes });
+        break;
+      }
+
+      case 'release_lock': {
+        const { lockDate, lockTime } = body;
+        if (!lockDate || !lockTime) {
+          return new Response(
+            JSON.stringify({ error: 'lockDate and lockTime required' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        await releaseSlotLock(lockDate, lockTime);
+        return new Response(
+          JSON.stringify({ success: true, message: 'Lock released' }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Invalid action' }),

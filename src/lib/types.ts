@@ -44,6 +44,7 @@ export interface Invoice {
   notes?: string;
   inspectionFrequency?: string;
   invoiceNumber: string;
+  lastReminderSentAt?: string;
 }
 
 // Pricing constants
@@ -118,6 +119,8 @@ export interface Booking {
   inspectionFrequency?: string;
   // Rescheduling
   rescheduleCount?: number;
+  // Admin notes
+  notes?: string;
 }
 
 export interface WeeklySlot {

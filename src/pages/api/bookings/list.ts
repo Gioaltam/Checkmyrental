@@ -1,6 +1,6 @@
 // List bookings for admin dashboard
 import type { APIRoute } from 'astro';
-import { listBookings, getBookingStats, getAvailability } from '../../../lib/db';
+import { listBookings, getBookingStats, getAvailability, listSlotLocks } from '../../../lib/db';
 import type { Booking } from '../../../lib/types';
 
 export const prerender = false;
@@ -30,11 +30,16 @@ export const GET: APIRoute = async ({ request, url }) => {
     const stats = await getBookingStats();
     const schedule = await getAvailability();
 
+    // Get slot locks if requested
+    const includeLocks = url.searchParams.get('includeLocks') === 'true';
+    const locks = includeLocks ? await listSlotLocks() : undefined;
+
     return new Response(
       JSON.stringify({
         bookings,
         stats,
         slotDuration: schedule.slotDuration || 60,
+        locks,
         pagination: {
           limit,
           offset,

@@ -153,7 +153,7 @@ export async function listInvoices(limit = 50, offset = 0): Promise<Invoice[]> {
 
 export async function updateInvoice(
   id: string,
-  updates: Partial<Pick<Invoice, 'status' | 'paidAt' | 'squareInvoiceId' | 'squarePaymentUrl'>>
+  updates: Partial<Pick<Invoice, 'status' | 'paidAt' | 'squareInvoiceId' | 'squarePaymentUrl' | 'customerName' | 'customerEmail' | 'customerPhone' | 'dueDate' | 'notes' | 'paymentMethod' | 'lastReminderSentAt'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`invoice:${id}`, stripNulls(updates as Record<string, unknown>));
@@ -279,7 +279,7 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));
@@ -375,6 +375,30 @@ export async function acquireSlotLock(date: string, time: string, bookingId: str
 export async function releaseSlotLock(date: string, time: string): Promise<void> {
   const redis = getRedis();
   await redis.del(`slot:lock:${date}:${time}`);
+}
+
+// List active slot locks
+export async function listSlotLocks(): Promise<Array<{ date: string; time: string; bookingId: string; ttl: number }>> {
+  const redis = getRedis();
+  const locks: Array<{ date: string; time: string; bookingId: string; ttl: number }> = [];
+
+  // Scan for slot:lock:* keys
+  let cursor = 0;
+  do {
+    const result = await redis.scan(cursor, { match: 'slot:lock:*', count: 100 });
+    cursor = result[0] as number;
+    const keys = result[1] as string[];
+    for (const key of keys) {
+      const bookingId = await redis.get(key) as string;
+      const ttl = await redis.ttl(key);
+      const parts = key.replace('slot:lock:', '').split(':');
+      if (parts.length >= 2) {
+        locks.push({ date: parts[0], time: parts[1], bookingId: bookingId || '', ttl });
+      }
+    }
+  } while (cursor !== 0);
+
+  return locks;
 }
 
 // Get booked slots for a specific date

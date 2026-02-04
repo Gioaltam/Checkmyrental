@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { listInvoices, listInquiries, getStats } from '../../../lib/db';
+import { listInvoices, listInquiries, getStats, updateInvoice } from '../../../lib/db';
 
 export const prerender = false;
 
@@ -24,7 +24,18 @@ export const GET: APIRoute = async ({ request }) => {
     const result: Record<string, unknown> = {};
 
     if (type === 'invoices' || type === 'all') {
-      result.invoices = await listInvoices(limit, offset);
+      const allInvoices = await listInvoices(limit, offset);
+
+      // Auto-detect overdue invoices
+      const today = new Date().toISOString().split('T')[0];
+      for (const inv of allInvoices) {
+        if (['sent', 'viewed'].includes(inv.status) && inv.dueDate && inv.dueDate < today) {
+          await updateInvoice(inv.id, { status: 'overdue' });
+          inv.status = 'overdue';
+        }
+      }
+
+      result.invoices = allInvoices;
     }
 
     if (type === 'inquiries' || type === 'all') {

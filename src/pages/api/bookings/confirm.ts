@@ -112,47 +112,10 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    // Send email notification to landlord
+    // Notify admin of confirmed booking (landlord receives a single payment receipt
+    // when invoice is marked paid, so no per-booking email to avoid spam)
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (RESEND_API_KEY) {
-      try {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: 'CheckMyRental <send@checkmyrental.io>',
-            to: [booking.landlordEmail],
-            subject: `Inspection Scheduled - ${booking.propertyAddress}`,
-            html: `
-              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #e74c3c;">Inspection Scheduled</h2>
-                <p>Good news! Your tenant has scheduled their property inspection.</p>
-
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <p style="margin: 5px 0;"><strong>Property:</strong> ${booking.propertyAddress}</p>
-                  <p style="margin: 5px 0;"><strong>Tenant:</strong> ${booking.tenantName}</p>
-                  <p style="margin: 5px 0;"><strong>Date:</strong> ${formattedDate}</p>
-                  <p style="margin: 5px 0;"><strong>Time:</strong> ${formattedTime}</p>
-                </div>
-
-                <p>A CheckMyRental inspector will conduct the inspection and you'll receive a detailed report within 24 hours.</p>
-
-                <p style="color: #666; font-size: 14px; margin-top: 30px;">
-                  Questions? Reply to this email or contact us at (813) 252-0524
-                </p>
-              </div>
-            `,
-          }),
-        });
-      } catch (emailError) {
-        console.error('Failed to send landlord notification:', emailError);
-        // Don't fail the booking if email fails
-      }
-
-      // Also notify admin
       const zoneName = getZoneName(serviceZone);
       try {
         await fetch('https://api.resend.com/emails', {

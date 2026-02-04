@@ -147,6 +147,32 @@ export const PATCH: APIRoute = async ({ params, request }) => {
         console.error('Error sending booking links:', bookingError);
         // Don't fail the mark_paid action if booking links fail
       }
+
+      // Send payment receipt email to landlord
+      try {
+        const { generatePaymentReceiptEmailHTML } = await import('../../../lib/invoice-pdf');
+        const receiptHtml = generatePaymentReceiptEmailHTML(invoice);
+
+        const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        if (RESEND_API_KEY) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${RESEND_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              from: 'CheckMyRental <send@checkmyrental.io>',
+              to: [String(invoice.customerEmail)],
+              subject: `Payment Receipt - ${invoice.invoiceNumber} | CheckMyRental`,
+              html: receiptHtml,
+            }),
+          });
+        }
+      } catch (receiptError) {
+        console.error('Error sending payment receipt email:', receiptError);
+        // Don't fail the mark_paid action if receipt email fails
+      }
     } else if (action === 'cancel') {
       // If Square invoice, cancel in Square too
       if (invoice.squareInvoiceId) {

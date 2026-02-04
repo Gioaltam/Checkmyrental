@@ -410,3 +410,136 @@ export function generateInvoiceEmailHTML(invoice: Invoice): string {
     </html>
   `;
 }
+
+export function generatePaymentReceiptEmailHTML(invoice: Invoice): string {
+  const paidDate = invoice.paidAt ? new Date(invoice.paidAt) : new Date();
+  const paymentMethodLabel = invoice.paymentMethod === 'square' ? 'Credit Card (Square)' : 'Zelle';
+
+  const propertiesHTML = invoice.properties.map(p => `
+    <tr>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
+        <strong>${PROPERTY_LABELS[p.type] || p.type}</strong><br>
+        <span style="color: #64748b; font-size: 14px;">${p.address}</span>
+      </td>
+      <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right;">
+        $${Number(p.price).toFixed(2)}
+      </td>
+    </tr>
+  `).join('');
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f8fafc;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        <!-- Header -->
+        <tr>
+          <td style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); padding: 30px; text-align: center;">
+            <img src="https://checkmyrental.io/logo-icon.png" alt="CheckMyRental" width="60" height="60" style="display: block; margin: 0 auto 12px auto; border-radius: 12px;" />
+            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">
+              CheckMy<span style="color: #e74c3c;">Rental</span>
+            </h1>
+            <p style="color: #94a3b8; margin: 5px 0 0 0; font-size: 14px;">Professional Property Inspections</p>
+          </td>
+        </tr>
+
+        <!-- Receipt Header -->
+        <tr>
+          <td style="padding: 30px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <h2 style="margin: 0; color: #1e293b; font-size: 24px;">Payment Receipt</h2>
+                  <p style="margin: 5px 0 0 0; color: #64748b;">Invoice ${invoice.invoiceNumber}</p>
+                </td>
+                <td style="text-align: right;">
+                  <span style="display: inline-block; background-color: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: 600;">
+                    Payment Received
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Receipt Details -->
+        <tr>
+          <td style="padding: 0 30px 20px 30px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border-radius: 8px;">
+              <tr>
+                <td style="padding: 8px 15px; color: #64748b; font-size: 14px;">Invoice Number</td>
+                <td style="padding: 8px 15px; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${invoice.invoiceNumber}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 15px; color: #64748b; font-size: 14px;">Amount Paid</td>
+                <td style="padding: 8px 15px; color: #16a34a; font-size: 14px; font-weight: 600; text-align: right;">$${Number(invoice.total).toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 15px; color: #64748b; font-size: 14px;">Payment Method</td>
+                <td style="padding: 8px 15px; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${paymentMethodLabel}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 15px; color: #64748b; font-size: 14px;">Date Paid</td>
+                <td style="padding: 8px 15px; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">${paidDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Properties List -->
+        <tr>
+          <td style="padding: 0 30px 30px 30px;">
+            <p style="color: #64748b; font-size: 12px; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 1px;">Properties</p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <tr style="background-color: #1e293b;">
+                <th style="padding: 12px; text-align: left; color: #ffffff; font-size: 14px;">Description</th>
+                <th style="padding: 12px; text-align: right; color: #ffffff; font-size: 14px;">Amount</th>
+              </tr>
+              ${propertiesHTML}
+              <tr style="background-color: #f8fafc;">
+                <td style="padding: 15px; text-align: right; font-weight: 600; color: #1e293b; font-size: 18px;">
+                  Amount Paid
+                </td>
+                <td style="padding: 15px; text-align: right; font-weight: 700; color: #16a34a; font-size: 24px;">
+                  $${Number(invoice.total).toFixed(2)}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- What's Next -->
+        <tr>
+          <td style="padding: 0 30px 30px 30px;">
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border-radius: 12px; padding: 25px; color: #ffffff;">
+              <h3 style="margin: 0 0 15px 0; font-size: 18px;">What's Next?</h3>
+              <p style="margin: 0 0 10px 0; font-size: 15px; line-height: 1.5;">
+                We're now coordinating with your tenants to schedule inspections. You'll receive your detailed photo report within 24 hours of each inspection.
+              </p>
+              <p style="margin: 0; font-size: 13px; opacity: 0.9;">
+                If you have any questions, don't hesitate to reach out.
+              </p>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; color: #64748b; font-size: 14px;">
+              Questions? Contact us at <a href="mailto:info@checkmyrental.io" style="color: #e74c3c;">info@checkmyrental.io</a> or call <a href="tel:8132520524" style="color: #e74c3c;">(813) 252-0524</a>
+            </p>
+            <p style="margin: 10px 0 0 0; color: #94a3b8; font-size: 12px;">
+              CheckMyRental | Tampa Bay Area, Florida | checkmyrental.io
+            </p>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+  `;
+}

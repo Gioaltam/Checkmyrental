@@ -885,7 +885,7 @@ export const prerender = false;
     </div>
 
     <!-- Today's Route Section -->
-    <section class="section" id="route-section" style="display: none;">
+    <section class="section" id="route-section">
       <div class="section-header">
         <h2>Today's Route</h2>
         <div class="tabs" id="route-date-tabs">
@@ -895,7 +895,9 @@ export const prerender = false;
       </div>
       <div class="section-content">
         <div id="route-summary"></div>
-        <div id="route-list"></div>
+        <div id="route-list">
+          <div class="no-route"><p>Loading route...</p></div>
+        </div>
       </div>
     </section>
 
@@ -1299,7 +1301,7 @@ export const prerender = false;
           }
 
           renderBookings();
-          renderRoute(0); // Render today's route
+          try { renderRoute(0); } catch (e) { console.error('Route render error:', e); }
           renderReports();
           renderSlotLocks();
         }
@@ -1587,7 +1589,6 @@ export const prerender = false;
       const listEl = document.getElementById('route-list');
 
       if (todayBookings.length === 0) {
-        routeSection.style.display = 'block';
         summaryEl.innerHTML = '';
         listEl.innerHTML = `
           <div class="no-route">
@@ -1596,8 +1597,6 @@ export const prerender = false;
         `;
         return;
       }
-
-      routeSection.style.display = 'block';
 
       // Calculate route statistics
       let totalTravel = 0;

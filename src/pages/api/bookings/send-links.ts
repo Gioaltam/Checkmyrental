@@ -1,6 +1,6 @@
 // Send booking links via SMS to tenants after invoice is paid
 import type { APIRoute } from 'astro';
-import { getInvoice, createBooking, updateBooking } from '../../../lib/db';
+import { getInvoice, createBooking, updateBooking, getBookingsByInvoice } from '../../../lib/db';
 import { sendBookingLinkSMS } from '../../../lib/twilio';
 
 export const prerender = false;
@@ -48,6 +48,9 @@ export const POST: APIRoute = async ({ request }) => {
       error?: string;
     }[] = [];
 
+    // Check for existing bookings to prevent duplicates
+    const existingBookings = await getBookingsByInvoice(invoiceId);
+
     // Create bookings and send SMS for each property with tenant info
     for (let i = 0; i < invoice.properties.length; i++) {
       const property = invoice.properties[i];
@@ -60,6 +63,20 @@ export const POST: APIRoute = async ({ request }) => {
           tenantName: property.tenantName || 'N/A',
           success: false,
           error: 'No tenant phone number provided',
+        });
+        continue;
+      }
+
+      // Skip if booking already exists for this property
+      const existingBooking = existingBookings.find(b => b.propertyIndex === i);
+      if (existingBooking) {
+        results.push({
+          propertyIndex: i,
+          address: property.address,
+          tenantName: property.tenantName || 'Tenant',
+          success: false,
+          error: 'Booking already exists for this property',
+          bookingId: existingBooking.id,
         });
         continue;
       }

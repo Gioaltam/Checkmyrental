@@ -111,13 +111,19 @@ export const PATCH: APIRoute = async ({ params, request }) => {
 
       // Automatically send booking links to tenants
       try {
-        const { createBooking, updateBooking: updateBookingDb } = await import('../../../lib/db');
+        const { createBooking, updateBooking: updateBookingDb, getBookingsByInvoice } = await import('../../../lib/db');
         const { sendBookingLinkSMS } = await import('../../../lib/twilio');
         const baseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+
+        // Check for existing bookings to prevent duplicates
+        const existingBookings = await getBookingsByInvoice(id);
 
         for (let i = 0; i < invoice.properties.length; i++) {
           const property = invoice.properties[i];
           if (property.tenantPhone) {
+            // Skip if booking already exists for this property
+            if (existingBookings.find(b => b.propertyIndex === i)) continue;
+
             const booking = await createBooking({
               invoiceId: id,
               propertyIndex: i,

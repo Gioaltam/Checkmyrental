@@ -25,7 +25,7 @@ import LandingFooter from '../components/LandingFooter.astro';
           </div>
         </div>
 
-        <div class="checkout-content">
+        <div class="checkout-content full-width" id="checkout-content">
           <!-- Left: Form -->
           <div class="checkout-form-section">
             <!-- Mobile Wizard Progress (hidden on desktop) -->
@@ -343,6 +343,13 @@ import LandingFooter from '../components/LandingFooter.astro';
     grid-template-columns: 1fr 400px;
     gap: 2rem;
     align-items: start;
+    transition: grid-template-columns 0.3s ease;
+  }
+
+  .checkout-content.full-width {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
   }
 
   /* Form Section */
@@ -2067,6 +2074,8 @@ import LandingFooter from '../components/LandingFooter.astro';
       if (summarySection) summarySection.style.display = show ? '' : 'none';
       const mobileSummary = document.getElementById('mobile-summary-toggle');
       if (mobileSummary) mobileSummary.style.display = show ? '' : 'none';
+      const content = document.getElementById('checkout-content');
+      if (content) content.classList.toggle('full-width', !show);
     }
 
     // Update progress bar width

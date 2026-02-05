@@ -86,7 +86,7 @@ import LandingFooter from '../components/LandingFooter.astro';
                         </span>
                       </label>
                       <label class="type-pill">
-                        <input type="radio" name="property_1_type" value="single_family" checked />
+                        <input type="radio" name="property_1_type" value="single_family" />
                         <span class="pill-content">
                           <span class="pill-icon">🏠</span>
                           <span class="pill-label">House</span>
@@ -185,13 +185,13 @@ import LandingFooter from '../components/LandingFooter.astro';
             </form>
           </div>
 
-          <!-- Right: Order Summary & Submit -->
-          <div class="order-summary-section">
+          <!-- Right: Order Summary & Submit (hidden until step 2+) -->
+          <div class="order-summary-section" id="order-summary-section" style="display: none;">
             <!-- Mobile Order Summary Toggle (hidden on desktop) -->
             <div class="mobile-order-summary-toggle" id="mobile-summary-toggle">
               <button type="button" class="mobile-summary-btn" id="toggle-summary-btn" aria-expanded="false">
                 <span class="mobile-summary-label">Order Summary</span>
-                <span class="mobile-summary-total" id="mobile-summary-total">$100.00</span>
+                <span class="mobile-summary-total" id="mobile-summary-total">$0.00</span>
                 <span class="mobile-summary-chevron">▼</span>
               </button>
               <div class="mobile-summary-content" id="mobile-summary-content">
@@ -203,9 +203,9 @@ import LandingFooter from '../components/LandingFooter.astro';
               <h3>Order Summary</h3>
 
               <div id="summary-items">
-                <div class="summary-line-item">
-                  <span>1× Single Family Home</span>
-                  <span>$100.00</span>
+                <div class="summary-line-item" style="opacity: 0.6; font-style: italic;">
+                  <span>Select a property type</span>
+                  <span>—</span>
                 </div>
               </div>
 
@@ -213,7 +213,7 @@ import LandingFooter from '../components/LandingFooter.astro';
 
               <div class="summary-row total">
                 <span>Per-Visit Total</span>
-                <span id="summary-total">$100.00</span>
+                <span id="summary-total">$0.00</span>
               </div>
 
               <p class="summary-note">You'll receive invoices based on your selected frequency.</p>
@@ -1712,14 +1712,23 @@ import LandingFooter from '../components/LandingFooter.astro';
 
     // Build summary HTML
     let html = '';
-    for (const [type, count] of Object.entries(items)) {
-      const subtotal = (prices[type] * count).toFixed(2);
-      html += `
-        <div class="summary-line-item">
-          <span>${count}× ${LABELS[type]}</span>
-          <span>$${subtotal}</span>
+    if (Object.keys(items).length === 0) {
+      html = `
+        <div class="summary-line-item" style="opacity: 0.6; font-style: italic;">
+          <span>Select a property type</span>
+          <span>—</span>
         </div>
       `;
+    } else {
+      for (const [type, count] of Object.entries(items)) {
+        const subtotal = (prices[type] * count).toFixed(2);
+        html += `
+          <div class="summary-line-item">
+            <span>${count}× ${LABELS[type]}</span>
+            <span>$${subtotal}</span>
+          </div>
+        `;
+      }
     }
 
     summaryItems.innerHTML = html;
@@ -2048,6 +2057,16 @@ import LandingFooter from '../components/LandingFooter.astro';
       updateStepIndicator();
       updateNavigationButtons();
       updateMobileSummaryTotal();
+      updateSummaryVisibility();
+    }
+
+    // Show order summary only on step 2+
+    function updateSummaryVisibility() {
+      const show = WIZARD_CONFIG.currentStep >= 2;
+      const summarySection = document.getElementById('order-summary-section');
+      if (summarySection) summarySection.style.display = show ? '' : 'none';
+      const mobileSummary = document.getElementById('mobile-summary-toggle');
+      if (mobileSummary) mobileSummary.style.display = show ? '' : 'none';
     }
 
     // Update progress bar width

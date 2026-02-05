@@ -2,6 +2,7 @@
 import type { APIRoute } from 'astro';
 import { getBooking, updateBooking, createNextRecurringBooking, releaseSlotLock } from '../../../lib/db';
 import { sendBookingLinkSMS, sendConfirmationSMS, sendReminderSMS } from '../../../lib/twilio';
+import { deleteCalendarEvent } from '../../../lib/google-calendar';
 
 export const prerender = false;
 
@@ -126,6 +127,14 @@ export const PATCH: APIRoute = async ({ params, request }) => {
       case 'cancel':
         if (booking.scheduledDate && booking.scheduledTime) {
           await releaseSlotLock(booking.scheduledDate, booking.scheduledTime);
+        }
+        // Delete Google Calendar event
+        if (booking.googleCalendarEventId) {
+          try {
+            await deleteCalendarEvent(booking.googleCalendarEventId);
+          } catch (calError) {
+            console.error('Failed to delete calendar event:', calError);
+          }
         }
         await updateBooking(id, { status: 'cancelled' });
         booking.status = 'cancelled';

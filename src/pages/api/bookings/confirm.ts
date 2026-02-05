@@ -1,8 +1,9 @@
 // Confirm a booking - tenant selects a time slot
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability } from '../../../lib/db';
 import { sendConfirmationSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
+import { createCalendarEvent } from '../../../lib/google-calendar';
 
 export const prerender = false;
 
@@ -92,6 +93,27 @@ export const POST: APIRoute = async ({ request }) => {
     } catch (updateError) {
       await releaseSlotLock(date, time);
       throw updateError;
+    }
+
+    // Create Google Calendar event
+    try {
+      const availability = await getAvailability();
+      const calendarEventId = await createCalendarEvent({
+        date,
+        time,
+        durationMinutes: availability.slotDuration || 60,
+        propertyAddress: booking.propertyAddress,
+        tenantName: booking.tenantName,
+        tenantPhone: booking.tenantPhone,
+        landlordName: booking.landlordName,
+        landlordEmail: booking.landlordEmail,
+        bookingId: booking.id,
+      });
+      if (calendarEventId) {
+        await updateBooking(booking.id, { googleCalendarEventId: calendarEventId });
+      }
+    } catch (calError) {
+      console.error('Failed to create calendar event:', calError);
     }
 
     // Send confirmation SMS to tenant

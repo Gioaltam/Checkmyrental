@@ -1,0 +1,623 @@
+---
+// Mobile Inspection Checklist
+export const prerender = false;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Inspection - CheckMyRental</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 {
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .header-address {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .save-indicator {
+      color: #4ade80;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .save-indicator.saving { color: #fbbf24; }
+    .save-indicator.error { color: #f87171; }
+
+    /* Progress bar */
+    .progress-bar {
+      background: rgba(255,255,255,0.1);
+      height: 4px;
+      border-radius: 2px;
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      background: #4ade80;
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      color: #94a3b8;
+      font-size: 11px;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      color: #64748b;
+      font-size: 15px;
+    }
+
+    .error-msg {
+      text-align: center;
+      padding: 40px 20px;
+      color: #dc2626;
+    }
+
+    /* Room tabs */
+    .room-tabs {
+      display: flex;
+      overflow-x: auto;
+      padding: 12px 16px;
+      gap: 8px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .room-tabs::-webkit-scrollbar { display: none; }
+
+    .room-tab {
+      flex-shrink: 0;
+      padding: 8px 16px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .room-tab.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #2563eb;
+    }
+
+    .room-tab.complete {
+      border-color: #4ade80;
+      color: #16a34a;
+    }
+
+    .room-tab.active.complete {
+      background: #16a34a;
+      border-color: #16a34a;
+      color: #fff;
+    }
+
+    .room-tab .check {
+      margin-left: 4px;
+    }
+
+    /* Items */
+    .room-content {
+      padding: 0 16px;
+    }
+
+    .item-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .item-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 12px;
+    }
+
+    /* Condition buttons */
+    .condition-btns {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .condition-btn {
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 2px solid #e2e8f0;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .condition-btn.good { color: #16a34a; }
+    .condition-btn.good.active { background: #dcfce7; border-color: #16a34a; }
+    .condition-btn.fair { color: #ca8a04; }
+    .condition-btn.fair.active { background: #fef9c3; border-color: #ca8a04; }
+    .condition-btn.poor { color: #ea580c; }
+    .condition-btn.poor.active { background: #fff7ed; border-color: #ea580c; }
+    .condition-btn.damaged { color: #dc2626; }
+    .condition-btn.damaged.active { background: #fef2f2; border-color: #dc2626; }
+
+    /* Notes input */
+    .item-notes {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .item-notes:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    /* Photo upload */
+    .photo-section {
+      margin-top: 10px;
+    }
+
+    .photo-grid {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .photo-thumb {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .add-photo-btn {
+      width: 70px;
+      height: 70px;
+      border-radius: 8px;
+      border: 2px dashed #cbd5e1;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 24px;
+      transition: border-color 0.2s;
+    }
+
+    .add-photo-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+    .photo-uploading {
+      width: 70px;
+      height: 70px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    /* Overall notes */
+    .overall-section {
+      padding: 0 16px;
+      margin-top: 8px;
+    }
+
+    .overall-section h3 {
+      font-size: 15px;
+      margin-bottom: 8px;
+      color: #1e293b;
+    }
+
+    .overall-notes {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      background: #fff;
+    }
+
+    .overall-notes:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    /* Footer / Complete button */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 16px;
+      background: #fff;
+      border-top: 1px solid #e2e8f0;
+      z-index: 100;
+    }
+
+    .complete-btn {
+      width: 100%;
+      padding: 14px;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .complete-btn:hover { background: #15803d; }
+    .complete-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .completed-banner {
+      background: #dcfce7;
+      color: #166534;
+      padding: 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <h1>Property Inspection</h1>
+        <div class="header-address" id="header-address">Loading...</div>
+      </div>
+      <div class="save-indicator" id="save-indicator">Saved</div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+    </div>
+    <div class="progress-text" id="progress-text">0% complete</div>
+  </div>
+
+  <div id="completed-banner" class="completed-banner" style="display: none;">
+    Inspection Complete
+  </div>
+
+  <div id="content">
+    <div class="loading" id="loading">Loading inspection...</div>
+  </div>
+
+  <div class="footer" id="footer" style="display: none;">
+    <button class="complete-btn" id="complete-btn" onclick="completeInspection()">
+      Complete Inspection
+    </button>
+  </div>
+
+  <input type="file" id="photo-input" accept="image/*" capture="environment" style="display: none;">
+
+  <script>
+    const token = window.location.pathname.split('/').pop();
+    let inspection = null;
+    let activeRoom = 0;
+    let saveTimeout = null;
+    let uploadingItemKey = null;
+
+    async function loadInspection() {
+      try {
+        const response = await fetch(`/api/inspections/${token}`);
+        if (!response.ok) {
+          document.getElementById('loading').innerHTML = '<div class="error-msg">Inspection not found or link expired.</div>';
+          return;
+        }
+
+        const data = await response.json();
+        inspection = data.inspection;
+
+        document.getElementById('header-address').textContent = inspection.propertyAddress;
+        renderInspection();
+      } catch (error) {
+        document.getElementById('loading').innerHTML = '<div class="error-msg">Failed to load. Please check your connection.</div>';
+      }
+    }
+
+    function renderInspection() {
+      const content = document.getElementById('content');
+
+      if (inspection.status === 'completed') {
+        document.getElementById('completed-banner').style.display = 'block';
+        document.getElementById('footer').style.display = 'none';
+      } else {
+        document.getElementById('footer').style.display = 'block';
+      }
+
+      updateProgress();
+
+      // Room tabs
+      let html = '<div class="room-tabs" id="room-tabs">';
+      inspection.rooms.forEach((room, i) => {
+        const isComplete = room.items.every(item => item.condition);
+        html += `<button class="room-tab ${i === activeRoom ? 'active' : ''} ${isComplete ? 'complete' : ''}" onclick="switchRoom(${i})">
+          ${room.name}${isComplete ? ' <span class="check">&#10003;</span>' : ''}
+        </button>`;
+      });
+      html += '</div>';
+
+      // Active room items
+      const room = inspection.rooms[activeRoom];
+      html += '<div class="room-content">';
+      room.items.forEach((item, itemIdx) => {
+        const key = `${activeRoom}-${itemIdx}`;
+        html += `
+          <div class="item-card">
+            <div class="item-name">${item.name}</div>
+            <div class="condition-btns">
+              ${['good', 'fair', 'poor', 'damaged'].map(c =>
+                `<button class="condition-btn ${c} ${item.condition === c ? 'active' : ''}" onclick="setCondition(${activeRoom}, ${itemIdx}, '${c}')">${c.charAt(0).toUpperCase() + c.slice(1)}</button>`
+              ).join('')}
+            </div>
+            <textarea class="item-notes" rows="1" placeholder="Notes (optional)"
+              oninput="setNotes(${activeRoom}, ${itemIdx}, this.value)">${item.notes || ''}</textarea>
+            <div class="photo-section">
+              <div class="photo-grid" id="photos-${key}">
+                ${(item.photoUrls || []).map(url => `<img class="photo-thumb" src="${url}" />`).join('')}
+                ${inspection.status !== 'completed' ? `<div class="add-photo-btn" onclick="startPhotoUpload(${activeRoom}, ${itemIdx})">+</div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+
+      // Overall notes
+      html += `
+        <div class="overall-section">
+          <h3>Overall Notes</h3>
+          <textarea class="overall-notes" placeholder="General observations, recommendations..."
+            oninput="setOverallNotes(this.value)"${inspection.status === 'completed' ? ' disabled' : ''}>${inspection.overallNotes || ''}</textarea>
+        </div>
+      `;
+
+      content.innerHTML = html;
+    }
+
+    function switchRoom(index) {
+      activeRoom = index;
+      renderInspection();
+      window.scrollTo(0, 0);
+    }
+
+    function setCondition(roomIdx, itemIdx, condition) {
+      if (inspection.status === 'completed') return;
+      const current = inspection.rooms[roomIdx].items[itemIdx].condition;
+      // Toggle off if clicking the same condition
+      inspection.rooms[roomIdx].items[itemIdx].condition = current === condition ? undefined : condition;
+      renderInspection();
+      autoSave();
+    }
+
+    function setNotes(roomIdx, itemIdx, notes) {
+      if (inspection.status === 'completed') return;
+      inspection.rooms[roomIdx].items[itemIdx].notes = notes;
+      autoSave();
+    }
+
+    function setOverallNotes(notes) {
+      if (inspection.status === 'completed') return;
+      inspection.overallNotes = notes;
+      autoSave();
+    }
+
+    function updateProgress() {
+      let total = 0;
+      let completed = 0;
+      for (const room of inspection.rooms) {
+        for (const item of room.items) {
+          total++;
+          if (item.condition) completed++;
+        }
+      }
+      const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+      document.getElementById('progress-fill').style.width = `${pct}%`;
+      document.getElementById('progress-text').textContent = `${pct}% complete (${completed}/${total})`;
+    }
+
+    function autoSave() {
+      clearTimeout(saveTimeout);
+      const indicator = document.getElementById('save-indicator');
+      indicator.textContent = 'Saving...';
+      indicator.className = 'save-indicator saving';
+
+      saveTimeout = setTimeout(async () => {
+        try {
+          const response = await fetch(`/api/inspections/${token}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              rooms: inspection.rooms,
+              overallNotes: inspection.overallNotes,
+            }),
+          });
+
+          if (response.ok) {
+            indicator.textContent = 'Saved';
+            indicator.className = 'save-indicator';
+          } else {
+            indicator.textContent = 'Save failed';
+            indicator.className = 'save-indicator error';
+          }
+        } catch {
+          indicator.textContent = 'Offline';
+          indicator.className = 'save-indicator error';
+        }
+      }, 1000);
+    }
+
+    // Photo upload
+    function startPhotoUpload(roomIdx, itemIdx) {
+      uploadingItemKey = { roomIdx, itemIdx };
+      document.getElementById('photo-input').click();
+    }
+
+    document.getElementById('photo-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !uploadingItemKey) return;
+
+      const { roomIdx, itemIdx } = uploadingItemKey;
+      const key = `${roomIdx}-${itemIdx}`;
+
+      // Show uploading indicator
+      const grid = document.getElementById(`photos-${key}`);
+      const indicator = document.createElement('div');
+      indicator.className = 'photo-uploading';
+      indicator.textContent = '...';
+      grid.insertBefore(indicator, grid.lastElementChild);
+
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('token', token);
+
+      try {
+        const response = await fetch('/api/inspections/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (!inspection.rooms[roomIdx].items[itemIdx].photoUrls) {
+            inspection.rooms[roomIdx].items[itemIdx].photoUrls = [];
+          }
+          inspection.rooms[roomIdx].items[itemIdx].photoUrls.push(data.url);
+          renderInspection();
+          autoSave();
+        } else {
+          indicator.textContent = 'Fail';
+          indicator.style.color = '#dc2626';
+        }
+      } catch {
+        indicator.textContent = 'Err';
+        indicator.style.color = '#dc2626';
+      }
+
+      // Reset file input
+      e.target.value = '';
+      uploadingItemKey = null;
+    });
+
+    async function completeInspection() {
+      // Check that at least some items have conditions
+      let hasAnyCondition = false;
+      for (const room of inspection.rooms) {
+        for (const item of room.items) {
+          if (item.condition) { hasAnyCondition = true; break; }
+        }
+        if (hasAnyCondition) break;
+      }
+
+      if (!hasAnyCondition) {
+        alert('Please inspect at least one item before completing.');
+        return;
+      }
+
+      if (!confirm('Mark this inspection as complete? This cannot be undone.')) return;
+
+      const btn = document.getElementById('complete-btn');
+      btn.disabled = true;
+      btn.textContent = 'Completing...';
+
+      try {
+        const response = await fetch(`/api/inspections/${token}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rooms: inspection.rooms,
+            overallNotes: inspection.overallNotes,
+            status: 'completed',
+          }),
+        });
+
+        if (response.ok) {
+          inspection.status = 'completed';
+          renderInspection();
+          document.getElementById('completed-banner').style.display = 'block';
+          document.getElementById('footer').style.display = 'none';
+          window.scrollTo(0, 0);
+        } else {
+          alert('Failed to complete. Please try again.');
+          btn.disabled = false;
+          btn.textContent = 'Complete Inspection';
+        }
+      } catch {
+        alert('Network error. Please check your connection and try again.');
+        btn.disabled = false;
+        btn.textContent = 'Complete Inspection';
+      }
+    }
+
+    // Initialize
+    loadInspection();
+  </script>
+</body>
+</html>

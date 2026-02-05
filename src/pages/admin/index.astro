@@ -361,6 +361,37 @@ export const prerender = false;
       color: #64748b;
     }
 
+    .navigate-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .navigate-all-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .route-nav-link {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 6px;
+      color: #2563eb;
+      text-decoration: none;
+      vertical-align: middle;
+    }
+
+    .route-nav-link:hover {
+      color: #1d4ed8;
+    }
+
     .no-route {
       text-align: center;
       padding: 40px 20px;
@@ -1474,6 +1505,9 @@ export const prerender = false;
                   </button>
                 ` : ''}
                 ${booking.status === 'scheduled' ? `
+                  <button class="table-btn table-btn-primary" onclick="startInspection('${booking.id}')" style="background: #7c3aed;">
+                    Inspect
+                  </button>
                   <button class="table-btn table-btn-primary" onclick="completeBooking('${booking.id}')">
                     Complete
                   </button>
@@ -1488,6 +1522,11 @@ export const prerender = false;
                       Retry SMS
                     </button>
                   ` : ''}
+                ` : ''}
+                ${booking.status === 'completed' ? `
+                  <button class="table-btn table-btn-secondary" onclick="viewReport('${booking.id}')" style="background: #ede9fe; color: #7c3aed;">
+                    Report
+                  </button>
                 ` : ''}
                 <button class="table-btn table-btn-secondary" onclick="openBookingNotesModal('${booking.id}')" title="${booking.notes ? 'Has notes' : 'Add notes'}">
                   ${booking.notes ? 'Notes *' : 'Notes'}
@@ -1579,6 +1618,12 @@ export const prerender = false;
       if (ratio >= 1.0) efficiency = 'poor';
       else if (ratio >= 0.5) efficiency = 'fair';
 
+      // Build Google Maps directions URL with all addresses as waypoints
+      const addresses = todayBookings.map(b => encodeURIComponent(b.propertyAddress));
+      const mapsUrl = addresses.length === 1
+        ? `https://www.google.com/maps/dir/?api=1&destination=${addresses[0]}`
+        : `https://www.google.com/maps/dir/?api=1&destination=${addresses[addresses.length - 1]}&waypoints=${addresses.slice(0, -1).join('|')}`;
+
       // Render summary
       summaryEl.innerHTML = `
         <div class="route-summary ${efficiency}">
@@ -1594,6 +1639,12 @@ export const prerender = false;
             <div class="route-stat-value">${efficiency.charAt(0).toUpperCase() + efficiency.slice(1)}</div>
             <div class="route-stat-label">Efficiency</div>
           </div>
+          <div class="route-stat">
+            <a href="${mapsUrl}" target="_blank" rel="noopener" class="navigate-all-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              Navigate All
+            </a>
+          </div>
         </div>
       `;
 
@@ -1605,6 +1656,8 @@ export const prerender = false;
           ? ZONE_TRAVEL_MATRIX[todayBookings[i-1].serviceZone || 'UNKNOWN']?.[zone] || 30
           : 0;
 
+        const singleMapUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(booking.propertyAddress)}`;
+
         return `
           <div class="route-card">
             <div class="route-time">${formatTime(booking.scheduledTime)}</div>
@@ -1612,6 +1665,9 @@ export const prerender = false;
               <div class="route-address">
                 ${booking.propertyAddress}
                 <span class="zone-badge ${zone}">${zone}</span>
+                <a href="${singleMapUrl}" target="_blank" rel="noopener" class="route-nav-link" title="Navigate">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                </a>
               </div>
               <div class="route-tenant">
                 ${booking.tenantName} - ${booking.tenantPhone}
@@ -2194,6 +2250,86 @@ export const prerender = false;
         } else {
           const result = await response.json();
           alert('Error: ' + (result.error || 'Failed to send reminder'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // Start inspection for a booking
+    async function startInspection(bookingId) {
+      try {
+        const response = await fetch('/api/inspections/start', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ bookingId, inspectorName: 'CheckMyRental Inspector' })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.inspectionUrl) {
+          window.open(data.inspectionUrl, '_blank');
+        } else {
+          alert('Failed to start inspection: ' + (data.error || 'Unknown error'));
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+      }
+    }
+
+    // View/generate report for a completed booking
+    async function viewReport(bookingId) {
+      try {
+        // Check if inspection exists
+        const listResponse = await fetch('/api/inspections/list', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const listData = await listResponse.json();
+        const inspection = (listData.inspections || []).find(i => i.bookingId === bookingId);
+
+        if (!inspection) {
+          alert('No inspection found for this booking. Start an inspection first.');
+          return;
+        }
+
+        if (inspection.status !== 'completed') {
+          // Open the inspection page for the inspector to complete
+          const baseUrl = window.location.origin;
+          window.open(`${baseUrl}/inspect/${inspection.inspectionToken}`, '_blank');
+          return;
+        }
+
+        // Generate report
+        const reportResponse = await fetch('/api/inspections/generate-report', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ inspectionId: inspection.id })
+        });
+
+        const reportData = await reportResponse.json();
+        if (reportResponse.ok && reportData.reportHtml) {
+          // Open report in a new window
+          const reportWindow = window.open('', '_blank');
+          reportWindow.document.write(`
+            <!DOCTYPE html><html><head><title>Inspection Report - ${inspection.propertyAddress}</title>
+            <style>body { margin: 20px; } @media print { body { margin: 0; } }</style></head>
+            <body>${reportData.reportHtml}
+            <div style="text-align: center; margin-top: 20px;">
+              <button onclick="window.print()" style="padding: 10px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Print / Save as PDF</button>
+            </div></body></html>
+          `);
+          reportWindow.document.close();
+
+          if (reportData.emailSent) {
+            alert('Report generated and emailed to landlord!');
+          }
+        } else {
+          alert('Failed to generate report: ' + (reportData.error || 'Unknown error'));
         }
       } catch (error) {
         alert('Error: ' + error.message);

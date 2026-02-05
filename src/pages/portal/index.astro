@@ -1,0 +1,460 @@
+---
+// Landlord Portal Dashboard
+export const prerender = false;
+
+import { getSessionEmail } from '../../lib/portal-auth';
+
+// Check session server-side
+const cookieHeader = Astro.request.headers.get('cookie') || '';
+const sessionMatch = cookieHeader.match(/portal_session=([^;]+)/);
+const sessionId = sessionMatch?.[1];
+
+let email: string | null = null;
+if (sessionId) {
+  email = await getSessionEmail(sessionId);
+}
+
+if (!email) {
+  return Astro.redirect('/portal/login');
+}
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Portal - CheckMyRental</title>
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8fafc;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header h1 {
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .header-email {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .logout-btn {
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-header h2 {
+      font-size: 16px;
+      color: #1e293b;
+    }
+
+    .section-body {
+      padding: 0;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: #64748b;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+      font-size: 14px;
+    }
+
+    /* Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .data-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #334155;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-badge.paid { background: #dcfce7; color: #166534; }
+    .status-badge.sent, .status-badge.viewed { background: #dbeafe; color: #1e40af; }
+    .status-badge.draft { background: #f1f5f9; color: #475569; }
+    .status-badge.overdue { background: #fef2f2; color: #991b1b; }
+    .status-badge.cancelled { background: #fef2f2; color: #991b1b; }
+    .status-badge.scheduled { background: #dbeafe; color: #1e40af; }
+    .status-badge.pending_tenant { background: #fef9c3; color: #854d0e; }
+    .status-badge.completed { background: #dcfce7; color: #166534; }
+    .status-badge.no_show { background: #fef2f2; color: #991b1b; }
+
+    .pay-link {
+      display: inline-block;
+      padding: 5px 14px;
+      background: #2563eb;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pay-link:hover { background: #1d4ed8; }
+
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+      }
+
+      .data-table {
+        display: block;
+      }
+
+      .data-table thead { display: none; }
+
+      .data-table tbody {
+        display: block;
+      }
+
+      .data-table tr {
+        display: block;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+      }
+
+      .data-table td {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        border-bottom: none;
+      }
+
+      .data-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-left">
+      <h1>CheckMyRental</h1>
+      <span class="header-email" id="user-email"></span>
+    </div>
+    <button class="logout-btn" onclick="logout()">Sign Out</button>
+  </div>
+
+  <div class="container">
+    <!-- Invoices Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2>My Invoices</h2>
+      </div>
+      <div class="section-body" id="invoices-section">
+        <div class="loading">Loading invoices...</div>
+      </div>
+    </div>
+
+    <!-- Bookings Section -->
+    <div class="section">
+      <div class="section-header">
+        <h2>My Inspections</h2>
+      </div>
+      <div class="section-body" id="bookings-section">
+        <div class="loading">Loading inspections...</div>
+      </div>
+    </div>
+
+    <!-- Reports Section -->
+    <div class="section" id="reports-section" style="display: none;">
+      <div class="section-header">
+        <h2>Inspection Reports</h2>
+      </div>
+      <div class="section-body" id="reports-body">
+        <div class="loading">Loading reports...</div>
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ email }}>
+    document.getElementById('user-email').textContent = email;
+
+    const STATUS_LABELS = {
+      draft: 'Draft',
+      sent: 'Sent',
+      viewed: 'Viewed',
+      paid: 'Paid',
+      overdue: 'Overdue',
+      cancelled: 'Cancelled',
+      pending_tenant: 'Awaiting Tenant',
+      scheduled: 'Scheduled',
+      completed: 'Completed',
+      no_show: 'No Show',
+    };
+
+    const FREQUENCY_LABELS = {
+      quarterly: 'Quarterly',
+      monthly: 'Monthly',
+      bimonthly: 'Every 2 Months',
+      weekly: 'Weekly',
+      one_time: 'One Time',
+      custom: 'Custom',
+    };
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function formatTime(timeStr) {
+      if (!timeStr) return '-';
+      const [h, m] = timeStr.split(':').map(Number);
+      return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+    }
+
+    function formatCurrency(amount) {
+      return `$${Number(amount).toFixed(2)}`;
+    }
+
+    async function loadPortalData() {
+      try {
+        const response = await fetch('/api/portal/data');
+
+        if (response.status === 401) {
+          window.location.href = '/portal/login';
+          return;
+        }
+
+        const data = await response.json();
+
+        renderInvoices(data.invoices || []);
+        renderBookings(data.bookings || []);
+        renderReports(data.reports || []);
+      } catch (error) {
+        console.error('Failed to load portal data:', error);
+        document.getElementById('invoices-section').innerHTML = '<div class="empty">Failed to load data. Please refresh.</div>';
+        document.getElementById('bookings-section').innerHTML = '<div class="empty">Failed to load data. Please refresh.</div>';
+      }
+    }
+
+    function renderInvoices(invoices) {
+      const section = document.getElementById('invoices-section');
+
+      if (invoices.length === 0) {
+        section.innerHTML = '<div class="empty">No invoices found.</div>';
+        return;
+      }
+
+      section.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Date</th>
+              <th>Properties</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoices.map(inv => {
+              const propertyCount = inv.properties?.length || 0;
+              const statusLabel = STATUS_LABELS[inv.status] || inv.status;
+              const showPayBtn = inv.squarePaymentUrl && (inv.status === 'sent' || inv.status === 'viewed' || inv.status === 'overdue');
+
+              return `
+                <tr>
+                  <td data-label="Invoice">${inv.invoiceNumber}</td>
+                  <td data-label="Date">${formatDate(inv.createdAt)}</td>
+                  <td data-label="Properties">${propertyCount} ${propertyCount === 1 ? 'property' : 'properties'}</td>
+                  <td data-label="Total">${formatCurrency(inv.total)}</td>
+                  <td data-label="Status"><span class="status-badge ${inv.status}">${statusLabel}</span></td>
+                  <td>${showPayBtn ? `<a href="${inv.squarePaymentUrl}" target="_blank" rel="noopener" class="pay-link">Pay Now</a>` : ''}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderBookings(bookings) {
+      const section = document.getElementById('bookings-section');
+
+      if (bookings.length === 0) {
+        section.innerHTML = '<div class="empty">No inspections found.</div>';
+        return;
+      }
+
+      // Sort: scheduled first (by date), then pending, then completed
+      const sortOrder = { scheduled: 0, pending_tenant: 1, completed: 2, cancelled: 3, no_show: 4 };
+      bookings.sort((a, b) => {
+        const orderDiff = (sortOrder[a.status] ?? 5) - (sortOrder[b.status] ?? 5);
+        if (orderDiff !== 0) return orderDiff;
+        if (a.scheduledDate && b.scheduledDate) return a.scheduledDate.localeCompare(b.scheduledDate);
+        return 0;
+      });
+
+      section.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Tenant</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Frequency</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${bookings.map(b => {
+              const statusLabel = STATUS_LABELS[b.status] || b.status;
+              const freqLabel = FREQUENCY_LABELS[b.inspectionFrequency] || b.inspectionFrequency || '-';
+
+              return `
+                <tr>
+                  <td data-label="Property">${b.propertyAddress}</td>
+                  <td data-label="Tenant">${b.tenantName}</td>
+                  <td data-label="Date">${formatDate(b.scheduledDate)}</td>
+                  <td data-label="Time">${formatTime(b.scheduledTime)}</td>
+                  <td data-label="Frequency">${freqLabel}</td>
+                  <td data-label="Status"><span class="status-badge ${b.status}">${statusLabel}</span></td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderReports(reports) {
+      const section = document.getElementById('reports-section');
+      const body = document.getElementById('reports-body');
+
+      if (reports.length === 0) {
+        body.innerHTML = '<div class="empty">No inspection reports yet. Reports will appear here after each completed inspection.</div>';
+        section.style.display = 'block';
+        return;
+      }
+
+      section.style.display = 'block';
+      body.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>Inspector</th>
+              <th>Completed</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reports.map(r => `
+              <tr>
+                <td data-label="Property">${r.propertyAddress}</td>
+                <td data-label="Inspector">${r.inspectorName}</td>
+                <td data-label="Completed">${formatDate(r.completedAt || r.createdAt)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    async function logout() {
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/api/portal/logout';
+      document.body.appendChild(form);
+      form.submit();
+    }
+
+    // Load data on page load
+    loadPortalData();
+  </script>
+</body>
+</html>

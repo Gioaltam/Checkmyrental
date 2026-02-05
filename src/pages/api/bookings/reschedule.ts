@@ -1,8 +1,9 @@
 // Reschedule a booking - tenant changes their scheduled time
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability } from '../../../lib/db';
 import { sendRescheduleSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
+import { updateCalendarEvent, createCalendarEvent } from '../../../lib/google-calendar';
 
 export const prerender = false;
 
@@ -133,6 +134,38 @@ export const POST: APIRoute = async ({ request }) => {
     } catch (updateError) {
       await releaseSlotLock(date, time);
       throw updateError;
+    }
+
+    // Update Google Calendar event
+    try {
+      const availability = await getAvailability();
+      if (booking.googleCalendarEventId) {
+        await updateCalendarEvent({
+          eventId: booking.googleCalendarEventId,
+          date,
+          time,
+          durationMinutes: availability.slotDuration || 60,
+          propertyAddress: booking.propertyAddress,
+        });
+      } else {
+        // No existing event — create one
+        const calendarEventId = await createCalendarEvent({
+          date,
+          time,
+          durationMinutes: availability.slotDuration || 60,
+          propertyAddress: booking.propertyAddress,
+          tenantName: booking.tenantName,
+          tenantPhone: booking.tenantPhone,
+          landlordName: booking.landlordName,
+          landlordEmail: booking.landlordEmail,
+          bookingId: booking.id,
+        });
+        if (calendarEventId) {
+          await updateBooking(booking.id, { googleCalendarEventId: calendarEventId });
+        }
+      }
+    } catch (calError) {
+      console.error('Failed to update calendar event:', calError);
     }
 
     // Send reschedule SMS to tenant

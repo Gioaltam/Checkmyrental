@@ -3,7 +3,7 @@ import { Redis } from '@upstash/redis';
 import type { Invoice, Inquiry, Booking, AvailabilitySchedule } from './types';
 
 // Initialize Redis client
-function getRedis(): Redis {
+export function getRedis(): Redis {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
@@ -279,7 +279,7 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes' | 'googleCalendarEventId'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));

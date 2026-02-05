@@ -2,7 +2,6 @@
 import type { APIRoute } from 'astro';
 import { getSessionEmail } from '../../../lib/portal-auth';
 import { listInvoices, listBookings } from '../../../lib/db';
-import { listInspections } from '../../../lib/inspection-db';
 
 export const prerender = false;
 
@@ -40,20 +39,6 @@ export const GET: APIRoute = async ({ request }) => {
       b => b.landlordEmail.toLowerCase() === email.toLowerCase()
     );
 
-    // Fetch completed inspection reports for landlord's bookings
-    const landlordBookingIds = new Set(landlordBookings.map(b => b.id));
-    const allInspections = await listInspections(200, 0);
-    const landlordReports = allInspections
-      .filter(i => i.status === 'completed' && landlordBookingIds.has(i.bookingId))
-      .map(i => ({
-        id: i.id,
-        bookingId: i.bookingId,
-        propertyAddress: i.propertyAddress,
-        inspectorName: i.inspectorName,
-        completedAt: i.completedAt,
-        createdAt: i.createdAt,
-      }));
-
     return new Response(
       JSON.stringify({
         email,
@@ -78,7 +63,6 @@ export const GET: APIRoute = async ({ request }) => {
           status: b.status,
           inspectionFrequency: b.inspectionFrequency,
         })),
-        reports: landlordReports,
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );

@@ -1507,9 +1507,6 @@ export const prerender = false;
                   </button>
                 ` : ''}
                 ${booking.status === 'scheduled' ? `
-                  <button class="table-btn table-btn-primary" onclick="startInspection('${booking.id}')" style="background: #7c3aed;">
-                    Inspect
-                  </button>
                   <button class="table-btn table-btn-primary" onclick="completeBooking('${booking.id}')">
                     Complete
                   </button>
@@ -1524,11 +1521,6 @@ export const prerender = false;
                       Retry SMS
                     </button>
                   ` : ''}
-                ` : ''}
-                ${booking.status === 'completed' ? `
-                  <button class="table-btn table-btn-secondary" onclick="viewReport('${booking.id}')" style="background: #ede9fe; color: #7c3aed;">
-                    Report
-                  </button>
                 ` : ''}
                 <button class="table-btn table-btn-secondary" onclick="openBookingNotesModal('${booking.id}')" title="${booking.notes ? 'Has notes' : 'Add notes'}">
                   ${booking.notes ? 'Notes *' : 'Notes'}
@@ -2249,86 +2241,6 @@ export const prerender = false;
         } else {
           const result = await response.json();
           alert('Error: ' + (result.error || 'Failed to send reminder'));
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
-    // Start inspection for a booking
-    async function startInspection(bookingId) {
-      try {
-        const response = await fetch('/api/inspections/start', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ bookingId, inspectorName: 'CheckMyRental Inspector' })
-        });
-
-        const data = await response.json();
-        if (response.ok && data.inspectionUrl) {
-          window.open(data.inspectionUrl, '_blank');
-        } else {
-          alert('Failed to start inspection: ' + (data.error || 'Unknown error'));
-        }
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    }
-
-    // View/generate report for a completed booking
-    async function viewReport(bookingId) {
-      try {
-        // Check if inspection exists
-        const listResponse = await fetch('/api/inspections/list', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const listData = await listResponse.json();
-        const inspection = (listData.inspections || []).find(i => i.bookingId === bookingId);
-
-        if (!inspection) {
-          alert('No inspection found for this booking. Start an inspection first.');
-          return;
-        }
-
-        if (inspection.status !== 'completed') {
-          // Open the inspection page for the inspector to complete
-          const baseUrl = window.location.origin;
-          window.open(`${baseUrl}/inspect/${inspection.inspectionToken}`, '_blank');
-          return;
-        }
-
-        // Generate report
-        const reportResponse = await fetch('/api/inspections/generate-report', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ inspectionId: inspection.id })
-        });
-
-        const reportData = await reportResponse.json();
-        if (reportResponse.ok && reportData.reportHtml) {
-          // Open report in a new window
-          const reportWindow = window.open('', '_blank');
-          reportWindow.document.write(`
-            <!DOCTYPE html><html><head><title>Inspection Report - ${inspection.propertyAddress}</title>
-            <style>body { margin: 20px; } @media print { body { margin: 0; } }</style></head>
-            <body>${reportData.reportHtml}
-            <div style="text-align: center; margin-top: 20px;">
-              <button onclick="window.print()" style="padding: 10px 24px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">Print / Save as PDF</button>
-            </div></body></html>
-          `);
-          reportWindow.document.close();
-
-          if (reportData.emailSent) {
-            alert('Report generated and emailed to landlord!');
-          }
-        } else {
-          alert('Failed to generate report: ' + (reportData.error || 'Unknown error'));
         }
       } catch (error) {
         alert('Error: ' + error.message);

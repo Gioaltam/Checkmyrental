@@ -247,15 +247,6 @@ if (!email) {
       </div>
     </div>
 
-    <!-- Reports Section -->
-    <div class="section" id="reports-section" style="display: none;">
-      <div class="section-header">
-        <h2>Inspection Reports</h2>
-      </div>
-      <div class="section-body" id="reports-body">
-        <div class="loading">Loading reports...</div>
-      </div>
-    </div>
   </div>
 
   <script define:vars={{ email }}>
@@ -312,7 +303,6 @@ if (!email) {
 
         renderInvoices(data.invoices || []);
         renderBookings(data.bookings || []);
-        renderReports(data.reports || []);
       } catch (error) {
         console.error('Failed to load portal data:', error);
         document.getElementById('invoices-section').innerHTML = '<div class="empty">Failed to load data. Please refresh.</div>';
@@ -407,39 +397,6 @@ if (!email) {
                 </tr>
               `;
             }).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-
-    function renderReports(reports) {
-      const section = document.getElementById('reports-section');
-      const body = document.getElementById('reports-body');
-
-      if (reports.length === 0) {
-        body.innerHTML = '<div class="empty">No inspection reports yet. Reports will appear here after each completed inspection.</div>';
-        section.style.display = 'block';
-        return;
-      }
-
-      section.style.display = 'block';
-      body.innerHTML = `
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Property</th>
-              <th>Inspector</th>
-              <th>Completed</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${reports.map(r => `
-              <tr>
-                <td data-label="Property">${r.propertyAddress}</td>
-                <td data-label="Inspector">${r.inspectorName}</td>
-                <td data-label="Completed">${formatDate(r.completedAt || r.createdAt)}</td>
-              </tr>
-            `).join('')}
           </tbody>
         </table>
       `;

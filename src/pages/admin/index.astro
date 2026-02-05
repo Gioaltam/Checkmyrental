@@ -896,7 +896,7 @@ export const prerender = false;
       <div class="section-content">
         <div id="route-summary"></div>
         <div id="route-list">
-          <div class="no-route"><p>Loading route...</p></div>
+          <div class="no-route"><p>No scheduled inspections for today's route</p></div>
         </div>
       </div>
     </section>
@@ -930,7 +930,7 @@ export const prerender = false;
               </tr>
             </thead>
             <tbody id="inquiries-tbody">
-              <tr><td colspan="7" class="loading">Loading...</td></tr>
+              <tr><td colspan="7" class="empty-state"><p>No inquiries found</p></td></tr>
             </tbody>
           </table>
         </div>
@@ -969,7 +969,7 @@ export const prerender = false;
               </tr>
             </thead>
             <tbody id="invoices-tbody">
-              <tr><td colspan="8" class="loading">Loading...</td></tr>
+              <tr><td colspan="8" class="empty-state"><p>No invoices found</p></td></tr>
             </tbody>
           </table>
         </div>
@@ -1003,7 +1003,7 @@ export const prerender = false;
               </tr>
             </thead>
             <tbody id="bookings-tbody">
-              <tr><td colspan="6" class="loading">Loading...</td></tr>
+              <tr><td colspan="6" class="empty-state"><p>No bookings found</p></td></tr>
             </tbody>
           </table>
         <!-- Slot Locks Panel -->
@@ -1027,7 +1027,7 @@ export const prerender = false;
         </div>
       </div>
       <div class="section-content" id="reports-content">
-        <div class="loading">Loading...</div>
+        <div class="empty-state"><p>No report data available</p></div>
       </div>
     </section>
   </main>

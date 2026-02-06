@@ -81,6 +81,53 @@ export const PUT: APIRoute = async ({ request }) => {
       }
     }
 
+    // Validate capacity fields
+    if (schedule.maxBookingsPerDay !== undefined) {
+      const max = Number(schedule.maxBookingsPerDay);
+      if (isNaN(max) || max < 1 || max > 20) {
+        return new Response(
+          JSON.stringify({ error: 'maxBookingsPerDay must be between 1 and 20' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    if (schedule.multiUnitMaxBookings !== undefined) {
+      const max = Number(schedule.multiUnitMaxBookings);
+      if (isNaN(max) || max < 1 || max > 30) {
+        return new Response(
+          JSON.stringify({ error: 'multiUnitMaxBookings must be between 1 and 30' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    if (schedule.weekendMaxBookings !== undefined) {
+      const max = Number(schedule.weekendMaxBookings);
+      if (isNaN(max) || max < 1 || max > 30) {
+        return new Response(
+          JSON.stringify({ error: 'weekendMaxBookings must be between 1 and 30' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    if (schedule.zoneDayRestrictions) {
+      const validRestrictions = ['TAMPA_ONLY', 'PINELLAS_ONLY', 'ALL'];
+      for (const [day, restriction] of Object.entries(schedule.zoneDayRestrictions)) {
+        const dayNum = Number(day);
+        if (isNaN(dayNum) || dayNum < 0 || dayNum > 6) {
+          return new Response(
+            JSON.stringify({ error: 'zoneDayRestrictions keys must be 0-6' }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+        if (!validRestrictions.includes(restriction as string)) {
+          return new Response(
+            JSON.stringify({ error: `Invalid zone restriction: ${restriction}` }),
+            { status: 400, headers: { 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+    }
+
     // Set defaults if not provided
     const validatedSchedule: AvailabilitySchedule = {
       weeklySlots: schedule.weeklySlots,
@@ -90,6 +137,10 @@ export const PUT: APIRoute = async ({ request }) => {
       maxAdvanceDays: schedule.maxAdvanceDays || 14,
       enableZoneFiltering: schedule.enableZoneFiltering !== false,
       travelBufferMinutes: schedule.travelBufferMinutes || 0,
+      maxBookingsPerDay: schedule.maxBookingsPerDay ?? 7,
+      multiUnitMaxBookings: schedule.multiUnitMaxBookings ?? 12,
+      weekendMaxBookings: schedule.weekendMaxBookings ?? 12,
+      zoneDayRestrictions: schedule.zoneDayRestrictions || undefined,
     };
 
     await setAvailability(validatedSchedule);

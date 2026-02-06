@@ -1,6 +1,6 @@
 // Zone-aware scheduling logic for travel time optimization
 
-import type { Booking } from './types';
+import type { Booking, AvailabilitySchedule } from './types';
 import { extractZipcode, getServiceZone, getTravelTime, type ServiceZone } from './zones';
 
 export interface TimeSlot {
@@ -259,4 +259,51 @@ export function isPreferredZone(propertyAddress: string, existingBookings: Booki
 
   // Preferred if property zone matches any existing booking zone
   return existingZones.includes(propertyZone);
+}
+
+// ==================== DAILY CAPACITY ====================
+
+/**
+ * Normalize an address by stripping unit/apt/suite numbers for comparison.
+ * Used to detect multi-unit bookings at the same property.
+ */
+export function normalizeAddress(address: string): string {
+  return address
+    .toLowerCase()
+    .replace(/\b(apt|apartment|unit|suite|ste|#)\s*\.?\s*\w+/gi, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * Check if any bookings on the same day share a base address (multi-unit property).
+ */
+export function hasMultiUnitBookings(bookings: Booking[]): boolean {
+  const normalized = bookings
+    .filter(b => b.status === 'scheduled' || b.status === 'pending_tenant')
+    .map(b => normalizeAddress(b.propertyAddress));
+
+  const unique = new Set(normalized);
+  return unique.size < normalized.length;
+}
+
+/**
+ * Get the effective daily capacity based on day of week and existing bookings.
+ */
+export function getDailyCapacity(
+  existingBookings: Booking[],
+  schedule: AvailabilitySchedule,
+  dayOfWeek: number
+): number {
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+  if (isWeekend) {
+    return schedule.weekendMaxBookings ?? 12;
+  }
+
+  if (hasMultiUnitBookings(existingBookings)) {
+    return schedule.multiUnitMaxBookings ?? 12;
+  }
+
+  return schedule.maxBookingsPerDay ?? 7;
 }

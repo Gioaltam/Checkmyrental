@@ -157,3 +157,33 @@ export function getZoneName(zoneId: ServiceZone): string {
   const zone = getZoneDefinition(zoneId);
   return zone?.name ?? 'Unknown Area';
 }
+
+// Region groupings for zone-day restrictions
+export const PINELLAS_ZONES: ServiceZone[] = ['NORTH', 'CENTRAL', 'SOUTH', 'EAST'];
+export const TAMPA_ZONES: ServiceZone[] = ['TAMPA'];
+
+/**
+ * Check if a service zone is allowed on a given day based on zone-day restrictions.
+ */
+export function isZoneAllowedOnDay(
+  zone: ServiceZone,
+  dayOfWeek: number,
+  restrictions?: Record<number, 'TAMPA_ONLY' | 'PINELLAS_ONLY' | 'ALL'>
+): boolean {
+  if (!restrictions) return true;
+  // UNKNOWN zones always allowed
+  if (zone === 'UNKNOWN') return true;
+
+  const restriction = restrictions[dayOfWeek];
+  if (!restriction || restriction === 'ALL') return true;
+
+  if (restriction === 'TAMPA_ONLY') {
+    return TAMPA_ZONES.includes(zone);
+  }
+
+  if (restriction === 'PINELLAS_ONLY') {
+    return PINELLAS_ZONES.includes(zone);
+  }
+
+  return true;
+}

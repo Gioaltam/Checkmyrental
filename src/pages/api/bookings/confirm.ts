@@ -1,9 +1,10 @@
 // Confirm a booking - tenant selects a time slot
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate } from '../../../lib/db';
 import { sendConfirmationSMS } from '../../../lib/twilio';
-import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
+import { extractZipcode, getServiceZone, getZoneName, isZoneAllowedOnDay } from '../../../lib/zones';
 import { createCalendarEvent } from '../../../lib/google-calendar';
+import { getDailyCapacity } from '../../../lib/scheduling';
 
 export const prerender = false;
 
@@ -67,6 +68,31 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Zone-day restriction enforcement
+    const availability = await getAvailability();
+    const zipcode = extractZipcode(booking.propertyAddress);
+    const serviceZone = getServiceZone(zipcode);
+    const confirmDayOfWeek = new Date(`${date}T12:00:00`).getDay();
+
+    if (!isZoneAllowedOnDay(serviceZone, confirmDayOfWeek, availability.zoneDayRestrictions)) {
+      await releaseSlotLock(date, time);
+      return new Response(
+        JSON.stringify({ error: 'This date is not available for your area. Please select another date.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Daily capacity enforcement
+    const existingBookingsForDay = await getBookingsForDate(date);
+    const maxForDay = getDailyCapacity(existingBookingsForDay, availability, confirmDayOfWeek);
+    if (existingBookingsForDay.length >= maxForDay) {
+      await releaseSlotLock(date, time);
+      return new Response(
+        JSON.stringify({ error: 'This date is fully booked. Please select another date.' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Secondary check for existing bookings
     const bookedSlots = await getBookedSlotsForDate(date);
     if (bookedSlots.includes(time)) {
@@ -77,11 +103,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Extract zone information from property address
-    const zipcode = extractZipcode(booking.propertyAddress);
-    const serviceZone = getServiceZone(zipcode);
-
-    // Update booking with scheduled date/time and zone info
+    // Update booking with scheduled date/time and zone info (zipcode and serviceZone already extracted above)
     try {
       await updateBooking(booking.id, {
         scheduledDate: date,
@@ -95,9 +117,8 @@ export const POST: APIRoute = async ({ request }) => {
       throw updateError;
     }
 
-    // Create Google Calendar event
+    // Create Google Calendar event (availability already fetched above)
     try {
-      const availability = await getAvailability();
       const calendarEventId = await createCalendarEvent({
         date,
         time,

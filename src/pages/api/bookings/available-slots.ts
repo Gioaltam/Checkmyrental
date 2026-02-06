@@ -2,7 +2,8 @@
 import type { APIRoute } from 'astro';
 import { getBookingByToken, getAvailability, getBookedSlotsForDate, getBookingsForDate } from '../../../lib/db';
 import type { TimeSlot, Booking } from '../../../lib/types';
-import { filterSlotsWithTravel, isPreferredZone } from '../../../lib/scheduling';
+import { filterSlotsWithTravel, isPreferredZone, getDailyCapacity } from '../../../lib/scheduling';
+import { extractZipcode, getServiceZone, isZoneAllowedOnDay } from '../../../lib/zones';
 
 export const prerender = false;
 
@@ -174,6 +175,10 @@ export const GET: APIRoute = async ({ url }) => {
       const availableDates: string[] = [];
       const today = new Date();
 
+      // Determine property zone for zone-day restriction checks
+      const propertyZipcode = extractZipcode(booking.propertyAddress);
+      const propertyZone = getServiceZone(propertyZipcode);
+
       for (let i = 0; i < schedule.maxAdvanceDays; i++) {
         const checkDate = new Date(today);
         checkDate.setDate(today.getDate() + i);
@@ -188,30 +193,41 @@ export const GET: APIRoute = async ({ url }) => {
         // Check if date is blocked
         const isBlocked = schedule.blockedDates.includes(dateStr);
 
-        if (hasSchedule && !isBlocked) {
-          // Check if there are any available slots (with zone-aware filtering)
-          let bookedSlots = await getBookedSlotsForDate(dateStr);
-          let existingBookings = await getBookingsForDate(dateStr);
+        if (!hasSchedule || isBlocked) continue;
 
-          // When rescheduling, exclude the current booking from conflict checks
-          if (isReschedule) {
-            bookedSlots = bookedSlots.filter(s => s !== booking.scheduledTime || booking.scheduledDate !== dateStr);
-            existingBookings = existingBookings.filter(b => b.id !== booking.id);
-          }
+        // Zone-day restriction: skip if property zone not allowed on this day
+        if (!isZoneAllowedOnDay(propertyZone, dayOfWeek, schedule.zoneDayRestrictions)) {
+          continue;
+        }
 
-          const slots = generateTimeSlots(
-            dateStr,
-            dayOfWeek,
-            schedule,
-            bookedSlots,
-            schedule.minAdvanceHours,
-            booking.propertyAddress,
-            existingBookings
-          );
+        // Check if there are any available slots (with zone-aware filtering)
+        let bookedSlots = await getBookedSlotsForDate(dateStr);
+        let existingBookings = await getBookingsForDate(dateStr);
 
-          if (slots.some(s => s.available)) {
-            availableDates.push(dateStr);
-          }
+        // When rescheduling, exclude the current booking from conflict checks
+        if (isReschedule) {
+          bookedSlots = bookedSlots.filter(s => s !== booking.scheduledTime || booking.scheduledDate !== dateStr);
+          existingBookings = existingBookings.filter(b => b.id !== booking.id);
+        }
+
+        // Daily capacity check: skip if day is at max bookings
+        const maxForDay = getDailyCapacity(existingBookings, schedule, dayOfWeek);
+        if (existingBookings.length >= maxForDay) {
+          continue;
+        }
+
+        const slots = generateTimeSlots(
+          dateStr,
+          dayOfWeek,
+          schedule,
+          bookedSlots,
+          schedule.minAdvanceHours,
+          booking.propertyAddress,
+          existingBookings
+        );
+
+        if (slots.some(s => s.available)) {
+          availableDates.push(dateStr);
         }
       }
 
@@ -238,6 +254,20 @@ export const GET: APIRoute = async ({ url }) => {
     const requestedDate = new Date(date);
     const dayOfWeek = requestedDate.getDay();
 
+    // Zone-day restriction check for specific date request
+    const specificZipcode = extractZipcode(booking.propertyAddress);
+    const specificZone = getServiceZone(specificZipcode);
+    if (!isZoneAllowedOnDay(specificZone, dayOfWeek, schedule.zoneDayRestrictions)) {
+      return new Response(
+        JSON.stringify({
+          booking: { propertyAddress: booking.propertyAddress, tenantName: booking.tenantName },
+          date,
+          slots: [],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Get booked slots for this date and existing bookings for zone filtering
     let bookedSlots = await getBookedSlotsForDate(date);
     let existingBookings = await getBookingsForDate(date);
@@ -246,6 +276,19 @@ export const GET: APIRoute = async ({ url }) => {
     if (isReschedule) {
       bookedSlots = bookedSlots.filter(s => s !== booking.scheduledTime || booking.scheduledDate !== date);
       existingBookings = existingBookings.filter(b => b.id !== booking.id);
+    }
+
+    // Daily capacity check for specific date request
+    const maxForDay = getDailyCapacity(existingBookings, schedule, dayOfWeek);
+    if (existingBookings.length >= maxForDay) {
+      return new Response(
+        JSON.stringify({
+          booking: { propertyAddress: booking.propertyAddress, tenantName: booking.tenantName },
+          date,
+          slots: [],
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     const slots = generateTimeSlots(

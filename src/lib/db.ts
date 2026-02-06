@@ -339,6 +339,7 @@ const DEFAULT_AVAILABILITY: AvailabilitySchedule = {
     { dayOfWeek: 3, startTime: '09:00', endTime: '17:00' },  // Wednesday
     { dayOfWeek: 4, startTime: '09:00', endTime: '17:00' },  // Thursday
     { dayOfWeek: 5, startTime: '09:00', endTime: '17:00' },  // Friday
+    { dayOfWeek: 6, startTime: '09:00', endTime: '17:00' },  // Saturday
   ],
   blockedDates: [],
   slotDuration: 30,      // 30 min slots for high volume
@@ -346,6 +347,9 @@ const DEFAULT_AVAILABILITY: AvailabilitySchedule = {
   maxAdvanceDays: 14,    // 2 weeks out
   enableZoneFiltering: true,   // Enable travel time filtering
   travelBufferMinutes: 0,      // Extra buffer on top of travel time
+  maxBookingsPerDay: 7,        // Weekday cap (1 inspector)
+  multiUnitMaxBookings: 12,    // Cap when same-address bookings exist
+  weekendMaxBookings: 12,      // Weekend cap (2 inspectors)
 };
 
 export async function getAvailability(): Promise<AvailabilitySchedule> {

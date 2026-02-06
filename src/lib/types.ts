@@ -88,6 +88,8 @@ export const FREQUENCY_LABELS: Record<string, string> = {
 
 export type ServiceZone = 'TAMPA' | 'NORTH' | 'CENTRAL' | 'SOUTH' | 'EAST' | 'UNKNOWN';
 
+export type ZoneDayRestriction = 'TAMPA_ONLY' | 'PINELLAS_ONLY' | 'ALL';
+
 export interface Booking {
   id: string;
   createdAt: string;
@@ -144,6 +146,12 @@ export interface AvailabilitySchedule {
   // Zone-based scheduling settings
   enableZoneFiltering?: boolean;  // Default true - filter slots by travel time
   travelBufferMinutes?: number;   // Default 0 - extra buffer on top of travel time
+  // Daily capacity controls
+  maxBookingsPerDay?: number;       // Default 7 - weekday cap (1 inspector)
+  multiUnitMaxBookings?: number;    // Default 12 - cap when same-address bookings exist
+  weekendMaxBookings?: number;      // Default 12 - weekend cap (2 inspectors)
+  // Zone-day restrictions: map day-of-week (0-6) to which region is allowed
+  zoneDayRestrictions?: Record<number, ZoneDayRestriction>;
 }
 
 export interface TimeSlot {

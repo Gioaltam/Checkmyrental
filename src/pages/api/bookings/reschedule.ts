@@ -1,9 +1,10 @@
 // Reschedule a booking - tenant changes their scheduled time
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate } from '../../../lib/db';
 import { sendRescheduleSMS } from '../../../lib/twilio';
-import { extractZipcode, getServiceZone, getZoneName } from '../../../lib/zones';
+import { extractZipcode, getServiceZone, getZoneName, isZoneAllowedOnDay } from '../../../lib/zones';
 import { updateCalendarEvent, createCalendarEvent } from '../../../lib/google-calendar';
+import { getDailyCapacity } from '../../../lib/scheduling';
 
 export const prerender = false;
 
@@ -104,6 +105,32 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // Zone-day restriction enforcement
+    const availability = await getAvailability();
+    const zipcode = extractZipcode(booking.propertyAddress);
+    const serviceZone = getServiceZone(zipcode);
+    const rescheduleDayOfWeek = new Date(`${date}T12:00:00`).getDay();
+
+    if (!isZoneAllowedOnDay(serviceZone, rescheduleDayOfWeek, availability.zoneDayRestrictions)) {
+      await releaseSlotLock(date, time);
+      return new Response(
+        JSON.stringify({ error: 'This date is not available for your area. Please select another date.' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Daily capacity enforcement (exclude this booking from count since it's moving)
+    const existingBookingsForDay = await getBookingsForDate(date);
+    const otherBookings = existingBookingsForDay.filter(b => b.id !== booking.id);
+    const maxForDay = getDailyCapacity(otherBookings, availability, rescheduleDayOfWeek);
+    if (otherBookings.length >= maxForDay) {
+      await releaseSlotLock(date, time);
+      return new Response(
+        JSON.stringify({ error: 'This date is fully booked. Please select another date.' }),
+        { status: 409, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Secondary check for existing bookings (exclude this booking's old slot)
     const bookedSlots = await getBookedSlotsForDate(date);
     const isSlotTaken = booking.scheduledDate === date
@@ -118,11 +145,7 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Extract zone information
-    const zipcode = extractZipcode(booking.propertyAddress);
-    const serviceZone = getServiceZone(zipcode);
-
-    // Update booking
+    // Update booking (zipcode and serviceZone already extracted above)
     try {
       await updateBooking(booking.id, {
         scheduledDate: date,
@@ -136,9 +159,8 @@ export const POST: APIRoute = async ({ request }) => {
       throw updateError;
     }
 
-    // Update Google Calendar event
+    // Update Google Calendar event (availability already fetched above)
     try {
-      const availability = await getAvailability();
       if (booking.googleCalendarEventId) {
         await updateCalendarEvent({
           eventId: booking.googleCalendarEventId,

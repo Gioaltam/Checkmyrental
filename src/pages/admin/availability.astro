@@ -399,6 +399,35 @@ export const prerender = false;
     .zone-badge.south { background: #fce7f3; color: #9d174d; }
     .zone-badge.east { background: #f3e8ff; color: #6b21a8; }
 
+    .zone-select {
+      padding: 8px 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 13px;
+      background: white;
+      cursor: pointer;
+      min-width: 130px;
+    }
+
+    .zone-select:focus {
+      outline: none;
+      border-color: #e74c3c;
+    }
+
+    .zone-select:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .zone-group-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+    }
+
     /* Loading */
     .loading {
       text-align: center;
@@ -502,6 +531,46 @@ export const prerender = false;
         </div>
       </div>
 
+      <!-- Daily Capacity -->
+      <div class="section">
+        <div class="section-header">
+          <h3>Daily Capacity</h3>
+          <p>Limit the number of inspections per day to prevent overbooking</p>
+        </div>
+        <div class="section-content">
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Weekday Max Bookings</div>
+              <div class="setting-desc">Maximum inspections Mon-Fri (1 inspector)</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="max-bookings-day" min="1" max="20" value="7">
+              <span>per day</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Multi-Unit Max Bookings</div>
+              <div class="setting-desc">Higher cap when multiple units at the same address are booked (no drive time between units)</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="max-bookings-multiunit" min="1" max="30" value="12">
+              <span>per day</span>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Weekend Max Bookings</div>
+              <div class="setting-desc">Maximum inspections Sat/Sun (2 inspectors)</div>
+            </div>
+            <div class="setting-input">
+              <input type="number" id="max-bookings-weekend" min="1" max="30" value="12">
+              <span>per day</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Zone Settings -->
       <div class="section">
         <div class="section-header">
@@ -534,9 +603,11 @@ export const prerender = false;
           </div>
 
           <div class="zone-info">
-            <div class="zone-info-header">Service Zones</div>
+            <div class="zone-info-header">Service Zone Regions</div>
             <div class="zone-list">
+              <div class="zone-group-label">Tampa Region (Hillsborough)</div>
               <div class="zone-item"><span class="zone-badge tampa">TAMPA</span> Tampa, Brandon, Temple Terrace</div>
+              <div class="zone-group-label" style="margin-top: 12px;">Pinellas Region</div>
               <div class="zone-item"><span class="zone-badge north">NORTH</span> Palm Harbor, Tarpon Springs, Dunedin</div>
               <div class="zone-item"><span class="zone-badge central">CENTRAL</span> Clearwater, Safety Harbor</div>
               <div class="zone-item"><span class="zone-badge south">SOUTH</span> St. Petersburg, Gulfport</div>
@@ -617,9 +688,12 @@ export const prerender = false;
       const container = document.getElementById('weekly-schedule');
       container.innerHTML = '';
 
+      const restrictions = currentSchedule.zoneDayRestrictions || {};
+
       DAY_NAMES.forEach((dayName, dayIndex) => {
         const slot = currentSchedule.weeklySlots.find(s => s.dayOfWeek === dayIndex);
         const isEnabled = !!slot;
+        const restriction = restrictions[dayIndex] || 'ALL';
 
         const row = document.createElement('div');
         row.className = 'day-row';
@@ -633,6 +707,11 @@ export const prerender = false;
             <span>to</span>
             <input type="time" id="end-${dayIndex}" value="${slot?.endTime || '17:00'}" ${!isEnabled ? 'disabled' : ''}>
           </div>
+          <select id="zone-restriction-${dayIndex}" class="zone-select" ${!isEnabled ? 'disabled' : ''}>
+            <option value="ALL" ${restriction === 'ALL' ? 'selected' : ''}>All Zones</option>
+            <option value="TAMPA_ONLY" ${restriction === 'TAMPA_ONLY' ? 'selected' : ''}>Tampa Only</option>
+            <option value="PINELLAS_ONLY" ${restriction === 'PINELLAS_ONLY' ? 'selected' : ''}>Pinellas Only</option>
+          </select>
         `;
         container.appendChild(row);
       });
@@ -643,15 +722,18 @@ export const prerender = false;
       const timesContainer = document.getElementById(`times-${dayIndex}`);
       const startInput = document.getElementById(`start-${dayIndex}`);
       const endInput = document.getElementById(`end-${dayIndex}`);
+      const zoneSelect = document.getElementById(`zone-restriction-${dayIndex}`);
 
       if (checkbox.checked) {
         timesContainer.classList.remove('disabled');
         startInput.disabled = false;
         endInput.disabled = false;
+        zoneSelect.disabled = false;
       } else {
         timesContainer.classList.add('disabled');
         startInput.disabled = true;
         endInput.disabled = true;
+        zoneSelect.disabled = true;
       }
     }
 
@@ -662,6 +744,10 @@ export const prerender = false;
       // Zone settings
       document.getElementById('enable-zone-filtering').checked = currentSchedule.enableZoneFiltering !== false;
       document.getElementById('travel-buffer').value = currentSchedule.travelBufferMinutes || 0;
+      // Capacity settings
+      document.getElementById('max-bookings-day').value = currentSchedule.maxBookingsPerDay ?? 7;
+      document.getElementById('max-bookings-multiunit').value = currentSchedule.multiUnitMaxBookings ?? 12;
+      document.getElementById('max-bookings-weekend').value = currentSchedule.weekendMaxBookings ?? 12;
     }
 
     function renderBlockedDates() {
@@ -729,6 +815,18 @@ export const prerender = false;
         }
       });
 
+      // Build zone-day restrictions from form
+      const zoneDayRestrictions = {};
+      DAY_NAMES.forEach((_, dayIndex) => {
+        const checkbox = document.getElementById(`day-${dayIndex}`);
+        if (checkbox.checked) {
+          const restriction = document.getElementById(`zone-restriction-${dayIndex}`).value;
+          if (restriction !== 'ALL') {
+            zoneDayRestrictions[dayIndex] = restriction;
+          }
+        }
+      });
+
       const schedule = {
         weeklySlots,
         blockedDates: currentSchedule.blockedDates || [],
@@ -736,7 +834,11 @@ export const prerender = false;
         minAdvanceHours: parseInt(document.getElementById('min-advance').value),
         maxAdvanceDays: parseInt(document.getElementById('max-advance').value),
         enableZoneFiltering: document.getElementById('enable-zone-filtering').checked,
-        travelBufferMinutes: parseInt(document.getElementById('travel-buffer').value) || 0
+        travelBufferMinutes: parseInt(document.getElementById('travel-buffer').value) || 0,
+        maxBookingsPerDay: parseInt(document.getElementById('max-bookings-day').value),
+        multiUnitMaxBookings: parseInt(document.getElementById('max-bookings-multiunit').value),
+        weekendMaxBookings: parseInt(document.getElementById('max-bookings-weekend').value),
+        zoneDayRestrictions: Object.keys(zoneDayRestrictions).length > 0 ? zoneDayRestrictions : undefined
       };
 
       try {

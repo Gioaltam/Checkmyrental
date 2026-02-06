@@ -827,6 +827,147 @@ export const prerender = false;
         font-size: 20px;
       }
     }
+
+    /* Calendar View */
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .calendar-nav button {
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .calendar-nav button:hover {
+      background: #f3f4f6;
+    }
+
+    .calendar-nav span {
+      font-weight: 600;
+      font-size: 15px;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .calendar-grid .cal-header {
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      padding: 8px 4px;
+      text-transform: uppercase;
+    }
+
+    .calendar-grid .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+      min-height: 56px;
+      position: relative;
+    }
+
+    .calendar-grid .cal-day:hover {
+      border-color: #d1d5db;
+    }
+
+    .calendar-grid .cal-day.empty {
+      cursor: default;
+    }
+
+    .calendar-grid .cal-day.empty:hover {
+      border-color: transparent;
+    }
+
+    .calendar-grid .cal-day.today {
+      border-color: #3b82f6;
+    }
+
+    .calendar-grid .cal-day.selected {
+      border-color: #e74c3c;
+      background: #fef2f2;
+    }
+
+    .cal-day .cal-num {
+      font-weight: 500;
+    }
+
+    .cal-day .cal-count {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-top: 2px;
+    }
+
+    .cal-count.green { background: #dcfce7; color: #166534; }
+    .cal-count.yellow { background: #fef9c3; color: #854d0e; }
+    .cal-count.red { background: #fee2e2; color: #991b1b; }
+
+    .cal-day-detail {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+    .cal-day-detail h4 {
+      margin-bottom: 12px;
+      font-size: 14px;
+      color: #374151;
+    }
+
+    .cal-detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 13px;
+    }
+
+    .cal-detail-item:last-child {
+      border-bottom: none;
+    }
+
+    .cal-detail-time {
+      font-weight: 600;
+      color: #374151;
+      min-width: 80px;
+    }
+
+    .cal-detail-addr {
+      flex: 1;
+      margin: 0 12px;
+      color: #6b7280;
+    }
+
+    .cal-detail-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -973,6 +1114,22 @@ export const prerender = false;
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section class="section" id="calendar-section">
+      <div class="section-header">
+        <h2>Calendar</h2>
+        <div class="calendar-nav">
+          <button onclick="changeCalendarMonth(-1)">&larr; Prev</button>
+          <span id="calendar-month-label"></span>
+          <button onclick="changeCalendarMonth(1)">Next &rarr;</button>
+        </div>
+      </div>
+      <div class="section-content">
+        <div class="calendar-grid" id="calendar-grid"></div>
+        <div id="calendar-detail"></div>
       </div>
     </section>
 
@@ -1304,6 +1461,7 @@ export const prerender = false;
           try { renderRoute(0); } catch (e) { console.error('Route render error:', e); }
           renderReports();
           renderSlotLocks();
+          renderCalendar();
         }
       } catch (error) {
         console.error('Fetch error:', error);
@@ -1558,6 +1716,124 @@ export const prerender = false;
       EAST: 'Mid Pinellas',
       UNKNOWN: 'Unknown Area'
     };
+
+    // Calendar view
+    let calendarMonth = new Date().getMonth();
+    let calendarYear = new Date().getFullYear();
+    let selectedCalendarDate = null;
+
+    function changeCalendarMonth(delta) {
+      calendarMonth += delta;
+      if (calendarMonth > 11) { calendarMonth = 0; calendarYear++; }
+      if (calendarMonth < 0) { calendarMonth = 11; calendarYear--; }
+      selectedCalendarDate = null;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const detail = document.getElementById('calendar-detail');
+      const label = document.getElementById('calendar-month-label');
+      if (!grid) return;
+
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      label.textContent = `${monthNames[calendarMonth]} ${calendarYear}`;
+
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+
+      // Count bookings per day for this month
+      const dayCounts = {};
+      const scheduledStatuses = ['scheduled', 'pending_tenant'];
+      bookings.forEach(b => {
+        if (b.scheduledDate && scheduledStatuses.includes(b.status)) {
+          const d = new Date(b.scheduledDate + 'T12:00:00');
+          if (d.getMonth() === calendarMonth && d.getFullYear() === calendarYear) {
+            dayCounts[b.scheduledDate] = (dayCounts[b.scheduledDate] || 0) + 1;
+          }
+        }
+      });
+
+      // Build grid
+      const dayHeaders = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      let html = dayHeaders.map(d => `<div class="cal-header">${d}</div>`).join('');
+
+      const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+      const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+
+      // Empty cells before first day
+      for (let i = 0; i < firstDay; i++) {
+        html += '<div class="cal-day empty"></div>';
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const count = dayCounts[dateStr] || 0;
+        const isToday = dateStr === todayStr;
+        const isSelected = dateStr === selectedCalendarDate;
+        const colorClass = count === 0 ? '' : count <= 4 ? 'green' : count <= 6 ? 'yellow' : 'red';
+
+        html += `<div class="cal-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="selectCalendarDay('${dateStr}')">
+          <span class="cal-num">${day}</span>
+          ${count > 0 ? `<span class="cal-count ${colorClass}">${count}</span>` : ''}
+        </div>`;
+      }
+
+      grid.innerHTML = html;
+
+      // Render detail panel if a date is selected
+      if (selectedCalendarDate) {
+        const dayBookings = bookings.filter(b =>
+          b.scheduledDate === selectedCalendarDate &&
+          ['scheduled', 'pending_tenant', 'completed', 'no_show'].includes(b.status)
+        ).sort((a, b) => (a.scheduledTime || '').localeCompare(b.scheduledTime || ''));
+
+        const displayDate = new Date(selectedCalendarDate + 'T12:00:00').toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric'
+        });
+
+        if (dayBookings.length === 0) {
+          detail.innerHTML = `<div class="cal-day-detail"><h4>${displayDate}</h4><p style="color:#6b7280;font-size:13px;">No bookings scheduled</p></div>`;
+        } else {
+          detail.innerHTML = `<div class="cal-day-detail">
+            <h4>${displayDate} - ${dayBookings.length} booking${dayBookings.length > 1 ? 's' : ''}</h4>
+            ${dayBookings.map(b => {
+              const time = b.scheduledTime ? formatTimeShort(b.scheduledTime) : 'TBD';
+              const statusColors = {
+                scheduled: 'background:#dcfce7;color:#166534',
+                pending_tenant: 'background:#fef9c3;color:#854d0e',
+                completed: 'background:#e0e7ff;color:#3730a3',
+                no_show: 'background:#fee2e2;color:#991b1b'
+              };
+              const statusLabels = {
+                scheduled: 'Scheduled',
+                pending_tenant: 'Pending',
+                completed: 'Completed',
+                no_show: 'No Show'
+              };
+              return `<div class="cal-detail-item">
+                <span class="cal-detail-time">${time}</span>
+                <span class="cal-detail-addr">${b.propertyAddress}</span>
+                <span class="cal-detail-status" style="${statusColors[b.status] || ''}">${statusLabels[b.status] || b.status}</span>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }
+      } else {
+        detail.innerHTML = '';
+      }
+    }
+
+    function selectCalendarDay(dateStr) {
+      selectedCalendarDate = selectedCalendarDate === dateStr ? null : dateStr;
+      renderCalendar();
+    }
+
+    function formatTimeShort(timeStr) {
+      const [h, m] = timeStr.split(':').map(Number);
+      const period = h >= 12 ? 'PM' : 'AM';
+      return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${period}`;
+    }
 
     // Render today's route
     function renderRoute(dateOffset = 0) {

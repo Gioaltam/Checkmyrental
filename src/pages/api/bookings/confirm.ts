@@ -1,6 +1,6 @@
 // Confirm a booking - tenant selects a time slot
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate, addBookingToDateIndex } from '../../../lib/db';
 import { sendConfirmationSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName, isZoneAllowedOnDay } from '../../../lib/zones';
 import { createCalendarEvent } from '../../../lib/google-calendar';
@@ -112,6 +112,8 @@ export const POST: APIRoute = async ({ request }) => {
         zipcode: zipcode || undefined,
         serviceZone: serviceZone,
       });
+      // Add to date index for fast lookups
+      await addBookingToDateIndex(booking.id, date);
     } catch (updateError) {
       await releaseSlotLock(date, time);
       throw updateError;

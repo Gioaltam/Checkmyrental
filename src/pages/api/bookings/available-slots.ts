@@ -173,6 +173,7 @@ export const GET: APIRoute = async ({ url }) => {
     // If no specific date requested, return available dates for the next maxAdvanceDays
     if (!date) {
       const availableDates: string[] = [];
+      const dateAvailability: Array<{ date: string; available: boolean; reason?: string }> = [];
       const today = new Date();
 
       // Determine property zone for zone-day restriction checks
@@ -190,13 +191,21 @@ export const GET: APIRoute = async ({ url }) => {
           s => s.dayOfWeek === dayOfWeek
         );
 
+        if (!hasSchedule) {
+          // Don't show non-working days at all
+          continue;
+        }
+
         // Check if date is blocked
         const isBlocked = schedule.blockedDates.includes(dateStr);
-
-        if (!hasSchedule || isBlocked) continue;
+        if (isBlocked) {
+          dateAvailability.push({ date: dateStr, available: false, reason: 'blocked' });
+          continue;
+        }
 
         // Zone-day restriction: skip if property zone not allowed on this day
         if (!isZoneAllowedOnDay(propertyZone, dayOfWeek, schedule.zoneDayRestrictions)) {
+          dateAvailability.push({ date: dateStr, available: false, reason: 'zone_restricted' });
           continue;
         }
 
@@ -213,6 +222,7 @@ export const GET: APIRoute = async ({ url }) => {
         // Daily capacity check: skip if day is at max bookings
         const maxForDay = getDailyCapacity(existingBookings, schedule, dayOfWeek);
         if (existingBookings.length >= maxForDay) {
+          dateAvailability.push({ date: dateStr, available: false, reason: 'capacity_full' });
           continue;
         }
 
@@ -228,6 +238,9 @@ export const GET: APIRoute = async ({ url }) => {
 
         if (slots.some(s => s.available)) {
           availableDates.push(dateStr);
+          dateAvailability.push({ date: dateStr, available: true });
+        } else {
+          dateAvailability.push({ date: dateStr, available: false, reason: 'capacity_full' });
         }
       }
 
@@ -243,6 +256,7 @@ export const GET: APIRoute = async ({ url }) => {
             }),
           },
           availableDates,
+          dateAvailability,
           minAdvanceHours: schedule.minAdvanceHours,
           maxAdvanceDays: schedule.maxAdvanceDays,
         }),

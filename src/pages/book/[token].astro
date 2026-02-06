@@ -7,6 +7,7 @@ const { token } = Astro.params;
 // Fetch booking data server-side
 let booking = null;
 let availableDates: string[] = [];
+let dateAvailability: Array<{ date: string; available: boolean; reason?: string }> = [];
 let error = null;
 let isReschedule = false;
 
@@ -18,6 +19,7 @@ try {
   if (response.ok) {
     booking = data.booking;
     availableDates = data.availableDates || [];
+    dateAvailability = data.dateAvailability || [];
   } else if (data.status === 'scheduled') {
     // Booking is already scheduled - try reschedule mode
     isReschedule = true;
@@ -26,6 +28,7 @@ try {
     if (response.ok) {
       booking = data.booking;
       availableDates = data.availableDates || [];
+      dateAvailability = data.dateAvailability || [];
     } else {
       error = data.error || 'Unable to load booking';
     }
@@ -124,7 +127,33 @@ try {
             )}
             {!isReschedule && <h2>Select a Date</h2>}
             <div class="date-grid" id="date-grid">
-              {availableDates.length > 0 ? (
+              {dateAvailability.length > 0 ? (
+                dateAvailability.map((entry) => {
+                  const date = new Date(entry.date + 'T12:00:00');
+                  const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  const reasonLabel = entry.reason === 'capacity_full' ? 'Fully booked'
+                    : entry.reason === 'zone_restricted' ? 'Not available for your area'
+                    : entry.reason === 'blocked' ? 'Unavailable'
+                    : '';
+                  return entry.available ? (
+                    <button
+                      type="button"
+                      class="date-btn"
+                      data-date={entry.date}
+                    >
+                      <span class="date-day">{dayName}</span>
+                      <span class="date-num">{monthDay}</span>
+                    </button>
+                  ) : (
+                    <div class="date-btn date-btn-disabled">
+                      <span class="date-day">{dayName}</span>
+                      <span class="date-num">{monthDay}</span>
+                      <span class="date-reason">{reasonLabel}</span>
+                    </div>
+                  );
+                })
+              ) : availableDates.length > 0 ? (
                 availableDates.map((dateStr) => {
                   const date = new Date(dateStr + 'T12:00:00');
                   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
@@ -556,6 +585,26 @@ try {
     .date-btn.selected {
       border-color: #e74c3c;
       background: rgba(231, 76, 60, 0.15);
+    }
+
+    .date-btn-disabled {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem 0.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      opacity: 0.45;
+      cursor: default;
+    }
+
+    .date-reason {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 0.25rem;
+      text-align: center;
+      line-height: 1.2;
     }
 
     .date-day {

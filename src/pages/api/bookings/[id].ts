@@ -1,7 +1,7 @@
 // Get or update a specific booking
 import type { APIRoute } from 'astro';
-import { getBooking, updateBooking, createNextRecurringBooking, releaseSlotLock } from '../../../lib/db';
-import { sendBookingLinkSMS, sendConfirmationSMS, sendReminderSMS } from '../../../lib/twilio';
+import { getBooking, updateBooking, createNextRecurringBooking, createBooking, releaseSlotLock, removeBookingFromDateIndex } from '../../../lib/db';
+import { sendBookingLinkSMS, sendConfirmationSMS, sendReminderSMS, sendNoShowFollowUpSMS } from '../../../lib/twilio';
 import { deleteCalendarEvent } from '../../../lib/google-calendar';
 
 export const prerender = false;
@@ -88,6 +88,11 @@ export const PATCH: APIRoute = async ({ params, request }) => {
         await updateBooking(id, { status: 'completed' });
         booking.status = 'completed';
 
+        // Remove from date index (completed bookings don't block slots)
+        if (booking.scheduledDate) {
+          await removeBookingFromDateIndex(id, booking.scheduledDate);
+        }
+
         // Auto-create next recurring booking if applicable
         let nextBooking = null;
         try {
@@ -136,14 +141,142 @@ export const PATCH: APIRoute = async ({ params, request }) => {
             console.error('Failed to delete calendar event:', calError);
           }
         }
+        // Remove from date index
+        if (booking.scheduledDate) {
+          await removeBookingFromDateIndex(id, booking.scheduledDate);
+        }
         await updateBooking(id, { status: 'cancelled' });
         booking.status = 'cancelled';
         break;
 
-      case 'no_show':
+      case 'no_show': {
         await updateBooking(id, { status: 'no_show' });
         booking.status = 'no_show';
-        break;
+
+        // Remove from date index
+        if (booking.scheduledDate) {
+          await removeBookingFromDateIndex(id, booking.scheduledDate);
+        }
+        // Release slot lock
+        if (booking.scheduledDate && booking.scheduledTime) {
+          await releaseSlotLock(booking.scheduledDate, booking.scheduledTime);
+        }
+        // Delete Google Calendar event
+        if (booking.googleCalendarEventId) {
+          try {
+            await deleteCalendarEvent(booking.googleCalendarEventId);
+          } catch (calError) {
+            console.error('Failed to delete calendar event on no-show:', calError);
+          }
+        }
+
+        // Create new booking so tenant can reschedule
+        let noShowNextBooking = null;
+        try {
+          noShowNextBooking = await createBooking({
+            invoiceId: booking.invoiceId,
+            propertyIndex: booking.propertyIndex,
+            propertyAddress: booking.propertyAddress,
+            tenantName: booking.tenantName,
+            tenantPhone: booking.tenantPhone,
+            landlordName: booking.landlordName,
+            landlordEmail: booking.landlordEmail,
+            inspectionFrequency: booking.inspectionFrequency,
+          });
+
+          // Send no-show follow-up SMS with new booking link
+          const noShowBaseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+          const rescheduleUrl = `${noShowBaseUrl}/book/${noShowNextBooking.bookingToken}`;
+          const noShowSms = await sendNoShowFollowUpSMS(
+            noShowNextBooking.tenantPhone,
+            noShowNextBooking.tenantName,
+            noShowNextBooking.propertyAddress,
+            rescheduleUrl
+          );
+          if (noShowSms.success) {
+            await updateBooking(noShowNextBooking.id, {
+              smsBookingLinkSentAt: new Date().toISOString(),
+            });
+          }
+        } catch (noShowError) {
+          console.error('Failed to create no-show follow-up booking:', noShowError);
+        }
+
+        // Email landlord about no-show
+        const RESEND_KEY = process.env.RESEND_API_KEY;
+        if (RESEND_KEY) {
+          try {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${RESEND_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'CheckMyRental <send@checkmyrental.io>',
+                to: [booking.landlordEmail],
+                subject: `No-Show - ${booking.propertyAddress}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #e74c3c;">Inspection No-Show</h2>
+                    <p>Your tenant did not show up for the scheduled inspection.</p>
+                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                      <p style="margin: 5px 0;"><strong>Property:</strong> ${booking.propertyAddress}</p>
+                      <p style="margin: 5px 0;"><strong>Tenant:</strong> ${booking.tenantName}</p>
+                      <p style="margin: 5px 0;"><strong>Scheduled:</strong> ${booking.scheduledDate} at ${booking.scheduledTime}</p>
+                    </div>
+                    <p>We've sent the tenant a new booking link to reschedule. We'll keep you updated once they select a new time.</p>
+                    <p style="color: #666; font-size: 14px; margin-top: 30px;">
+                      Questions? Reply to this email or contact us at (813) 252-0524
+                    </p>
+                  </div>
+                `,
+              }),
+            });
+          } catch (emailError) {
+            console.error('Failed to send no-show landlord email:', emailError);
+          }
+
+          // Notify admin
+          try {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${RESEND_KEY}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'CheckMyRental <send@checkmyrental.io>',
+                to: ['info@checkmyrental.io'],
+                subject: `[No-Show] ${booking.propertyAddress} - ${booking.tenantName}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif;">
+                    <h3>Booking No-Show</h3>
+                    <p><strong>Property:</strong> ${booking.propertyAddress}</p>
+                    <p><strong>Tenant:</strong> ${booking.tenantName} (${booking.tenantPhone})</p>
+                    <p><strong>Landlord:</strong> ${booking.landlordName} (${booking.landlordEmail})</p>
+                    <p><strong>Was Scheduled:</strong> ${booking.scheduledDate} at ${booking.scheduledTime}</p>
+                    <p><strong>New booking created:</strong> ${noShowNextBooking ? 'Yes - SMS sent' : 'No - failed'}</p>
+                  </div>
+                `,
+              }),
+            });
+          } catch (adminEmailError) {
+            console.error('Failed to send no-show admin notification:', adminEmailError);
+          }
+        }
+
+        // Return early with next booking info
+        const updatedNoShow = await getBooking(id);
+        return new Response(
+          JSON.stringify({
+            success: true,
+            booking: updatedNoShow,
+            ...(noShowNextBooking && { nextBooking: { id: noShowNextBooking.id } }),
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
 
       case 'resend_link':
         // Resend the booking link SMS

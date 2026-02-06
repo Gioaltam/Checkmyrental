@@ -153,7 +153,7 @@ export async function listInvoices(limit = 50, offset = 0): Promise<Invoice[]> {
 
 export async function updateInvoice(
   id: string,
-  updates: Partial<Pick<Invoice, 'status' | 'paidAt' | 'squareInvoiceId' | 'squarePaymentUrl' | 'customerName' | 'customerEmail' | 'customerPhone' | 'dueDate' | 'notes' | 'paymentMethod' | 'lastReminderSentAt'>>
+  updates: Partial<Pick<Invoice, 'status' | 'paidAt' | 'squareInvoiceId' | 'squarePaymentUrl' | 'customerName' | 'customerEmail' | 'customerPhone' | 'dueDate' | 'notes' | 'paymentMethod' | 'lastReminderSentAt' | 'reminderCount'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`invoice:${id}`, stripNulls(updates as Record<string, unknown>));
@@ -279,19 +279,61 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes' | 'googleCalendarEventId'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'smsFollowUpSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes' | 'googleCalendarEventId'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));
 }
 
+// ==================== DATE INDEX (for efficient per-date lookups) ====================
+
+// Add a booking to the date index when confirmed/rescheduled
+export async function addBookingToDateIndex(bookingId: string, date: string): Promise<void> {
+  const redis = getRedis();
+  await redis.sadd(`bookings:date:${date}`, bookingId);
+  // Auto-expire after 30 days to prevent unbounded growth
+  await redis.expire(`bookings:date:${date}`, 60 * 60 * 24 * 30);
+}
+
+// Remove a booking from the date index when cancelled/completed/rescheduled away
+export async function removeBookingFromDateIndex(bookingId: string, date: string): Promise<void> {
+  const redis = getRedis();
+  await redis.srem(`bookings:date:${date}`, bookingId);
+}
+
 // Get all bookings for a specific date (for zone-aware scheduling)
+// Uses date index when available, falls back to full scan + lazy backfill
 export async function getBookingsForDate(date: string): Promise<Booking[]> {
-  const bookings = await listBookings(200, 0);
-  return bookings.filter(b =>
+  const redis = getRedis();
+
+  // Try date index first (fast path)
+  const indexedIds = await redis.smembers(`bookings:date:${date}`);
+
+  if (indexedIds.length > 0) {
+    const bookings = await Promise.all(
+      indexedIds.map(id => getBooking(id as string))
+    );
+    return bookings.filter((b): b is Booking =>
+      b !== null &&
+      b.scheduledDate === date &&
+      (b.status === 'scheduled' || b.status === 'pending_tenant')
+    );
+  }
+
+  // Fallback: scan all bookings (for pre-index data)
+  const allBookings = await listBookings(200, 0);
+  const matching = allBookings.filter(b =>
     b.scheduledDate === date &&
     (b.status === 'scheduled' || b.status === 'pending_tenant')
   );
+
+  // Lazily populate index for future calls
+  for (const b of matching) {
+    await redis.sadd(`bookings:date:${date}`, b.id);
+    await redis.expire(`bookings:date:${date}`, 60 * 60 * 24 * 30);
+  }
+
+  return matching;
 }
 
 // ==================== RECURRING BOOKINGS ====================
@@ -405,11 +447,11 @@ export async function listSlotLocks(): Promise<Array<{ date: string; time: strin
   return locks;
 }
 
-// Get booked slots for a specific date
+// Get booked slots for a specific date (uses date index via getBookingsForDate)
 export async function getBookedSlotsForDate(date: string): Promise<string[]> {
-  const bookings = await listBookings(100, 0);
+  const bookings = await getBookingsForDate(date);
   return bookings
-    .filter(b => b.scheduledDate === date && b.status === 'scheduled')
+    .filter(b => b.status === 'scheduled')
     .map(b => b.scheduledTime!)
     .filter(Boolean);
 }

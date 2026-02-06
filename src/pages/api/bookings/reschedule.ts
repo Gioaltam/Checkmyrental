@@ -1,6 +1,6 @@
 // Reschedule a booking - tenant changes their scheduled time
 import type { APIRoute } from 'astro';
-import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate } from '../../../lib/db';
+import { getBookingByToken, updateBooking, getBookedSlotsForDate, acquireSlotLock, releaseSlotLock, getAvailability, getBookingsForDate, addBookingToDateIndex, removeBookingFromDateIndex } from '../../../lib/db';
 import { sendRescheduleSMS } from '../../../lib/twilio';
 import { extractZipcode, getServiceZone, getZoneName, isZoneAllowedOnDay } from '../../../lib/zones';
 import { updateCalendarEvent, createCalendarEvent } from '../../../lib/google-calendar';
@@ -154,6 +154,11 @@ export const POST: APIRoute = async ({ request }) => {
         serviceZone: serviceZone,
         rescheduleCount: rescheduleCount + 1,
       });
+      // Update date index: remove from old date, add to new date
+      if (booking.scheduledDate) {
+        await removeBookingFromDateIndex(booking.id, booking.scheduledDate);
+      }
+      await addBookingToDateIndex(booking.id, date);
     } catch (updateError) {
       await releaseSlotLock(date, time);
       throw updateError;

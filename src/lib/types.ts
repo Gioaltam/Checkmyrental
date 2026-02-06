@@ -45,6 +45,7 @@ export interface Invoice {
   inspectionFrequency?: string;
   invoiceNumber: string;
   lastReminderSentAt?: string;
+  reminderCount?: number;
 }
 
 // Pricing constants
@@ -115,6 +116,7 @@ export interface Booking {
   smsBookingLinkSentAt?: string;
   smsConfirmationSentAt?: string;
   smsReminderSentAt?: string;
+  smsFollowUpSentAt?: string;
   // Booking token for security (unique token in booking URL)
   bookingToken: string;
   // Recurring inspection frequency

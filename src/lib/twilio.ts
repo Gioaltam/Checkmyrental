@@ -121,6 +121,60 @@ export async function sendReminderSMS(
   }
 }
 
+// Send follow-up reminder SMS for pending bookings (48h after initial link)
+export async function sendFollowUpReminderSMS(
+  phone: string,
+  tenantName: string,
+  propertyAddress: string,
+  bookingUrl: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const client = getTwilioClient();
+    const fromNumber = getFromNumber();
+
+    const message = await client.messages.create({
+      body: `Hi ${tenantName}! Friendly reminder to schedule your property inspection at ${propertyAddress}. Pick a time that works for you: ${bookingUrl} - CheckMyRental`,
+      from: fromNumber,
+      to: formatPhoneNumber(phone),
+    });
+
+    return { success: true, messageId: message.sid };
+  } catch (error) {
+    console.error('Failed to send follow-up reminder SMS:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// Send no-show follow-up SMS with rescheduling link
+export async function sendNoShowFollowUpSMS(
+  phone: string,
+  tenantName: string,
+  propertyAddress: string,
+  rescheduleUrl: string
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const client = getTwilioClient();
+    const fromNumber = getFromNumber();
+
+    const message = await client.messages.create({
+      body: `Hi ${tenantName}! We missed you for the inspection at ${propertyAddress}. Please reschedule at your earliest convenience: ${rescheduleUrl} - CheckMyRental`,
+      from: fromNumber,
+      to: formatPhoneNumber(phone),
+    });
+
+    return { success: true, messageId: message.sid };
+  } catch (error) {
+    console.error('Failed to send no-show follow-up SMS:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 // Send reschedule confirmation SMS to tenant
 export async function sendRescheduleSMS(
   phone: string,

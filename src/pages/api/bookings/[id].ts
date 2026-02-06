@@ -175,7 +175,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
         await updateBooking(id, { noShowCount });
         const maxNoShows = 2;
 
-        // Calculate no-show fee (50% of inspection rate)
+        // Calculate no-show fee (flat $35)
         let noShowFee = 0;
         let noShowFeeInvoice = null;
         try {
@@ -183,7 +183,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
           if (originalInvoice) {
             const property = originalInvoice.properties[Number(booking.propertyIndex) || 0];
             if (property) {
-              noShowFee = Number(property.price) * 0.5;
+              noShowFee = 35;
               const paymentMethod = originalInvoice.paymentMethod || 'zelle';
               const processingFee = paymentMethod === 'square' ? noShowFee * 0.03 : 0;
               const feeTotal = noShowFee + processingFee;
@@ -207,7 +207,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
                 paymentMethod,
                 status: 'sent',
                 dueDate: dueDate.toISOString().split('T')[0],
-                notes: `No-show fee (50% of inspection rate) - Tenant ${booking.tenantName} did not show for scheduled inspection on ${booking.scheduledDate}`,
+                notes: `No-show fee - Tenant ${booking.tenantName} did not show for scheduled inspection on ${booking.scheduledDate}`,
               });
 
               // Send no-show fee invoice to landlord

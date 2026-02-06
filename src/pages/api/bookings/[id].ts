@@ -1,6 +1,6 @@
 // Get or update a specific booking
 import type { APIRoute } from 'astro';
-import { getBooking, updateBooking, createNextRecurringBooking, createBooking, releaseSlotLock, removeBookingFromDateIndex } from '../../../lib/db';
+import { getBooking, getInvoice, updateBooking, createNextRecurringBooking, createBooking, createInvoice, releaseSlotLock, removeBookingFromDateIndex } from '../../../lib/db';
 import { sendBookingLinkSMS, sendConfirmationSMS, sendReminderSMS, sendNoShowFollowUpSMS } from '../../../lib/twilio';
 import { deleteCalendarEvent } from '../../../lib/google-calendar';
 
@@ -170,41 +170,156 @@ export const PATCH: APIRoute = async ({ params, request }) => {
           }
         }
 
-        // Create new booking so tenant can reschedule
-        let noShowNextBooking = null;
-        try {
-          noShowNextBooking = await createBooking({
-            invoiceId: booking.invoiceId,
-            propertyIndex: booking.propertyIndex,
-            propertyAddress: booking.propertyAddress,
-            tenantName: booking.tenantName,
-            tenantPhone: booking.tenantPhone,
-            landlordName: booking.landlordName,
-            landlordEmail: booking.landlordEmail,
-            inspectionFrequency: booking.inspectionFrequency,
-          });
+        // Track no-show count
+        const noShowCount = (Number(booking.noShowCount) || 0) + 1;
+        await updateBooking(id, { noShowCount });
+        const maxNoShows = 2;
 
-          // Send no-show follow-up SMS with new booking link
-          const noShowBaseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
-          const rescheduleUrl = `${noShowBaseUrl}/book/${noShowNextBooking.bookingToken}`;
-          const noShowSms = await sendNoShowFollowUpSMS(
-            noShowNextBooking.tenantPhone,
-            noShowNextBooking.tenantName,
-            noShowNextBooking.propertyAddress,
-            rescheduleUrl
-          );
-          if (noShowSms.success) {
-            await updateBooking(noShowNextBooking.id, {
-              smsBookingLinkSentAt: new Date().toISOString(),
-            });
+        // Calculate no-show fee (50% of inspection rate)
+        let noShowFee = 0;
+        let noShowFeeInvoice = null;
+        try {
+          const originalInvoice = await getInvoice(booking.invoiceId);
+          if (originalInvoice) {
+            const property = originalInvoice.properties[Number(booking.propertyIndex) || 0];
+            if (property) {
+              noShowFee = Number(property.price) * 0.5;
+              const paymentMethod = originalInvoice.paymentMethod || 'zelle';
+              const processingFee = paymentMethod === 'square' ? noShowFee * 0.03 : 0;
+              const feeTotal = noShowFee + processingFee;
+
+              // Create no-show fee invoice
+              const dueDate = new Date();
+              dueDate.setDate(dueDate.getDate() + 7);
+
+              noShowFeeInvoice = await createInvoice({
+                customerName: originalInvoice.customerName,
+                customerEmail: originalInvoice.customerEmail,
+                customerPhone: originalInvoice.customerPhone,
+                properties: [{
+                  type: property.type,
+                  address: property.address,
+                  price: noShowFee,
+                }],
+                subtotal: noShowFee,
+                processingFee: processingFee || undefined,
+                total: feeTotal,
+                paymentMethod,
+                status: 'sent',
+                dueDate: dueDate.toISOString().split('T')[0],
+                notes: `No-show fee (50% of inspection rate) - Tenant ${booking.tenantName} did not show for scheduled inspection on ${booking.scheduledDate}`,
+              });
+
+              // Send no-show fee invoice to landlord
+              const RESEND_FEE = process.env.RESEND_API_KEY;
+              if (RESEND_FEE && noShowFeeInvoice) {
+                if (paymentMethod === 'zelle') {
+                  const { generateInvoicePDF, generateInvoiceEmailHTML } = await import('../../../lib/invoice-pdf');
+                  const pdfBuffer = generateInvoicePDF(noShowFeeInvoice);
+                  const emailHtml = generateInvoiceEmailHTML(noShowFeeInvoice);
+                  await fetch('https://api.resend.com/emails', {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${RESEND_FEE}`,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      from: 'CheckMyRental <send@checkmyrental.io>',
+                      to: [String(noShowFeeInvoice.customerEmail)],
+                      subject: `No-Show Fee Invoice ${noShowFeeInvoice.invoiceNumber} - CheckMyRental`,
+                      html: emailHtml,
+                      attachments: [{
+                        filename: `${noShowFeeInvoice.invoiceNumber}.pdf`,
+                        content: pdfBuffer.toString('base64'),
+                      }],
+                    }),
+                  });
+                } else {
+                  // Square: create Square invoice with payment link
+                  try {
+                    const { createSquareInvoice } = await import('../../../lib/square');
+                    const squareResult = await createSquareInvoice(noShowFeeInvoice);
+                    const { updateInvoice } = await import('../../../lib/db');
+                    await updateInvoice(noShowFeeInvoice.id, {
+                      squareInvoiceId: squareResult.squareInvoiceId,
+                      squarePaymentUrl: squareResult.paymentUrl,
+                    });
+
+                    await fetch('https://api.resend.com/emails', {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${RESEND_FEE}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        from: 'CheckMyRental <send@checkmyrental.io>',
+                        to: [String(noShowFeeInvoice.customerEmail)],
+                        subject: `No-Show Fee Invoice ${noShowFeeInvoice.invoiceNumber} - CheckMyRental`,
+                        html: `
+                          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <h2>No-Show Fee Invoice</h2>
+                            <p>Hi ${noShowFeeInvoice.customerName},</p>
+                            <p>A no-show fee of <strong>$${feeTotal.toFixed(2)}</strong> has been applied for the missed inspection at ${property.address}.</p>
+                            <p><a href="${squareResult.paymentUrl}" style="display: inline-block; padding: 12px 24px; background: #e74c3c; color: white; text-decoration: none; border-radius: 6px;">Pay Now</a></p>
+                            <p>Thank you,<br>CheckMyRental</p>
+                          </div>
+                        `,
+                      }),
+                    });
+                  } catch (squareErr) {
+                    console.error('Failed to create Square no-show invoice:', squareErr);
+                  }
+                }
+              }
+            }
           }
-        } catch (noShowError) {
-          console.error('Failed to create no-show follow-up booking:', noShowError);
+        } catch (feeError) {
+          console.error('Failed to create no-show fee invoice:', feeError);
+        }
+
+        // Create follow-up booking only if under no-show limit
+        let noShowNextBooking = null;
+        if (noShowCount < maxNoShows) {
+          try {
+            noShowNextBooking = await createBooking({
+              invoiceId: booking.invoiceId,
+              propertyIndex: booking.propertyIndex,
+              propertyAddress: booking.propertyAddress,
+              tenantName: booking.tenantName,
+              tenantPhone: booking.tenantPhone,
+              landlordName: booking.landlordName,
+              landlordEmail: booking.landlordEmail,
+              inspectionFrequency: booking.inspectionFrequency,
+              noShowCount,
+            });
+
+            // Send no-show follow-up SMS with new booking link
+            const noShowBaseUrl = process.env.PUBLIC_SITE_URL || 'https://checkmyrental.io';
+            const rescheduleUrl = `${noShowBaseUrl}/book/${noShowNextBooking.bookingToken}`;
+            const noShowSms = await sendNoShowFollowUpSMS(
+              noShowNextBooking.tenantPhone,
+              noShowNextBooking.tenantName,
+              noShowNextBooking.propertyAddress,
+              rescheduleUrl
+            );
+            if (noShowSms.success) {
+              await updateBooking(noShowNextBooking.id, {
+                smsBookingLinkSentAt: new Date().toISOString(),
+              });
+            }
+          } catch (noShowError) {
+            console.error('Failed to create no-show follow-up booking:', noShowError);
+          }
         }
 
         // Email landlord about no-show
         const RESEND_KEY = process.env.RESEND_API_KEY;
         if (RESEND_KEY) {
+          const feeText = noShowFee > 0 ? `<p style="margin: 5px 0;"><strong>No-Show Fee:</strong> $${noShowFee.toFixed(2)} (a separate invoice has been sent)</p>` : '';
+          const actionText = noShowCount >= maxNoShows
+            ? '<p>This tenant has reached the maximum number of no-shows. No further automatic rescheduling will occur. Please coordinate directly with your tenant to ensure access for future inspections.</p>'
+            : '<p>We\'ve sent the tenant a new booking link to reschedule. We\'ll keep you updated once they select a new time.</p>';
+
           try {
             await fetch('https://api.resend.com/emails', {
               method: 'POST',
@@ -215,7 +330,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
               body: JSON.stringify({
                 from: 'CheckMyRental <send@checkmyrental.io>',
                 to: [booking.landlordEmail],
-                subject: `No-Show - ${booking.propertyAddress}`,
+                subject: `No-Show${noShowCount >= maxNoShows ? ' - Action Required' : ''} - ${booking.propertyAddress}`,
                 html: `
                   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                     <h2 style="color: #e74c3c;">Inspection No-Show</h2>
@@ -224,8 +339,10 @@ export const PATCH: APIRoute = async ({ params, request }) => {
                       <p style="margin: 5px 0;"><strong>Property:</strong> ${booking.propertyAddress}</p>
                       <p style="margin: 5px 0;"><strong>Tenant:</strong> ${booking.tenantName}</p>
                       <p style="margin: 5px 0;"><strong>Scheduled:</strong> ${booking.scheduledDate} at ${booking.scheduledTime}</p>
+                      <p style="margin: 5px 0;"><strong>No-Show Count:</strong> ${noShowCount} of ${maxNoShows}</p>
+                      ${feeText}
                     </div>
-                    <p>We've sent the tenant a new booking link to reschedule. We'll keep you updated once they select a new time.</p>
+                    ${actionText}
                     <p style="color: #666; font-size: 14px; margin-top: 30px;">
                       Questions? Reply to this email or contact us at (813) 252-0524
                     </p>
@@ -248,7 +365,7 @@ export const PATCH: APIRoute = async ({ params, request }) => {
               body: JSON.stringify({
                 from: 'CheckMyRental <send@checkmyrental.io>',
                 to: ['info@checkmyrental.io'],
-                subject: `[No-Show] ${booking.propertyAddress} - ${booking.tenantName}`,
+                subject: `[No-Show ${noShowCount}/${maxNoShows}] ${booking.propertyAddress} - ${booking.tenantName}`,
                 html: `
                   <div style="font-family: Arial, sans-serif;">
                     <h3>Booking No-Show</h3>
@@ -256,7 +373,9 @@ export const PATCH: APIRoute = async ({ params, request }) => {
                     <p><strong>Tenant:</strong> ${booking.tenantName} (${booking.tenantPhone})</p>
                     <p><strong>Landlord:</strong> ${booking.landlordName} (${booking.landlordEmail})</p>
                     <p><strong>Was Scheduled:</strong> ${booking.scheduledDate} at ${booking.scheduledTime}</p>
-                    <p><strong>New booking created:</strong> ${noShowNextBooking ? 'Yes - SMS sent' : 'No - failed'}</p>
+                    <p><strong>No-Show Count:</strong> ${noShowCount} of ${maxNoShows}</p>
+                    <p><strong>No-Show Fee:</strong> $${noShowFee.toFixed(2)}${noShowFeeInvoice ? ` (Invoice ${noShowFeeInvoice.invoiceNumber})` : ' (failed to create invoice)'}</p>
+                    <p><strong>Follow-up booking:</strong> ${noShowNextBooking ? 'Yes - SMS sent' : noShowCount >= maxNoShows ? 'No - max no-shows reached' : 'No - failed'}</p>
                   </div>
                 `,
               }),
@@ -272,6 +391,9 @@ export const PATCH: APIRoute = async ({ params, request }) => {
           JSON.stringify({
             success: true,
             booking: updatedNoShow,
+            noShowCount,
+            noShowFee,
+            noShowFeeInvoiceId: noShowFeeInvoice?.id,
             ...(noShowNextBooking && { nextBooking: { id: noShowNextBooking.id } }),
           }),
           { status: 200, headers: { 'Content-Type': 'application/json' } }

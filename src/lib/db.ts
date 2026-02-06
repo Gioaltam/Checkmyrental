@@ -279,7 +279,7 @@ export async function getBookingsByInvoice(invoiceId: string): Promise<Booking[]
 
 export async function updateBooking(
   id: string,
-  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'smsFollowUpSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'notes' | 'googleCalendarEventId'>>
+  updates: Partial<Pick<Booking, 'status' | 'scheduledDate' | 'scheduledTime' | 'smsBookingLinkSentAt' | 'smsConfirmationSentAt' | 'smsReminderSentAt' | 'smsFollowUpSentAt' | 'zipcode' | 'serviceZone' | 'rescheduleCount' | 'noShowCount' | 'notes' | 'googleCalendarEventId'>>
 ): Promise<void> {
   const redis = getRedis();
   await redis.hset(`booking:${id}`, stripNulls(updates as Record<string, unknown>));

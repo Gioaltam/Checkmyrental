@@ -123,6 +123,8 @@ export interface Booking {
   inspectionFrequency?: string;
   // Rescheduling
   rescheduleCount?: number;
+  // No-show tracking
+  noShowCount?: number;
   // Google Calendar
   googleCalendarEventId?: string;
   // Admin notes

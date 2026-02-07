@@ -45,14 +45,16 @@ export async function sendBookingLinkSMS(
   phone: string,
   tenantName: string,
   propertyAddress: string,
-  bookingUrl: string
+  bookingUrl: string,
+  landlordName?: string
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const client = getTwilioClient();
     const fromNumber = getFromNumber();
 
+    const who = landlordName || 'Your landlord';
     const message = await client.messages.create({
-      body: `Hi ${tenantName}! Your landlord scheduled a property inspection at ${propertyAddress}. FL law requires 24hr notice. Select your time: ${bookingUrl} - CheckMyRental`,
+      body: `Hi ${tenantName}! ${who} has requested a property inspection at ${propertyAddress}. Pick a date & time that works for you: ${bookingUrl} - CheckMyRental`,
       from: fromNumber,
       to: formatPhoneNumber(phone),
     });
@@ -80,7 +82,7 @@ export async function sendConfirmationSMS(
     const fromNumber = getFromNumber();
 
     const message = await client.messages.create({
-      body: `Confirmed! Inspection at ${propertyAddress} on ${date} at ${time}. A CheckMyRental inspector will arrive during this window. Questions? Reply to this text. - CheckMyRental`,
+      body: `Confirmed! Inspection at ${propertyAddress} on ${date} at ${time}. A CheckMyRental inspector will arrive during this window. Questions? Call (813) 252-0524 - CheckMyRental`,
       from: fromNumber,
       to: formatPhoneNumber(phone),
     });
@@ -188,7 +190,7 @@ export async function sendRescheduleSMS(
     const fromNumber = getFromNumber();
 
     const message = await client.messages.create({
-      body: `Hi ${tenantName}! Your inspection at ${propertyAddress} has been rescheduled to ${date} at ${time}. FL law requires 24hr notice. Questions? Reply to this text. - CheckMyRental`,
+      body: `Hi ${tenantName}! Your inspection at ${propertyAddress} has been rescheduled to ${date} at ${time}. FL law requires 24hr notice. Questions? Call (813) 252-0524 - CheckMyRental`,
       from: fromNumber,
       to: formatPhoneNumber(phone),
     });

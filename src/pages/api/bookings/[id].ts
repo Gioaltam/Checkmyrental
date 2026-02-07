@@ -105,7 +105,8 @@ export const PATCH: APIRoute = async ({ params, request }) => {
               nextBooking.tenantPhone,
               nextBooking.tenantName,
               nextBooking.propertyAddress,
-              nextBookingUrl
+              nextBookingUrl,
+              nextBooking.landlordName
             );
             if (sms.success) {
               await updateBooking(nextBooking.id, {
@@ -416,7 +417,8 @@ export const PATCH: APIRoute = async ({ params, request }) => {
           booking.tenantPhone,
           booking.tenantName,
           booking.propertyAddress,
-          bookingUrl
+          bookingUrl,
+          booking.landlordName
         );
 
         if (!smsResult.success) {

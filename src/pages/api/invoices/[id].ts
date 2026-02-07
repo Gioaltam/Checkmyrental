@@ -139,7 +139,8 @@ export const PATCH: APIRoute = async ({ params, request }) => {
               property.tenantPhone,
               property.tenantName || 'Tenant',
               property.address,
-              bookingUrl
+              bookingUrl,
+              invoice.customerName
             );
 
             if (smsResult.success) {

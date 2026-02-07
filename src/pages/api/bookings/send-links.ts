@@ -102,7 +102,8 @@ export const POST: APIRoute = async ({ request }) => {
           property.tenantPhone,
           property.tenantName || 'Tenant',
           property.address,
-          bookingUrl
+          bookingUrl,
+          invoice.customerName
         );
 
         if (smsResult.success) {
